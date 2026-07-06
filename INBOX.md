@@ -40,4 +40,4 @@ Reports from the `weekly-review` skill are linked here, most recent first.
 
 ---
 
-Agents: nothing to maintain here beyond the **Reviews** section — the lists above derive from the frontmatter (`stage`, `critical`, `blocked`, `awaiting_merge`). To locate gates without Obsidian: `grep -r "^stage: 003" --include="*.md"`, `grep -r "^awaiting_merge: true"` and equivalents.
+Agents: nothing to maintain here beyond the **Reviews** section — the lists above derive from the frontmatter (`stage`, `critical`, `blocked`, `awaiting_merge`). To locate gates without Obsidian, run `python3 scripts/pop_status.py` (grep on `stage:`/`awaiting_merge:` works as a fallback).

@@ -116,10 +116,23 @@ python3 scripts/pop_worktree.py add 1.1.1-user-table   # create/remove the task'
    git clone https://github.com/gabesan21/project-of-projects.git my-vault
    cd my-vault
    ```
-2. **Open it in Obsidian** — open the folder as a vault and install the **Dataview** community plugin (powers `INBOX.md`).
+2. **Open it in Obsidian** — open the folder as a vault and install the community plugins below (only **Dataview** is required).
 3. **Point your agent at it** — open the folder with your AI coding agent. It reads `AGENTS.md` (Claude Code reads it via the `CLAUDE.md` symlink) and learns the whole system from there.
 4. **Create your first project** — ask the agent to run the `new-project` skill (or `import-project` for an existing repository) and answer the interview.
 5. **Work the loop** — ask for `new-task`, approve plans in `003_human_approval`, ask for `advance-task` to move stages, merge PRs, and check `INBOX.md` daily. Run `weekly-review` once a week.
+
+## Obsidian plugins
+
+All plugins serve the **human** side — agents never depend on them (`INBOX.md` documents grep equivalents, and `scripts/` covers the sweeps).
+
+| Plugin | Why |
+|--------|-----|
+| **Dataview** *(required)* | Powers the `INBOX.md` queries — tasks awaiting approval, critical verifications, pending merges, blocked. |
+| **Obsidian Git** | Commit and sync the vault from inside Obsidian — agents commit per session; this covers your manual edits. |
+| **Templater** | Point its template folder at `_templates/` to create cards and notes by hand already in the standard format. |
+| **QuickAdd** | Quick-capture ideas into a project's `notes/ideas/` without navigating the vault. |
+| **Excalidraw** | Visual diagrams in specs, plans and notes — pairs with the optional [excalidraw-diagram skill](https://github.com/coleam00/excalidraw-diagram-skill); `.excalidraw.md` files are exempt from the note line limit. |
+| **Omnisearch** | Better full-text search once the vault grows. |
 
 ## Make it yours
 
