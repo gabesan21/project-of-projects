@@ -13,6 +13,7 @@ import argparse
 import datetime
 import sys
 
+import pop_claim
 import poplib
 
 WIP_LIMIT = 3
@@ -33,7 +34,7 @@ def collect(project):
     """Collects counts and attention lists for a project."""
     counts = {stage: 0 for stage in poplib.STAGES}
     attention = {"approval": [], "critical": [], "merge": [], "blocked": [],
-                 "stale": []}
+                 "stale": [], "claimed": []}
     for stage, task_dir, card in poplib.iter_cards(project):
         counts[stage] += 1
         meta = poplib.read_card(card)
@@ -51,6 +52,12 @@ def collect(project):
             days = _stale_since(meta)
             if days is not None and days > STALE_DAYS:
                 attention["stale"].append(f"{tid} — no update for {days} days")
+        by, at = pop_claim.parse_claim(meta)
+        if by and stage != "006_done":
+            when = at.isoformat(timespec="minutes") if at else "?"
+            mark = "" if not pop_claim.expired(
+                at, pop_claim.DEFAULT_LEASE_HOURS) else " [EXPIRED]"
+            attention["claimed"].append(f"{tid} — {by} since {when}{mark}")
     return counts, attention
 
 
@@ -99,7 +106,7 @@ def main():
         return 0
 
     merged = {"approval": [], "critical": [], "merge": [], "blocked": [],
-              "stale": []}
+              "stale": [], "claimed": []}
     print(f"Vault: {root}")
     for project in projects:
         label = poplib.project_label(root, project)
@@ -114,6 +121,8 @@ def main():
     print_list("Blocked", merged["blocked"])
     print_list(f"Stale (no update for >{STALE_DAYS} days, outside 006)",
                merged["stale"])
+    print_list("In progress (active claim — do not pick these tasks)",
+               merged["claimed"])
     if not any(merged.values()):
         print("\nNothing awaiting the human.")
     return 0

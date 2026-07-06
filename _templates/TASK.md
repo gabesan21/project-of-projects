@@ -8,6 +8,8 @@ critical: false
 blocked: false
 blocked_reason:
 depends_on: []
+claimed_by:
+claimed_at:
 worktree:
 pr:
 awaiting_merge: false

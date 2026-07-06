@@ -34,6 +34,16 @@ WHERE blocked = true
 SORT updated ASC
 ```
 
+## In progress now
+
+Informational (no decision needed): tasks with an active agent claim — see the claim rule in [[WORKFLOW|WORKFLOW]].
+
+```dataview
+TABLE WITHOUT ID file.link AS Task, project AS Project, claimed_by AS Agent, claimed_at AS Since
+WHERE claimed_by
+SORT claimed_at ASC
+```
+
 ## Reviews
 
 Reports from the `weekly-review` skill are linked here, most recent first.

@@ -4,7 +4,8 @@ Scripts in **Python 3 (≥3.9), stdlib only** — agent-agnostic and cross-platf
 
 | Script | Does |
 |--------|-----|
-| `pop_status.py` | Overview: tasks per stage/project, pending gates (003, 005 critical, merge), blocked, WIP > 3 alert. `--project <cat>/<proj>` filters. |
+| `pop_status.py` | Overview: tasks per stage/project, pending gates (003, 005 critical, merge), blocked, stale >14 days, active claims, WIP > 3 alert. `--project <cat>/<proj>` filters. |
+| `pop_claim.py <task>` | Task claim (lease) — one agent per task: writes `claimed_by:`/`claimed_at:` to the card; active claim by another agent → refusal (exit 1); a 2h lease expires an orphan claim. `--release` releases, `--status` queries, `--by` identifies the agent. |
 | `pop_validate.py` | Validates limits: 144/600 chars in the indexes, ≤150 lines per note (plans ≤200), card frontmatter, consistent `stage:`, orphan worktrees (warning). Exit 1 on violation. |
 | `pop_move.py <task> <stage>` | Moves the task folder, validates the transition (returns: 003→002, 004→002, 005→004; `--force` for exceptions), updates `stage:`/`updated:` and the `## Log` (`--reason`). |
 | `pop_task.py <cat>/<proj> <id>` | Scaffolding: card in `001_initial_task` from `_templates/TASK.md` + empty `subtasks/`. `--title "..."` sets the title. |

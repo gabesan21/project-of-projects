@@ -108,5 +108,6 @@ You do not execute the task here — you **wargame** the execution, so that a si
 - **The merge belongs to the human:** the agent never merges a task PR on its own — only when commanded in the merge round.
 - **Transition log:** every stage change adds a line to the card's Log: `YYYY-MM-DD — 002→003 — short reason`.
 - **Frontmatter always up to date:** when moving, update `stage:` and `updated:`; when blocking/unblocking, `blocked:` and `blocked_reason:`.
+- **Task claim — one agent per task:** when taking a task the orchestrator records `claimed_by:`/`claimed_at:` on the card (`scripts/pop_claim.py <id>`) and **releases when stopping** at a gate (`--release`). An active claim by another agent = busy task — do not touch it. Lease of ~2h: a claim older than that is orphaned and may be taken over (the script decides).
 - **Task files are linked by name only** (`[[1.1.1-user-table-creation]]`) — never by path, since the folder moves.
 - **Never skip stages.** Allowed returns: 003→002, 004→002, 005→004.
