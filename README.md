@@ -134,6 +134,7 @@ python3 scripts/pop_worktree.py add 1.1.1-user-table   # create/remove the task'
 - **Developer:** [G. S. Nunes (CariocaWeb3)](https://github.com/gabesan21), using **Fable 5**.
 - The application-context model in `_templates/DOX.md` is inspired by the open **DOX** framework (agent0ai/dox, MIT), adapted to be fully self-contained here.
 - Skills follow the open **Agent Skills** format (`SKILL.md`), readable by any modern coding agent.
+- Visual diagrams are powered by the **[excalidraw-diagram skill](https://github.com/coleam00/excalidraw-diagram-skill)** by [coleam00](https://github.com/coleam00) — an optional external skill that pairs with the Obsidian Excalidraw plugin.
 
 ## License
 
