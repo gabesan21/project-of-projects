@@ -79,6 +79,8 @@ def note_limit(path):
     """Line limit for the file, or None if exempt."""
     if path.name in EXEMPT_NAMES:
         return None
+    if path.name.endswith(".excalidraw.md"):
+        return None  # Excalidraw diagram: embedded JSON, not a note
     if path.name.endswith(".plan.md"):
         return MAX_PLAN_LINES
     return MAX_NOTE_LINES
