@@ -1,18 +1,28 @@
-```
-██████╗          ██████╗
-██╔══██╗ ██████╗ ██╔══██╗
-██████╔╝██╔═══██╗██████╔╝
-██╔═══╝ ██║   ██║██╔═══╝
-██║     ╚██████╔╝██║
-╚═╝      ╚═════╝ ╚═╝
-P r o j e c t   O f   P r o j e c t s
-```
+<p align="center">
+  <img src="assets/pop-logo.svg" alt="PoP — Project Of Projects" width="340">
+</p>
 
-# PoP — Project Of Projects
+<p align="center">
+  <b>A second brain for everything you build with AI agents.</b>
+</p>
 
-**A second brain for everything you build with AI agents.**
+<p align="center">
+  <a href="#getting-started">Getting started</a> ·
+  <a href="#how-it-works">How it works</a> ·
+  <a href="#core-skills">Core skills</a> ·
+  <a href="#make-it-yours">Make it yours</a>
+</p>
 
-PoP is an [Obsidian](https://obsidian.md) vault that catalogs every project in your life — code, writing, work, agents — and gives AI agents the *harness* they need to work on each one: rules, context, specs, skills and a kanban workflow with human approval gates.
+<p align="center">
+  <img alt="Obsidian vault" src="https://img.shields.io/badge/Obsidian-vault-f97316">
+  <img alt="Agent-agnostic" src="https://img.shields.io/badge/agents-agnostic-f97316">
+  <img alt="Human in the loop" src="https://img.shields.io/badge/human-in__the__loop-f97316">
+  <a href="LICENSE"><img alt="License: Apache-2.0" src="https://img.shields.io/badge/license-Apache--2.0-555"></a>
+</p>
+
+---
+
+**PoP** is an [Obsidian](https://obsidian.md) vault that catalogs every project in your life — code, writing, work, agents — and gives AI agents the *harness* they need to work on each one: rules, context, specs, skills and a kanban workflow with human approval gates.
 
 This repository does **not** hold your projects' code. It holds their **planning, tracking and agent harness** — and aggregates your real repositories around it.
 
@@ -20,20 +30,30 @@ This repository does **not** hold your projects' code. It holds their **planning
 
 Working with AI agents across many projects tends to scatter context everywhere. PoP centralizes it:
 
-- **One vault, all projects** — each with a standard anatomy an agent can navigate blind.
-- **Humans decide, agents execute** — every task passes a human approval gate before an agent touches real code, and every change ships as a PR that only you merge.
-- **Plans built like wargames** — recon with parallel subagents, moves with expected observations, forks with triggers, abort conditions, red-teaming. Written so a cheaper executor can run them without asking a single question.
-- **Durable memory** — every finished task leaves a ≤2000-char memory record, so history survives cleanup.
-- **Agent-agnostic** — skills live in `.agents/skills/` as plain `SKILL.md` files (the open Agent Skills format). No tool-specific folders; works with Claude Code, Cursor, Codex, opencode and anything that reads `AGENTS.md`.
+- 🗂️ **One vault, all projects** — each with a standard anatomy an agent can navigate blind.
+- 🚦 **Humans decide, agents execute** — every task passes a human approval gate before an agent touches real code, and every change ships as a PR that only you merge.
+- ♟️ **Plans built like wargames** — recon with parallel subagents, moves with expected observations, forks with triggers, abort conditions, red-teaming. Written so a cheaper executor can run them without asking a single question.
+- 🧠 **Durable memory** — every finished task leaves a ≤2000-char memory record, so history survives cleanup.
+- 🔌 **Agent-agnostic** — skills live in `.agents/skills/` as plain `SKILL.md` files (the open Agent Skills format). No tool-specific folders; works with Claude Code, Cursor, Codex, opencode and anything that reads `AGENTS.md`.
 
 ## How it works
 
-Every project lives in a category folder with the same anatomy — a ficha (`PROJECT.md`), a roadmap (`ROADMAP.md` + `roadmap/`, in epochs → phases → tasks), specs, skills, notes, researches, memory and a kanban:
+Every project lives in a category folder with the same anatomy — a sheet (`PROJECT.md`), a roadmap (`ROADMAP.md` + `roadmap/`, in epochs → phases → tasks), specs, skills, notes, researches, memory and a kanban every task travels through:
 
+```mermaid
+flowchart LR
+    A["001<br/>initial task"] --> B["002<br/>planning"]
+    B --> C["003<br/>human approval"]
+    C --> D["004<br/>processing"]
+    D --> E["005<br/>verifying"]
+    E --> F["006<br/>done"]
+    classDef agent fill:#1f2937,stroke:#4b5563,color:#e5e7eb
+    classDef human fill:#f97316,stroke:#c2570c,color:#1c1917,font-weight:bold
+    class A,B,D,E agent
+    class C,F human
 ```
-001_initial_task → 002_planning → 003_human_approval → 004_processing → 005_verifying → 006_done
-      agent           agent            HUMAN               agent            agent         agent + HUMAN (merge)
-```
+
+<p align="center"><sub>🟧 orange = a human decides &nbsp;·&nbsp; ⬛ dark = an agent executes</sub></p>
 
 - **002 is a wargame:** the agent recons with parallel subagents, then writes a plan a blind executor can follow — route, forks with triggers, abort conditions, acceptance criteria with verification runs, change specs, red-team pass.
 - **003 is yours:** nothing touches a repository until you check `- [x] Done`.
@@ -95,6 +115,7 @@ project-of-projects/
 
 ## Credits
 
+- **Developer:** [G. S. Nunes (CariocaWeb3)](https://github.com/gabesan21), using **Fable 5**.
 - The application-context model in `_templates/DOX.md` is inspired by the open **DOX** framework (agent0ai/dox, MIT), adapted to be fully self-contained here.
 - Skills follow the open **Agent Skills** format (`SKILL.md`), readable by any modern coding agent.
 

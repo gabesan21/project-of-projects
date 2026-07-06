@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 340 184" width="340" height="184" role="img" aria-label="PoP — Project Of Projects">
+  <style>
+    .art {
+      font-family: ui-monospace, "Cascadia Code", "SF Mono", Menlo, Consolas, "DejaVu Sans Mono", monospace;
+      font-size: 20px;
+      fill: #f97316;
+      white-space: pre;
+    }
+    .sub {
+      font-family: ui-monospace, "Cascadia Code", "SF Mono", Menlo, Consolas, "DejaVu Sans Mono", monospace;
+      font-size: 13px;
+      letter-spacing: 5px;
+      fill: #8b949e;
+    }
+  </style>
+  <text xml:space="preserve" class="art" x="14" y="24">██████╗          ██████╗</text>
+  <text xml:space="preserve" class="art" x="14" y="46">██╔══██╗ ██████╗ ██╔══██╗</text>
+  <text xml:space="preserve" class="art" x="14" y="68">██████╔╝██╔═══██╗██████╔╝</text>
+  <text xml:space="preserve" class="art" x="14" y="90">██╔═══╝ ██║   ██║██╔═══╝</text>
+  <text xml:space="preserve" class="art" x="14" y="112">██║     ╚██████╔╝██║</text>
+  <text xml:space="preserve" class="art" x="14" y="134">╚═╝      ╚═════╝ ╚═╝</text>
+  <text class="sub" x="170" y="168" text-anchor="middle">PROJECT OF PROJECTS</text>
+</svg>
