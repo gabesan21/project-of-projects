@@ -131,7 +131,7 @@ When creating a new skill: create the folder at `.agents/skills/<name>/SKILL.md`
 
 ## Harness decisions
 
-The vault's architecture decisions live in `notes/decisions/`, one note per decision day — consult them before proposing harness changes: [[notes/decisions/2026-07-04-harness-decisions|2026-07-04]] · [[notes/decisions/2026-07-05-harness-decisions|2026-07-05]] · [[notes/decisions/2026-07-06-harness-decisions|2026-07-06]].
+The vault's architecture decisions live in `notes/decisions/`, one note per decision day (`YYYY-MM-DD-harness-decisions.md`) — consult them before proposing harness changes, and link each new note here as it is created.
 
 ## Open decisions (to discuss)
 
