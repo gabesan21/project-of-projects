@@ -7,6 +7,8 @@ description: Imports an existing repository or project into the vault - codebase
 
 Brings a project **that already exists** (repository or local folder) into the PoP. Unlike `new-project`, here reality comes first: the agent does **recon of the codebase before asking**, and the roadmap is born **from where the project stands** — **Epoch 1 is always "Organization"**: building specs, skills, research and notes faithful to what exists. Until it completes, **no change to the project is accepted**.
 
+**Delegate to subagents:** the entire recon of Step 1 (parallel subagents, one per front, each answer ≤30 lines); the interview and materialization stay with the main agent.
+
 ## How to conduct
 
 - Recon first, read-only; then interview in blocks of 2–4 questions, reflecting back what you understood.
@@ -45,5 +47,4 @@ Ask what the code doesn't show: **(a)** what the project does today, in the user
 
 - **Recon is read-only:** the import doesn't change the imported repo in any way — the first real change will only exist via the kanban, and only after Epoch 1.
 - **Faithful spec = recon + user confirmation.** Don't write a spec from the code alone: what the user hasn't confirmed is born in the "Open" section.
-- The organization gate applies to **any agent, always** — it is not a suggestion. Epoch 1 completes via the derived status (all tasks in `006_done`/memory).
-- Don't create tasks here (`new-task` skill) nor specs outside the flow (`write-spec` skill).
+- The organization gate applies to **any agent, always** — it is not a suggestion. Epoch 1 completes via the derived status (all tasks in `006_done`/memory). Don't create tasks here (`new-task` skill) nor specs outside the flow (`write-spec` skill).

@@ -1,5 +1,7 @@
 # Approval — [[<id>-<slug>]]
 
+> Blockquotes in this template are fill-in instructions — **delete them when filling it in**.
+
 - **Stage:** 003_human_approval · **Owner:** user
 
 > One round per trip to `003_human_approval`. The agent only acts when `- [x] Done` — see [[WORKFLOW|WORKFLOW]]. Old rounds are never deleted.

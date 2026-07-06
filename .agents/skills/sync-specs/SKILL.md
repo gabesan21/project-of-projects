@@ -5,7 +5,9 @@ description: Mandatory spec-update flow as tasks advance through the kanban - sp
 
 # sync-specs
 
-**Principle: a spec describes the project's current agreed state. A lying spec is a bug.** This flow is mandatory and tracks the WORKFLOW.md stages.
+**Principle: a spec describes the project's current agreed state. A lying spec is a bug.** This flow is mandatory and tracks the [[WORKFLOW|WORKFLOW]] stages.
+
+**Delegate to subagents:** the audit (listing 006_done + reading the linked specs); the kanban touchpoints run inside the stage's subagent (`advance-task`).
 
 ## Kanban touchpoints
 
@@ -18,9 +20,7 @@ description: Mandatory spec-update flow as tasks advance through the kanban - sp
 
 ## Audit (on demand or in the weekly-review)
 
-1. List the tasks in `006_done` and the specs their plans link.
-2. Linked specs still `draft`/`approved` without reflecting what the task delivered → flag as pending.
-3. `obsolete` specs without a link to a replacement, or specs no task/phase references → candidates for archiving or rewriting.
+Delegate it to a **subagent** (answer ≤30 lines): list the tasks in `006_done` and read the specs their plans link, flagging **(a)** specs still `draft`/`approved` that don't reflect what the task delivered → pending; **(b)** `obsolete` specs without a link to a replacement, or with no task/phase reference → candidates for archiving/rewriting. The main agent only decides what to do with the list.
 
 ## Cautions
 

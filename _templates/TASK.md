@@ -17,6 +17,8 @@ updated: YYYY-MM-DD
 
 # <id>-<slug> — <short title>
 
+> Blockquotes in this template are fill-in instructions — **delete them when filling it in**.
+
 - **Phase:** [[<category>/<project>/roadmap/<n>-<epoch-slug>|Phase <n>.<m>]]
 - **Plan:** [[<id>-<slug>.plan]] · **Approval:** [[<id>-<slug>.approval]] · **Verification:** [[<id>-<slug>.verify]]
 
@@ -30,10 +32,11 @@ One sentence: why now, and what it unblocks.
 
 ## Skills per stage
 
-> Filled in during 002_planning. Owners per stage: see [[WORKFLOW|WORKFLOW]].
+> The 002 row is filled in at task creation (001); the 004/005 rows are filled in during 002_planning. Owners per stage: see [[WORKFLOW|WORKFLOW]].
 
 | Stage | Project skills | Owner |
 |-------|----------------|-------|
+| 002_planning | [[<category>/<project>/skills/<skill>\|<skill>]] | agent |
 | 004_processing | [[<category>/<project>/skills/<skill>\|<skill>]] | agent |
 | 005_verifying | [[<category>/<project>/skills/<skill>\|<skill>]] | agent |
 
@@ -45,8 +48,10 @@ One sentence: why now, and what it unblocks.
 
 ## Links
 
-- **Specs:** [[<category>/<project>/specs/<spec>|<spec>]]
-- **Related tasks:** [[<id-of-another-task>]]
+> Every link carries a 1-line trigger — *when* it is worth following. A link without a trigger is rightly ignored.
+
+- **Specs:** [[<category>/<project>/specs/<spec>|<spec>]] — *follow if <condition>*.
+- **Related tasks:** [[<id-of-another-task>]] — *follow if <condition>*.
 
 ## Log
 

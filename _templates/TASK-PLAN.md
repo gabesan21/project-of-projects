@@ -1,5 +1,7 @@
 # Plan (wargame) — [[<id>-<slug>]]
 
+> Blockquotes in this template are fill-in instructions — **delete them when filling it in**.
+
 - **Stage:** 002_planning · **Owner:** agent
 
 > You are not executing the task — you are **wargaming** the execution. Whoever runs the plan in 004 may be a simpler executor: write so they can execute **without asking a single question**. Limit: **200 lines** (documented exception to the ~150 rule); detailed moves live in the groups under `subtasks/`. Went over 200 → the task is too big: propose splitting it into more tasks chained by `depends_on`.
@@ -45,6 +47,12 @@ How the task will be executed, in a few paragraphs. Discarded alternatives in on
 > Drafted **here** (draft via `write-spec`), approved together with the 003 gate, synced with the project specs in 006 (`sync-specs`).
 
 - [[<category>/<project>/specs/<spec>|<spec>]] — what changes in it, in one line.
+
+## Minimal executor context
+
+> A **closed** list, assembled in the wargame: everything the 004 executor reads. Outside it, only with a fork trigger.
+
+- <file/spec/contract> — what it answers, in one line.
 
 ## Groups
 

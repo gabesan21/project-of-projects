@@ -8,16 +8,17 @@ A tree of `AGENTS.md` files inside the code: the one at the code root is the **D
 
 ## Rules
 
-1. **Before editing:** read the code's root AGENTS.md, identify **all** affected paths and **walk the tree** down to each edit location, reading every applicable AGENTS.md along the way.
+1. **Before editing:** read the code's root AGENTS.md, identify **all** affected paths and **walk the tree** down to each edit location, reading every applicable AGENTS.md along the way. The walk can be delegated to a subagent that returns **only the rules applicable** to the task's paths — the executor receives the extract, not the tree.
 2. **Local understanding:** any point in the code must be understandable by reading only the nearest AGENTS.md + all its parents above it. If it isn't, a contract is missing — create/complete the local one before editing.
 3. **Conflicts:** the nearest document rules over local details; a child **never weakens** a parent's directive.
-4. **Operational concision:** broad rules at the high levels, concrete detail in the children. Only what changes editing decisions — no prose.
+4. **Operational concision:** broad rules at the high levels, concrete detail in the children. Only what changes editing decisions — no prose. Cap: **~60 lines** per subtree contract; overflowed, the detail moves down into a child. Exception: a large-tree directory (many subfolders) may exceed it to hold the subtree's index — the exception covers the index, not prose.
 5. **Mandatory review:** every relevant change requires reviewing the affected AGENTS.md files — update them when purpose, scope, responsibility, structure, flows, inputs, outputs or quality standards change.
 6. **Closeout:** when finishing the work, re-check the changed paths, update the owning document and the affected parents, refresh the indexes, remove obsolete content and run the pertinent checks.
+7. **Related contracts:** optional section in each contract with relative markdown links (`../services/payments/AGENTS.md`) to contracts of other subtrees that local decisions depend on — each link with a 1-line **trigger** (*when to follow it*). Max. ~5 links, only a dependency that changes an editing decision (not every import); a link without a trigger doesn't count. The walk becomes: vertical down to the edit location + the laterals whose trigger matches the task. The closeout (rule 6) also updates the laterals of the touched contracts.
 
 ## Initialization
 
-Code without a DOX tree → recursive sweep and tree construction: root AGENTS.md with the general index and child contracts **wherever a local rule is worth it** — do not create empty AGENTS.md files "just in case". In an imported project (`import-project`), initialization is a task of Epoch 1 (Organization).
+Code without a DOX tree → recursive sweep and tree construction: root AGENTS.md with the general index and child contracts **only where the directory has ≥2 non-obvious conventions or has already caused a blind-edit error** — do not create empty AGENTS.md files "just in case". In an imported project (`import-project`), initialization is a task of Epoch 1 (Organization).
 
 ## In the PoP flow
 

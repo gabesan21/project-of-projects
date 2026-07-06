@@ -1,5 +1,7 @@
 # Suggested researches — <Project name>
 
+> Blockquotes in this template are fill-in instructions — **delete them when filling it in**.
+
 Profile: [[<category>/<project>/PROJECT|<Project name>]] · Roadmap: [[<category>/<project>/ROADMAP|Roadmap]]
 
 > **Optional** file, next to ROADMAP.md. **Deep research** prompts proposed by the agent for the **user** to run in whatever tool they prefer (deep research) and deposit the result in `researches/<topic>/`. A delivered research enriches the roadmap (epoch recon), the specs and the project itself.

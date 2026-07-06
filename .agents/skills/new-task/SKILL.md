@@ -5,7 +5,9 @@ description: Quick interview that creates a task from a roadmap phase as a folde
 
 # new-task
 
-Materializes a roadmap task as a folder in the kanban, at stage `001_initial_task` — **confirming the essentials with the user before creating**. Full flow: WORKFLOW.md at the root.
+Materializes a roadmap task as a folder in the kanban, at stage `001_initial_task` — **confirming the essentials with the user before creating**. Full flow: [[WORKFLOW|WORKFLOW]].
+
+**Delegate to subagents:** almost nothing — it is a short interview with the user; delegation begins at planning (`advance-task`).
 
 ## Interview (skip what the user already answered)
 
@@ -25,7 +27,7 @@ Materializes a roadmap task as a folder in the kanban, at stage `001_initial_tas
    - "What", "Why", "Dependencies" section and spec links filled in with the interview answers; first Log line.
 3. In the epoch table, turn the task id into the wikilink `[[<id>-<slug>]]` and update the status to `001_initial_task`.
 4. If it is the project's first active task, check whether the project status in the INDEX files (category + root) should change to "in progress".
-5. Close by suggesting the next call: advance to planning with the `advance-task` skill. Creating the task **is** this run's stage — planning (002) only runs in a new call (one run = one stage).
+5. Close by offering to **chain straight into planning** via the `advance-task` skill: since one run goes **until the next human gate**, creating the task can proceed to 002 and stop at the `.approval.md` in 003 in the same call — if the user prefers, stop here and leave the advance for another call.
 
 ## Cautions
 

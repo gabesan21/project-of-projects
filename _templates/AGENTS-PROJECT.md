@@ -1,5 +1,7 @@
 # <Project name> — instructions for agents
 
+> Blockquotes in this template are fill-in instructions — **delete them when filling it in** (except the one below, which stays in the project).
+
 > Project managed by the **ProjectOfProjects (PoP)** workflow. `CLAUDE.md` is a symlink to this file — always edit this one.
 
 - **Type:** default | included | multi-repo — see [[TYPES|TYPES]].
@@ -26,7 +28,15 @@ Every change to the project goes through the kanban (`kanban/001_initial_task �
 5. **005** — verification of the criteria in the worktree (+ human approval if `critical: true`).
 6. **006** — PR to the PR branch above → **the human merges** → the agent writes `memory/<id>.md`, removes the worktree and finishes.
 
-**One run = one stage:** each agent call executes a single stage, makes one transition and **stops** — continuing requires a new call from the human. Full detail: [[WORKFLOW|WORKFLOW]] (at the PoP root; copied into this repository when the type is `included`).
+**One run = up to the next human gate:** the agent acts as an orchestrator — a dedicated subagent per stage — and chains stages until a gate: approval in 003, verification if `critical`, a `(user)` item, a block, or the merge round in 006. Full detail: [[WORKFLOW|WORKFLOW]] (at the PoP root; copied into this repository when the type is `included`).
+
+## Context protocol
+
+1. Start from the card and the plan: read **only** what they list.
+2. Missing context → a subagent with a specific question, never "read the folder to get familiar".
+3. Stop searching once you can answer *what changes and where* — anything beyond that is overthinking.
+4. A doubt the search did not resolve = **RECON NEEDED** in the plan or `blocked:` on the card — never an assumption.
+5. Specs and memory exist so the past is never reread: consult them before any git/code archaeology.
 
 ## Skills
 

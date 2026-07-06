@@ -1,5 +1,7 @@
 # Epoch <n> — <epoch name>
 
+> Blockquotes in this template are fill-in instructions — **delete them when filling it in**.
+
 - **Project:** [[<category>/<project>/PROJECT|<Project name>]] · **Roadmap:** [[<category>/<project>/ROADMAP|Roadmap]]
 - **Status:** pending | in progress | completed
 - **Description:** one line — what this chapter delivers.

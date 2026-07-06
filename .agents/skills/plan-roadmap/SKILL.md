@@ -7,6 +7,8 @@ description: Guided interview to build or evolve a project's roadmap (epochs, ph
 
 Builds the roadmap **together with the user**, by interview — never invent the path on your own. Works for any kind of project (programming, writing, business, research...).
 
+**Delegate to subagents:** step 4's epoch recon (parallel, one per front); the interview and materialization stay with the main agent.
+
 ## How to conduct
 
 - Ask in short blocks (2–3 questions at a time), reflect back what you understood before moving on.

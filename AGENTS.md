@@ -19,6 +19,8 @@ ProjectOfProjects/
 ├── WORKFLOW.md          ← kanban state machine (task flow)
 ├── TYPES.md             ← project types: default | included | multi-repo
 ├── _templates/          ← templates for every standard file
+├── notes/               ← vault notes: decisions/ holds the harness decisions
+├── scripts/             ← Python CLI (pop_status, pop_move, pop_validate, pop_task, pop_worktree) — saves scanning tokens
 ├── agents/              ← AI agents, automations, skills
 │   ├── INDEX.md         ← category index: 600 chars + status
 │   └── <project>/       ← standard anatomy (below)
@@ -78,6 +80,7 @@ The PoP is a **repository aggregator**: every project declares a **type** in its
 - IDs follow the hierarchy: epoch `1` → phase `1.1` → task `1.1.1-user-table-creation`. Slug in kebab-case, unique across the vault (if it collides with another project, adjust the slug).
 - **Task files move** between kanban stages, so all of them carry the task's unique name in the file name (`1.1.1-user-table-creation.md`, `1.1.1-user-table-creation.plan.md`…) and are linked **by name only**: `[[1.1.1-user-table-creation]]` resolves in any stage.
 - **Files that don't move** (sheets, roadmaps, specs, skills, indexes) are linked with full path + alias: `[[agents/my-project/PROJECT|My Project]]`.
+- **Links with a trigger:** in agent-facing navigation sections (the card's Links, related specs, memory, learnings, DOX contracts), every link carries 1 line saying **when** to follow it — a link without a trigger there is a link the agent rightly ignores.
 
 ## Indexes and INBOX
 
@@ -111,39 +114,23 @@ When creating a new skill: create the folder at `.agents/skills/<name>/SKILL.md`
 3. **Cross-reference whenever needed:** when mentioning another project, spec, skill, task or note, link it. Related projects cite each other.
 4. **One project, one folder, inside a category:** never mix material from different projects. Every project folder follows the standard anatomy.
 5. **Modularization — no file too large:** a note must not exceed **~150 lines** (exceptions: a task's `.plan.md`, up to **200** — see [[WORKFLOW|WORKFLOW]] — and the AGENTS.md of an **application** project, which embeds the DOX process). When approaching the limit, extract sections into their own files and leave a wikilink with a one-line summary. A file answers **one** question; if it answers two, it is two files. Roadmap descriptions are always one line — detail goes to a spec or a task.
-6. **The task flow is the [[WORKFLOW|WORKFLOW]]:** every task travels through the kanban stages as described there. Never skip the human gate at `003_human_approval`. **One run = one stage:** each agent invocation executes a single stage and stops — the next stage requires a new invocation.
-7. **Explicit owner:** every kanban stage has an owner (`agent` or `user` — table in [[WORKFLOW|WORKFLOW]]), every subtask marks its owner with `(agent)` or `(user)`, and the card lists the project skills to use at each stage. Agents never execute a `(user)` item nor check `- [ ] Done`.
+6. **One run = up to the next human gate:** the agent advances the task and only stops where a human decision is awaited — gates and orchestration in [[WORKFLOW|WORKFLOW]].
+7. **Explicit owner:** every stage, subtask and skill has a declared owner (`agent` or `user`) and the agent never executes a `(user)` item — table and rules in [[WORKFLOW|WORKFLOW]].
 8. **Indexes always in sync:** when creating, completing or changing a project's status, update the category `INDEX.md` **and** the root one. Respect the limits: 144 chars (root), 600 chars (category).
 9. **Absolute dates:** always YYYY-MM-DD, never "next week" or "last month".
 10. **Decisions are recorded:** important decisions made in conversation go into the project folder (with date and rationale) before ending the session.
 11. **Lessons are extracted:** when completing a task, whatever was learned and is reusable becomes a skill (`skills/`) or a note (`notes/`), linked in the task's card.
 12. **Planning and execution don't mix:** each project's real work lives exclusively in `project/` — or in the external repository indicated in the sheet's harness, with `project/` holding only the pointer. The other folders are for planning and knowledge.
-13. **Every change to the project goes through the kanban:** agents **never** change `project/` (or the external repository) outside a task in `004_processing` whose plan was approved by the human in 003. There is no "quick fix" without a task — if the need arises, create the task and follow the flow. The agent never works on the project without the user's supervision.
+13. **Every change to the project goes through the kanban:** agents **never** touch `project/` (or the external repository) outside a task in `004_processing` with a plan approved in 003 — no "quick fix"; detail in [[WORKFLOW|WORKFLOW]].
 14. **Self-validation before finishing:** the agent checks its own changes from the session — index limits (144/600 chars), ~150 lines per note, complete frontmatter on cards, links following the convention — and fixes anything out of bounds before the commit.
 15. **Commit per session:** this vault is a git repository. When ending a work session, commit the changes with a short message in the vault's language saying what changed.
-16. **One worktree per task, merge by the human:** in `004_processing` the work happens in the task's worktree (`worktrees/<id>`, branch `task/<id>`); in 006 it becomes a **PR** to the branch declared in the project's AGENTS.md and **only the human merges** (or commands the merge). A task only enters 004 with all its `depends_on` completed — see [[WORKFLOW|WORKFLOW]].
-17. **Durable memory:** every completed task generates `memory/<id>.md` (≤2000 chars, final commit, start/end dates) before finishing — `006_done` may be cleaned; the memory stays and counts as proof of completion.
+16. **One worktree per task, merge by the human:** 004 work happens in the task's worktree, PR in 006 and merge **by the human only**; 004 requires completed `depends_on` — detail in [[WORKFLOW|WORKFLOW]].
+17. **Durable memory:** every completed task generates `memory/<id>.md` (≤2000 chars) before finishing — `006_done` may be cleaned, the memory counts as proof; detail in [[WORKFLOW|WORKFLOW]].
+18. **Delegation by default:** broad context reading (recon, audits, sweeps, DOX tree walks, skill diffs) never happens in the main agent's window — it goes to a subagent that receives (a) a specific question, (b) the relevant skill/section, (c) a response format with a cap (e.g. ≤30 lines). The main agent orchestrates and decides.
 
-## Harness decisions (2026-07-04)
+## Harness decisions
 
-- **INBOX via Dataview:** queries over the cards' frontmatter — no manual synchronization (requires the Dataview plugin in Obsidian; agents locate gates by grepping `stage:`).
-- **WIP limit:** max. **3** tasks in `004_processing` per project (soft rule — see [[WORKFLOW|WORKFLOW]]).
-- **Blocked tasks:** `blocked: true` + `blocked_reason:` in the card's frontmatter; they appear in the INBOX.
-- **Derived status:** a phase is completed when all its tasks are in `006_done`; an epoch when all its phases complete — updated at stage 006.
-- **Periodic review:** the `weekly-review` skill, run manually or by a scheduled routine of the user's tool.
-- **Git:** repository initiated on 2026-07-04; see rule 15.
-- **Validation:** the agent's own responsibility (rule 14), no tool-specific hooks — keeps the vault agnostic.
-- **Supervised execution:** no change to the real project outside the kanban (rule 13) — the human gate at 003 is the only path for the agent to touch `project/`.
-
-## Harness decisions (2026-07-05)
-
-- **PoP as aggregator:** projects may be their own repositories — types in [[TYPES|TYPES]]; clones always gitignored; master list in the root [[INDEX|INDEX]].
-- **Human merge and clean 006:** the task worktree becomes a PR in 006 and the merge is always the human's — direct or commanded in the merge round (rule 16); `memory/` is the durable record (rule 17), `006_done` may be cleaned and the `depends_on` gate accepts the memory as proof.
-- **Strictly agent-agnostic:** skills always as **real copies** in `.agents/skills/` (vault and projects, any type) — no symlinks and no tool-specific folders (`.claude/` etc.); drift between copies is audited by the `weekly-review`.
-- **Planning is a wargame:** stage 002 plans for an executor running blind — recon with parallel subagents, Moves with expected observation and counter-move, Forks with trigger, abort conditions, universal red-team (skippable only for a trivial task) and Change specs assembled in the plan (synced in 006, alongside the memory). `.plan.md` up to 200 lines; overflowed → split the task into more boards.
-- **Import with Organization gate:** an imported project (`import-project`) receives no change at all until Epoch 1 (Organization) completes — faithful specs, skills, research and notes come first; the gate is declared in the project's AGENTS.md.
-- **Single stage per invocation:** the agent never traverses two kanban stages in one run — the stage's work, one transition, stop and report (rule 6; detail in [[WORKFLOW|WORKFLOW]]).
-- **DOX for applications:** agent context in the code organized by the DOX process, **self-contained** in [[_templates/DOX|_templates/DOX]] (inspired by agent0ai/dox, MIT, no dependency on the repository) — pasted into the project's AGENTS.md, with contracts updated at the close of each task.
+The vault's architecture decisions live in `notes/decisions/`, one note per decision day — consult them before proposing harness changes: [[notes/decisions/2026-07-04-harness-decisions|2026-07-04]] · [[notes/decisions/2026-07-05-harness-decisions|2026-07-05]] · [[notes/decisions/2026-07-06-harness-decisions|2026-07-06]].
 
 ## Open decisions (to discuss)
 

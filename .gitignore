@@ -7,3 +7,6 @@
 
 # Obsidian local state (remove this if you prefer to version your workspace)
 .obsidian/
+
+# Python bytecode from scripts/
+__pycache__/

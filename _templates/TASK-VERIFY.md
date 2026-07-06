@@ -1,5 +1,7 @@
 # Verification — [[<id>-<slug>]]
 
+> Blockquotes in this template are fill-in instructions — **delete them when filling it in**.
+
 - **Stage:** 005_verifying · **Owner:** agent (+ user if `critical: true`)
 
 > Copy the "Acceptance criteria and verification" table from the [[<id>-<slug>.plan|plan]] and execute **each run in the task's worktree**, comparing what was observed with the "Pass looks like" defined there. A criterion failed → the task goes back to `004_processing` — see [[WORKFLOW|WORKFLOW]].

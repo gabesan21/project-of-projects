@@ -7,6 +7,8 @@ description: Standardizes spec creation for any kind of project (software, writi
 
 Creates a spec in `specs/` from `_templates/SPEC.md`, interviewing the user with the right questions for the project type. A spec answers **one** question; if it starts answering two, it is two specs.
 
+**Delegate to subagents:** almost nothing — it is an interview; broad reading of existing material to ground the spec goes to a subagent with a specific question and an answer ≤30 lines.
+
 ## Procedure
 
 1. **Scope the topic:** confirm with the user in one sentence what the spec covers — and what stays out ("Out of scope" section).

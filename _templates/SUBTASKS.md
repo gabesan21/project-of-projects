@@ -1,5 +1,7 @@
 # Group <g01> — <group name> — [[<id>-<slug>]]
 
+> Blockquotes in this template are fill-in instructions — **delete them when filling it in**.
+
 - **Order:** this group's position in the execution (see [[<id>-<slug>.plan|plan]]).
 - **Depends on:** prerequisite groups (e.g. `g01`) — empty = can run in parallel with the other groups.
 - **Description:** one line — what this group delivers together.
