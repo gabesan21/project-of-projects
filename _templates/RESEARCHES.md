@@ -8,7 +8,7 @@ Profile: [[<category>/<project>/PROJECT|<Project name>]] · Roadmap: [[<category
 
 ## <topic-in-kebab-case>
 
-- **Status:** pending | delivered → [[<category>/<project>/researches/<topic>/<note>|result]]
+- **Status:** pending | delivered → [[<category>/<project>/researches/<topic>/<topic>|synthesis]]
 - **Feeds:** epoch <n> | spec [[<category>/<project>/specs/<spec>|<spec>]] | RECON NEEDED <which>
 - **Suggested prompt:**
 
@@ -17,5 +17,5 @@ Profile: [[<category>/<project>/PROJECT|<Project name>]] · Roadmap: [[<category
 ## How to use
 
 1. The agent proposes researches here (`new-project`, `plan-roadmap`, `import-project`) — one section per topic.
-2. The user runs the prompt wherever they want and saves the result in `researches/<topic>/`.
-3. Result delivered → status `delivered` with a link, and the agent reflects the finding in the corresponding roadmap/spec (on the next call).
+2. The user runs the prompt wherever they want and delivers the raw result in `researches/<topic>/raw/` (tip: the Obsidian Web Clipper converts web articles to markdown).
+3. Result delivered → the agent runs the `ingest-research` skill: synthesis in `researches/<topic>/<topic>.md`, status `delivered` with a link to the synthesis and a proposal of roadmap/spec updates (contradiction with a spec/note is flagged, never silent).

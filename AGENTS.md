@@ -20,6 +20,7 @@ ProjectOfProjects/
 ├── TYPES.md             ← project types: default | included | multi-repo
 ├── _templates/          ← templates for every standard file
 ├── notes/               ← vault notes: decisions/ holds the harness decisions
+├── researches/          ← the PoP's own deep researches (raw source in raw/, synthesis alongside)
 ├── scripts/             ← Python CLI (pop_status, pop_move, pop_validate, pop_task, pop_worktree) — saves scanning tokens
 ├── agents/              ← AI agents, automations, skills
 │   ├── INDEX.md         ← category index: 600 chars + status
@@ -63,7 +64,7 @@ New categories may be created when no existing one fits — always with their ow
   - **Epoch** (`1`): a big chapter of the project (e.g. "authentication", "payments"). One line in ROADMAP.md, detail in `roadmap/<n>-<slug>.md`.
   - **Phase** (`1.1`): a stage within the epoch (e.g. "user tables", "middleware"). Listed in the epoch's file.
   - **Task** (`1.1.1-<slug>`): the executable unit. It becomes a **folder in the kanban** and travels through the stages described in [[WORKFLOW|WORKFLOW]].
-- **project/** — the real work (code, manuscript etc.), fully free structure; if it lives in an external repository, it contains only a pointer (a note with a link). **researches/** — research that grounds the roadmap: free structure inside one folder per topic; deep-research prompts proposed by the agent for the **user** to run go in `RESEARCHES.md` (optional, next to the ROADMAP — [[_templates/RESEARCHES|template]]).
+- **project/** — the real work (code, manuscript etc.), fully free structure; if it lives in an external repository, it contains only a pointer (a note with a link). **researches/** — research that grounds the roadmap: one folder per topic, with the immutable raw source in `raw/` and the agent's synthesis alongside (skill `ingest-research`); deep-research prompts proposed by the agent for the **user** to run go in `RESEARCHES.md` (optional, next to the ROADMAP — [[_templates/RESEARCHES|template]]).
 - **AGENTS.md + .agents/skills/** — make the project **standalone**: type, repositories, PR branch and the essentials of the workflow, with **real copies** of the core skills — even someone who doesn't use the PoP can work on the project. **Application** projects embed the **DOX** process there ([[_templates/DOX|template]]): a tree of AGENTS.md files in the code as hierarchical contracts per subtree.
 - **memory/** — durable summary of each completed task (final commit + dates); allows cleaning `006_done` periodically. **worktrees/** — one git worktree per task in execution, always gitignored.
 - **skills/** — reusable "how to do X". **specs/** — the detail of each theme.
@@ -103,6 +104,7 @@ The central procedures are **skills** in the open Agent Skills format (`SKILL.md
 | `advance-task` | Move a task through the 001→006 flow, respecting the human gates. |
 | `write-spec` | Create/rewrite a standardized spec, with questions per project type. |
 | `sync-specs` | Mandatory flow: keep specs faithful to reality as tasks advance. |
+| `ingest-research` | Ingests a delivered research result: immutable raw source in `raw/`, synthesis with triggered links and a contradiction check against specs/notes. |
 | `weekly-review` | Vault overview: what awaits the human, what is stalled, proposals. |
 | `excalidraw-diagram` *(optional, external)* | `.excalidraw` diagrams that argue visually — for specs, plans and notes (pairs with the Obsidian Excalidraw plugin). By [coleam00](https://github.com/coleam00/excalidraw-diagram-skill) — clone it into `.agents/skills/excalidraw-diagram/`. |
 
@@ -120,7 +122,7 @@ When creating a new skill: create the folder at `.agents/skills/<name>/SKILL.md`
 8. **Indexes always in sync:** when creating, completing or changing a project's status, update the category `INDEX.md` **and** the root one. Respect the limits: 144 chars (root), 600 chars (category).
 9. **Absolute dates:** always YYYY-MM-DD, never "next week" or "last month".
 10. **Decisions are recorded:** important decisions made in conversation go into the project folder (with date and rationale) before ending the session.
-11. **Lessons are extracted:** when completing a task, whatever was learned and is reusable becomes a skill (`skills/`) or a note (`notes/`), linked in the task's card.
+11. **Lessons are extracted and integrated:** when completing a task, whatever was learned and is reusable becomes a skill (`skills/`) or a note (`notes/`) — updating an existing note on the same theme instead of duplicating, and flagging contradiction with a previous note/decision — linked in the task's card.
 12. **Planning and execution don't mix:** each project's real work lives exclusively in `project/` — or in the external repository indicated in the sheet's harness, with `project/` holding only the pointer. The other folders are for planning and knowledge.
 13. **Every change to the project goes through the kanban:** agents **never** touch `project/` (or the external repository) outside a task in `004_processing` with a plan approved in 003 — no "quick fix"; detail in [[WORKFLOW|WORKFLOW]].
 14. **Self-validation before finishing:** the agent checks its own changes from the session — index limits (144/600 chars), ~150 lines per note, complete frontmatter on cards, links following the convention — and fixes anything out of bounds before the commit.

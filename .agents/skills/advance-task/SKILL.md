@@ -37,3 +37,4 @@ Each subagent receives **only** its stage's skill (the card's "Skills per stage"
 - **Never skip stages or gates.** Allowed returns: 003→002, 004→002, 005→004 — the orchestrator decides the return; the subagent only reports.
 - A subagent reported an abort, a `(user)` item or a discovery that changes the plan → stop/return per the WORKFLOW; **do not improvise in the main window**.
 - When unblocking a task, clear `blocked:` and `blocked_reason:`.
+- A learning in 006 **updates an existing note on the same theme** when there is one (don't duplicate); a contradiction with a previous note/decision becomes a visible `> Contradicts: [[target]] — <why>` line.

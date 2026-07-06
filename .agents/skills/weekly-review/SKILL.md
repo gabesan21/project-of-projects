@@ -11,12 +11,13 @@ Generates a vault overview and proposes actions. Changes nothing beyond the repo
 
 ## Procedure
 
-1. **Scripts first:** run `scripts/pop_status.py` (kanban overview: tasks per stage/project, blocked ones, pending gates — 003, critical in 005, `awaiting_merge`, stalled for >14 days) and `scripts/pop_validate.py` (limit violations: 144/600 chars, ~150 lines, frontmatter, `stage` vs folder, orphaned worktrees). INBOX.md is Dataview, not a source.
+1. **Scripts first:** run `scripts/pop_status.py` (kanban overview: tasks per stage/project, blocked ones, pending gates — 003, critical in 005, `awaiting_merge`, stalled for >14 days) and `scripts/pop_validate.py` (limit violations: 144/600 chars, ~150 lines, frontmatter, `stage` vs folder; warnings: orphan worktrees, broken wikilinks). INBOX.md is Dataview, not a source.
 2. **What the scripts don't cover → parallel subagents**, one per front, each with a specific question and an answer ≤30 lines:
    - **Drift in copied skills:** `diff` between each project's `.agents/skills/` and the root core skills — divergence becomes a sync proposal.
    - **Indexes vs. reality:** status in the category INDEXes vs. actual activity in the kanban; **Aggregated repositories** (root INDEX) vs. actual clones/`.gitignore`.
    - **Orphaned worktrees:** `worktrees/` with content whose task is not in `004`/`005`/`006` awaiting merge.
    - **Outdated specs:** the `sync-specs` skill's audit (tasks in done whose specs weren't updated).
+   - **Note health:** orphan notes (no inbound wikilinks in the vault) and contradictions between notes/decisions and specs — reply ≤15 lines: candidates to link, merge or mark with `> Contradicts:`.
    - **Stalled epochs:** "Abandon/pause if" conditions met in the epoch files; imported projects with Epoch 1 (Organization) open — since when and what is missing to release the gate.
 3. **Consolidate:** the main agent only assembles the report from the scripts and the subagents' answers. Write it in the target's `notes/`, or — if it covers the whole vault — in `REVIEW-YYYY-MM-DD.md` at the root, with:
    - **Waiting on you**: pending human gates, with link and since when.

@@ -4,7 +4,8 @@
 Checks: root INDEX.md descriptions (<=144 chars) and category INDEX.md
 descriptions (<=600 chars); project notes with <=150 lines (plans <=200);
 required frontmatter on task cards and `stage:` consistency with the
-folder; and orphan worktrees (warning). Exit 1 if there is a violation;
+folder; orphan worktrees (warning); and broken wikilinks (warning — a
+link to a future note is legitimate). Exit 1 if there is a violation;
 warnings do not fail.
 
 Usage:
@@ -25,6 +26,10 @@ EXEMPT_NAMES = {"AGENTS.md", "WORKFLOW.md", "README.md"}
 CARD_REQUIRED = ("id", "project", "stage", "created", "updated")
 
 ROOT_ENTRY = re.compile(r"^- \[\[.*?\]\]\s*—\s*(.+)$")
+WIKILINK = re.compile(r"!?\[\[([^\]|#^]*)")
+INLINE_CODE = re.compile(r"`[^`]*`")
+LINK_SKIP_PARTS = {"external-repository", ".obsidian", ".git", "worktrees",
+                   "__pycache__", "node_modules"}
 
 
 def lines_outside_fences(path):
@@ -96,6 +101,8 @@ def check_note_sizes(root, projects, violations):
         for path in sorted(scope.rglob("*.md")):
             if "worktrees" in path.parts or "_templates" in path.parts:
                 continue
+            if "raw" in path.parts:
+                continue  # raw research source: immutable, not a note
             limit = note_limit(path)
             if limit is None:
                 continue
@@ -131,10 +138,42 @@ def check_worktrees(root, projects, warnings):
                                 f"004_processing")
 
 
+def check_wikilinks(root, warnings):
+    """(f) broken wikilinks: target without a matching file (warning)."""
+    targets = set()
+    for path in root.rglob("*"):
+        if not path.is_file():
+            continue
+        rel = path.relative_to(root).as_posix().lower()
+        if LINK_SKIP_PARTS & set(rel.split("/")):
+            continue
+        targets.update({path.name.lower(), path.stem.lower(), rel})
+        if rel.endswith(".md"):
+            targets.add(rel[:-3])
+    for path in sorted(root.rglob("*.md")):
+        parts = set(path.relative_to(root).parts)
+        if parts & LINK_SKIP_PARTS or "_templates" in parts or "raw" in parts:
+            continue
+        if path.name.endswith(".excalidraw.md"):
+            continue
+        for n, line in lines_outside_fences(path):
+            for m in WIKILINK.finditer(INLINE_CODE.sub("", line)):
+                target = m.group(1).strip()
+                # skip empty (heading-only link), placeholder and ellipsis
+                if not target or "<" in target or set(target) <= {"."}:
+                    continue
+                low = target.lower()
+                name = low.rsplit("/", 1)[-1]
+                if {low, f"{low}.md", name} & targets:
+                    continue
+                warnings.append(f"{path}:{n}: broken wikilink [[{target}]]")
+
+
 def main():
     parser = argparse.ArgumentParser(
         description="Validates vault limits: 144/600 chars, 150 lines, "
-                    "card frontmatter and orphan worktrees.")
+                    "card frontmatter, orphan worktrees and broken "
+                    "wikilinks.")
     parser.add_argument("--vault", metavar="DIR",
                         help="vault root (default: folder above scripts/)")
     args = parser.parse_args()
@@ -149,6 +188,7 @@ def main():
     check_note_sizes(root, projects, violations)
     check_cards(root, projects, violations)
     check_worktrees(root, projects, warnings)
+    check_wikilinks(root, warnings)
 
     for w in warnings:
         print(f"[WARNING] {w}")

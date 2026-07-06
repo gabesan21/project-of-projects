@@ -12,3 +12,7 @@ created: YYYY-MM-DD
 Free-form content — but ≤150 lines and answering **one** question. Link the origin (task, spec, conversation): [[<task-id>]] · [[<category>/<project>/specs/<spec>|<spec>]]
 
 Learnings link **where they apply** (spec, skill, contract), each link with a 1-line trigger — *when to follow it*.
+
+> Before creating: look for an existing note on the same theme (grep in `notes/`) — if one exists, **update it** instead of duplicating. A finding that contradicts a previous note/decision is recorded, never silenced:
+
+> Contradicts: [[<note-or-decision>]] — <why, in 1 line>.
