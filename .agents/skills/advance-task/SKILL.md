@@ -18,7 +18,7 @@ You are the **orchestrator**: identify the task's stage, resolve gates and trans
 0. **Claim first:** `scripts/pop_claim.py <task-id>` — refused (active claim by another agent)? **Do not touch the task**, report and finish.
 1. Read the card: `stage`, `critical`, `blocked`, `depends_on`, the "Skills per stage" table.
 2. While there is no pending human gate:
-   - Read the current stage's section in the [[WORKFLOW|WORKFLOW]] and execute it — **001 and 006** yourself (they are cheap); **002/004/005** via a dedicated subagent (below).
+   - Read the current stage's section in the [[WORKFLOW|WORKFLOW]] and execute it — **001 and 006** yourself (they are cheap); **002/004/005** via a dedicated subagent (below). **Fast path:** a trivial task of very few steps (the same yardstick as the red-team waiver) → execute **004** yourself and record the fast path in the Log; **005 remains a subagent** (fresh eyes are not waived).
    - Transition: `scripts/pop_move.py <task-id> <stage>` moves the folder, updates `stage:`/`updated:` and appends the Log line — atomically (without the script, do all three by hand).
 3. Upon reaching a gate, **release the claim** (`scripts/pop_claim.py <task-id> --release`), **stop and report**: the current stage, what awaits the human and what the next call will do.
 
@@ -28,7 +28,7 @@ You are the **orchestrator**: identify the task's stage, resolve gates and trans
 
 Each subagent receives **only** its stage's skill (the card's "Skills per stage" table) + the minimal context — never the whole vault:
 
-- **002 — planner:** receives the card + linked specs → returns the `.plan.md` (spawns its own wargame recon subagents).
+- **002 — planner:** receives the card + linked specs → returns the `.plan.md` (spawns its own wargame recon wave, **3-5 per wave**; recon workers are leaves — they report "Gaps / Not found", never spawn subagents).
 - **004 — executor:** receives the plan + the "Minimal executor context" section → works in the task's worktree, returns checked checkboxes + divergences.
 - **005 — verifier:** receives the plan's verification table → returns the `.verify.md` with evidence. **Never the same agent that executed** — it judges without the bias of whoever did the work.
 

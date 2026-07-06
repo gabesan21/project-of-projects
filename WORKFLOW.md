@@ -21,10 +21,11 @@ Each stage file declares its owner at the top. Agents **never** execute a `(user
 
 The main agent is the **orchestrator**: it reads the card, resolves the gates and makes the transitions (frontmatter, Log, moving the folder). Each work stage runs in a **dedicated subagent**, equipped only with that stage's skill (the card's "Skills per stage" table) + the stage's minimal context:
 
-- **002 — planner:** receives card + linked specs → returns the `.plan.md` (fires its own recon subagents).
+- **002 — planner:** receives card + linked specs → returns the `.plan.md` (fires its own wargame recon wave, **3-5 per wave**; recon workers are leaves: they report "Gaps / Not found", never spawn subagents).
 - **004 — executor:** receives plan + the "Minimal executor context" section → works in the worktree, returns checked checkboxes + divergences.
 - **005 — verifier:** receives the plan's verification table → returns the `.verify.md` with evidence. Verifier ≠ executor **by design**: it judges without the bias of whoever did the work.
 - **001 and 006** stay with the orchestrator itself (they are cheap: creating the card, PR, memory).
+- **Fast path (trivial task):** a task of very few steps — the same yardstick that waives the red-team in 002 — waives the executor subagent: the orchestrator executes 004 itself and records the fast path in the Log. **005 remains a verifier subagent**: fresh eyes are not waived (verifier ≠ executor holds here too).
 
 This way the main agent's window grows by **results** (finished plan, filled-in verify), not by process.
 

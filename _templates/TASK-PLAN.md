@@ -8,7 +8,7 @@
 
 ## Recon
 
-> Prior reading, read-only, **before** planning: specs, affected code/material, references. On research-heavy boards, fire off **parallel subagents** — one per investigation front — and consolidate here.
+> Prior reading, read-only, **before** planning: specs, affected code/material, references. On research-heavy boards, fire off **parallel subagents** — one per investigation front, in **waves of 3-5** — and consolidate here. Each report carries a **source (file/line) per finding** and a **"Gaps / Not found"** section (it feeds RECON NEEDED); recon workers spawn no subagents.
 
 - <source read> — what it established, in one line.
 
