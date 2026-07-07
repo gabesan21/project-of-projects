@@ -1,6 +1,6 @@
 """poplib — shared utilities for the PoP CLI scripts.
 
-Provides: vault root detection, project discovery (`<category>/<project>/`
+Provides: vault root detection, project discovery (`categories/<category>/<project>/`
 folders with `kanban/`), a simple YAML frontmatter parser (key: value,
 inline `[a, b]` lists and block `- item` lists) and task card helpers.
 Stdlib only (Python >= 3.9).
@@ -20,19 +20,6 @@ STAGES = [
     "005_verifying",
     "006_done",
 ]
-
-# Top-level folders that are never a project category.
-IGNORED_TOP = {
-    "external-repository",
-    "_templates",
-    ".obsidian",
-    "researches",
-    "notes",
-    "scripts",
-    "worktrees",
-    ".git",
-}
-
 
 def vault_root(override: Optional[str] = None) -> Path:
     """Vault root: `--vault` if given, otherwise the folder above `scripts/`."""
@@ -106,11 +93,10 @@ def parse_frontmatter(text: str) -> Tuple[dict, str]:
 
 
 def discover_projects(root: Path) -> list:
-    """Vault projects: `<category>/<project>/` folders with `kanban/`."""
+    """Vault projects: `categories/<category>/<project>/` folders with `kanban/`."""
     projects = []
-    for kanban in sorted(root.glob("*/*/kanban")):
-        category = kanban.parent.parent.name
-        if category in IGNORED_TOP or category.startswith("."):
+    for kanban in sorted(root.glob("categories/*/*/kanban")):
+        if kanban.parent.parent.name.startswith("."):
             continue
         if kanban.is_dir():
             projects.append(kanban.parent)
@@ -119,7 +105,7 @@ def discover_projects(root: Path) -> list:
 
 def project_label(root: Path, project: Path) -> str:
     """Short `<category>/<project>` name of a project folder."""
-    return project.relative_to(root).as_posix()
+    return project.relative_to(root / "categories").as_posix()
 
 
 def iter_cards(project: Path) -> Iterator[Tuple[str, Path, Path]]:

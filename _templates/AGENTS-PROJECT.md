@@ -7,7 +7,7 @@
 - **Type:** default | included | multi-repo — see [[TYPES|TYPES]].
 - **Project language:** <en> — specs, notes, researches, code comments and the entire kanban flow follow this language.
 - **Supported languages (i18n):** <list of languages the application must support — handled in the roadmap and specs. Applications only; remove if not applicable.>
-- **Profile:** [[<category>/<project>/PROJECT|PROJECT]] · **Roadmap:** [[<category>/<project>/ROADMAP|ROADMAP]]
+- **Profile:** [[categories/<category>/<project>/PROJECT|PROJECT]] · **Roadmap:** [[categories/<category>/<project>/ROADMAP|ROADMAP]]
 
 ## Repositories
 
@@ -41,7 +41,7 @@ Every change to the project goes through the kanban (`kanban/001_initial_task �
 ## Skills
 
 - **PoP workflow:** `.agents/skills/` — `new-task`, `advance-task`, `plan-roadmap`, `write-spec`, `sync-specs`.
-- **Project domain:** `skills/` — listed in the profile [[<category>/<project>/PROJECT|PROJECT]].
+- **Project domain:** `skills/` — listed in the profile [[categories/<category>/<project>/PROJECT|PROJECT]].
 
 ## DOX process (applications only)
 

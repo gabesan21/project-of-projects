@@ -20,10 +20,10 @@ Generates a vault overview and proposes actions. Changes nothing beyond the repo
    - **Note health:** orphan notes (no inbound wikilinks in the vault) and contradictions between notes/decisions and specs — reply ≤15 lines: candidates to link, merge or mark with `> Contradicts:`.
    - **Stalled epochs:** "Abandon/pause if" conditions met in the epoch files; imported projects with Epoch 1 (Organization) open — since when and what is missing to release the gate.
 3. **Consolidate:** the main agent only assembles the report from the scripts and the subagents' answers. Write it in the target's `notes/`, or — if it covers the whole vault — in `REVIEW-YYYY-MM-DD.md` at the root, with:
-   - **Waiting on you**: pending human gates, with link and since when.
+   - **Waiting on you**: pending human gates and `open` questions in `open_questions/`, with link and since when.
    - **Stalled**: tasks/projects without movement, with a suggestion (resume, pause, abandon) and a one-line justification.
    - **Progress**: what moved since the last review (compare with the previous report, if any).
-   - **Proposals**: promotions of ideas to epoch, epochs ready to complete, priority adjustments.
+   - **Proposals**: promotions of ideas to epoch, epochs ready to complete, priority adjustments, drafts in `drafts/` ready to process (`new-project`/`import-project`).
 4. Link the report in INBOX.md (new "Reviews" section if needed) so the human can find it.
 
 ## Cautions

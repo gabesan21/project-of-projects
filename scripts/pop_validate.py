@@ -58,7 +58,7 @@ def check_root_index(root, violations):
 def check_category_indexes(root, categories, violations):
     """(b) category INDEX.md: project description <=600 chars."""
     for category in sorted(categories):
-        index = root / category / "INDEX.md"
+        index = root / "categories" / category / "INDEX.md"
         if not index.is_file():
             continue
         entry_start, desc = None, []
@@ -94,7 +94,7 @@ def note_limit(path):
 def check_note_sizes(root, projects, violations):
     """(c) project .md files and notes <=150 lines (plans <=200)."""
     scopes = list(projects)
-    for extra in ("notes", "researches"):
+    for extra in ("notes", "researches", "open_questions", "drafts"):
         if (root / extra).is_dir():
             scopes.append(root / extra)
     for scope in scopes:

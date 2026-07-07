@@ -2,8 +2,8 @@
 
 > Blockquotes in this template are fill-in instructions — **delete them when filling it in**.
 
-- **Project:** [[<category>/<project>/PROJECT|<Project name>]]
-- **Epoch/Phase:** [[<category>/<project>/roadmap/<n>-<slug>|Phase <n>.<m>]]
+- **Project:** [[categories/<category>/<project>/PROJECT|<Project name>]]
+- **Epoch/Phase:** [[categories/<category>/<project>/roadmap/<n>-<slug>|Phase <n>.<m>]]
 - **Status:** draft | approved | implemented | obsolete
 - **Created on:** YYYY-MM-DD
 
@@ -31,5 +31,5 @@ Design, flows, examples. If it exceeds ~150 lines in total, extract parts into a
 
 > Optional. Each link with a 1-line trigger — *when* to follow it. In an application project, include the topic's DOX contracts (relative markdown path in the repo).
 
-- [[<category>/<project>/specs/<other-spec>|<other-spec>]] — *follow if <condition>*.
+- [[categories/<category>/<project>/specs/<other-spec>|<other-spec>]] — *follow if <condition>*.
 - [`<subtree>/AGENTS.md`](../<path-in-repo>/AGENTS.md) — *follow if <condition>*.

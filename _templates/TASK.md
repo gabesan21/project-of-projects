@@ -21,7 +21,7 @@ updated: YYYY-MM-DD
 
 > Blockquotes in this template are fill-in instructions — **delete them when filling it in**.
 
-- **Phase:** [[<category>/<project>/roadmap/<n>-<epoch-slug>|Phase <n>.<m>]]
+- **Phase:** [[categories/<category>/<project>/roadmap/<n>-<epoch-slug>|Phase <n>.<m>]]
 - **Plan:** [[<id>-<slug>.plan]] · **Approval:** [[<id>-<slug>.approval]] · **Verification:** [[<id>-<slug>.verify]]
 
 ## What
@@ -38,9 +38,9 @@ One sentence: why now, and what it unblocks.
 
 | Stage | Project skills | Owner |
 |-------|----------------|-------|
-| 002_planning | [[<category>/<project>/skills/<skill>\|<skill>]] | agent |
-| 004_processing | [[<category>/<project>/skills/<skill>\|<skill>]] | agent |
-| 005_verifying | [[<category>/<project>/skills/<skill>\|<skill>]] | agent |
+| 002_planning | [[categories/<category>/<project>/skills/<skill>\|<skill>]] | agent |
+| 004_processing | [[categories/<category>/<project>/skills/<skill>\|<skill>]] | agent |
+| 005_verifying | [[categories/<category>/<project>/skills/<skill>\|<skill>]] | agent |
 
 ## Dependencies
 
@@ -52,7 +52,7 @@ One sentence: why now, and what it unblocks.
 
 > Every link carries a 1-line trigger — *when* it is worth following. A link without a trigger is rightly ignored.
 
-- **Specs:** [[<category>/<project>/specs/<spec>|<spec>]] — *follow if <condition>*.
+- **Specs:** [[categories/<category>/<project>/specs/<spec>|<spec>]] — *follow if <condition>*.
 - **Related tasks:** [[<id-of-another-task>]] — *follow if <condition>*.
 
 ## Log

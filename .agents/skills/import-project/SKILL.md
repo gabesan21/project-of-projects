@@ -14,6 +14,7 @@ Brings a project **that already exists** (repository or local folder) into the P
 - Recon first, read-only; then interview in blocks of 2–4 questions, reflecting back what you understood.
 - "I don't know" is a valid answer → it becomes RECON NEEDED (with the check that resolves it) or an "Open" item in a spec.
 - If the recon already answered something, don't ask — **confirm** ("I saw X in the code; is that right?").
+- **Draft in `drafts/import/`?** Use it as a pre-answered interview ([[_templates/IMPORT_PROJECT|template]]): confirm what is filled in instead of asking; a divergence between draft and recon → RECON NEEDED. An open question that **blocks** a human decision → file in `open_questions/` ([[_templates/OPEN-QUESTION|template]]). When materializing the project, **delete the draft**.
 
 ## Step 1 — Codebase recon
 
@@ -23,7 +24,7 @@ Brings a project **that already exists** (repository or local folder) into the P
 
 ## Step 2 — Fit into the vault
 
-Ask: **(a)** which category (`agents` | `applications` | `writing` | `work` — or a new one)? **(b)** which **type** (explain using TYPES.md): AI specs can be committed to the repo → `included`; repo must stay clean of harness → `default` (clone in `project/`); it's one of several repos of the same project → `multi-repo`? **(c)** what is the tasks' **PR branch**? **(d)** project name in kebab-case (propose one; it may differ from the repo name). **(e)** what is the **project's default language** — the recon indicates the current language of code and docs; confirm. Specs, notes, research, code comments and the flow follow that language (declared in the project's AGENTS.md). **(f)** if it is an application: which **languages must it support** (i18n) — the recon shows what i18n already exists; the confirmed list goes into the AGENTS.md and is handled in the roadmap and specs.
+Ask: **(a)** which category (in `categories/`: `agents` | `applications` | `writing` | `work` — or a new one)? **(b)** which **type** (explain using TYPES.md): AI specs can be committed to the repo → `included`; repo must stay clean of harness → `default` (clone in `project/`); it's one of several repos of the same project → `multi-repo`? **(c)** what is the tasks' **PR branch**? **(d)** project name in kebab-case (propose one; it may differ from the repo name). **(e)** what is the **project's default language** — the recon indicates the current language of code and docs; confirm. Specs, notes, research, code comments and the flow follow that language (declared in the project's AGENTS.md). **(f)** if it is an application: which **languages must it support** (i18n) — the recon shows what i18n already exists; the confirmed list goes into the AGENTS.md and is handled in the roadmap and specs.
 
 ## Step 3 — Project flow (what makes the specs faithful)
 

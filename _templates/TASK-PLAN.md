@@ -46,7 +46,7 @@ How the task will be executed, in a few paragraphs. Discarded alternatives in on
 
 > Drafted **here** (draft via `write-spec`), approved together with the 003 gate, synced with the project specs in 006 (`sync-specs`).
 
-- [[<category>/<project>/specs/<spec>|<spec>]] — what changes in it, in one line.
+- [[categories/<category>/<project>/specs/<spec>|<spec>]] — what changes in it, in one line.
 
 ## Minimal executor context
 

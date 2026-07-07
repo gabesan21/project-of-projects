@@ -11,7 +11,7 @@ Scripts in **Python 3 (≥3.9), stdlib only** — agent-agnostic and cross-platf
 | `pop_task.py <cat>/<proj> <id>` | Scaffolding: card in `001_initial_task` from `_templates/TASK.md` + empty `subtasks/`. `--title "..."` sets the title. |
 | `pop_worktree.py add\|remove <task>` | Creates/removes `worktrees/<id>` + branch `task/<id>` via git (`--repo` for an external repo, `--base`, `--delete-branch`). |
 
-`poplib.py` is the shared module: vault root, project discovery (glob `*/*/kanban/`) and its own frontmatter parser (no PyYAML).
+`poplib.py` is the shared module: vault root, project discovery (glob `categories/*/*/kanban/`; `<cat>/<proj>` in the arguments is always relative to `categories/`) and its own frontmatter parser (no PyYAML).
 
 Example:
 

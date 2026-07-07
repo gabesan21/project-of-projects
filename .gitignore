@@ -2,8 +2,8 @@
 **/worktrees/
 
 # Clones of aggregated repositories (keep in sync with "Aggregated repositories" in INDEX.md)
-# `included` projects with a repo: <category>/<project>/
-# Example: applications/my-app/
+# `included` projects with a repo: categories/<category>/<project>/
+# Example: categories/applications/my-app/
 
 # Obsidian local state (remove this if you prefer to version your workspace)
 .obsidian/

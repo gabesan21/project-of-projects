@@ -1,6 +1,6 @@
 # Skill — <skill-name>
 
-- **Project:** [[<category>/<project>/PROJECT|<Project name>]]
+- **Project:** [[categories/<category>/<project>/PROJECT|<Project name>]]
 - **When to use:** one sentence — the trigger indicating this skill applies.
 
 ## Procedure

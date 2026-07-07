@@ -39,7 +39,7 @@ Working with AI agents across many projects tends to scatter context everywhere.
 
 ## How it works
 
-Every project lives in a category folder with the same anatomy — a sheet (`PROJECT.md`), a roadmap (`ROADMAP.md` + `roadmap/`, in epochs → phases → tasks), specs, skills, notes, researches, memory and a kanban every task travels through:
+Every project lives in a category folder under `categories/` with the same anatomy — a sheet (`PROJECT.md`), a roadmap (`ROADMAP.md` + `roadmap/`, in epochs → phases → tasks), specs, skills, notes, researches, memory and a kanban every task travels through:
 
 ```mermaid
 flowchart LR
@@ -78,10 +78,13 @@ project-of-projects/
 ├── _templates/          ← templates for every standard file
 ├── notes/               ← vault notes: the harness decision log
 ├── scripts/             ← stdlib-only Python CLI: status, validation, kanban moves
-├── agents/              ← AI agents, automations, skills
-├── applications/        ← applications and software
-├── writing/             ← articles, books, content
-└── work/                ← professional projects
+├── open_questions/      ← the agent's open questions for you (surface in the INBOX)
+├── drafts/              ← your project drafts: new/ and import/ (fill a template, let an agent process it)
+└── categories/          ← every project category
+    ├── agents/          ← AI agents, automations, skills
+    ├── applications/    ← applications and software
+    ├── writing/         ← articles, books, content
+    └── work/            ← professional projects
 ```
 
 ## Core skills
@@ -137,7 +140,7 @@ All plugins serve the **human** side — agents never depend on them (`INBOX.md`
 ## Make it yours
 
 - **Language** — the template ships in English; the vault's language is declared in `AGENTS.md` (rule 1) and each project declares its own default language (plus supported i18n languages for applications). Fork it in any language you like.
-- **Categories** — `agents`, `applications`, `writing`, `work` are starters. Add your own: create the folder with an `INDEX.md` and register it in `AGENTS.md` and the root `INDEX.md`.
+- **Categories** — `agents`, `applications`, `writing`, `work` (in `categories/`) are starters. Add your own: create the folder with an `INDEX.md` and register it in `AGENTS.md` and the root `INDEX.md`.
 - **Project types** — see `TYPES.md`: keep work inside the vault (`default`), embed the harness in your repo (`included`), or aggregate several repos (`multi-repo`). Clones are always gitignored — the vault stays planning-only.
 - **Rules** — the WIP limit, criticality gates and every workflow rule live in `AGENTS.md` and `WORKFLOW.md`. Edit them; the templates in `_templates/` are the single source the skills build from, so keep them in sync.
 - **Application context** — programming projects use the **DOX process** (`_templates/DOX.md`): a tree of `AGENTS.md` contract files inside the code, kept honest at every task closeout.

@@ -63,7 +63,7 @@ def main():
         return 1
 
     root = poplib.vault_root(args.vault)
-    project_dir = root / args.project
+    project_dir = root / "categories" / args.project
     if not (project_dir / "kanban").is_dir():
         print(f"Project without kanban/: {project_dir} — check "
               f"<category>/<project>.")

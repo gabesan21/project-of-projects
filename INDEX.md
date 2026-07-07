@@ -9,10 +9,13 @@ ProjectOfProjects/
 ├── INBOX.md         → [[INBOX|what awaits human decision]]
 ├── WORKFLOW.md      → [[WORKFLOW|task flow on the kanban]]
 ├── TYPES.md         → [[TYPES|project types: default, included, multi-repo]]
-├── agents/          → [[agents/INDEX|agents index]]
-├── applications/    → [[applications/INDEX|applications index]]
-├── writing/         → [[writing/INDEX|writing index]]
-└── work/            → [[work/INDEX|work index]]
+├── drafts/          → the human's project drafts: new/ and import/ ([[_templates/NEW_PROJECT|NEW_PROJECT]] · [[_templates/IMPORT_PROJECT|IMPORT_PROJECT]])
+├── open_questions/  → open questions for the human, outside any task — the open ones show up in the [[INBOX|INBOX]]
+└── categories/      → every project category
+    ├── agents/          → [[categories/agents/INDEX|agents index]]
+    ├── applications/    → [[categories/applications/INDEX|applications index]]
+    ├── writing/         → [[categories/writing/INDEX|writing index]]
+    └── work/            → [[categories/work/INDEX|work index]]
 ```
 
 ## agents
@@ -48,7 +51,7 @@ _No repositories yet._
 **Format of each line:**
 
 ```
-| [[<category>/<project>/PROJECT|<project>]] | <type> | <url> | `<local clone path>` | `<PR branch>` |
+| [[categories/<category>/<project>/PROJECT|<project>]] | <type> | <url> | `<local clone path>` | `<PR branch>` |
 ```
 
 ---
@@ -56,5 +59,5 @@ _No repositories yet._
 **Format of each entry:**
 
 ```
-- [[<category>/<project>/PROJECT|<Project name>]] — description of up to 144 characters.
+- [[categories/<category>/<project>/PROJECT|<Project name>]] — description of up to 144 characters.
 ```

@@ -22,20 +22,25 @@ ProjectOfProjects/
 ├── notes/               ← vault notes: decisions/ holds the harness decisions
 ├── researches/          ← the PoP's own deep researches (raw source in raw/, synthesis alongside)
 ├── scripts/             ← Python CLI (pop_status, pop_move, pop_validate, pop_task, pop_worktree) — saves scanning tokens
-├── agents/              ← AI agents, automations, skills
-│   ├── INDEX.md         ← category index: 600 chars + status
-│   └── <project>/       ← standard anatomy (below)
-├── applications/        ← applications and software in general
-├── writing/             ← writing: articles, books, content
-└── work/                ← professional projects
+├── open_questions/      ← the agent's questions to the human, outside any task ([[_templates/OPEN-QUESTION|template]])
+├── drafts/              ← project drafts filled in by the human
+│   ├── new/             ← filled-in copies of [[_templates/NEW_PROJECT|NEW_PROJECT]]
+│   └── import/          ← filled-in copies of [[_templates/IMPORT_PROJECT|IMPORT_PROJECT]]
+└── categories/          ← every project category
+    ├── agents/          ← AI agents, automations, skills
+    │   ├── INDEX.md     ← category index: 600 chars + status
+    │   └── <project>/   ← standard anatomy (below)
+    ├── applications/    ← applications and software in general
+    ├── writing/         ← writing: articles, books, content
+    └── work/            ← professional projects
 ```
 
-New categories may be created when no existing one fits — always with their own `INDEX.md`, registering the new folder in this file and in the root `INDEX.md`.
+New categories may be created inside `categories/` when no existing one fits — always with their own `INDEX.md`, registering the new folder in this file and in the root `INDEX.md`.
 
 ## Anatomy of a project
 
 ```
-<category>/<project>/
+categories/<category>/<project>/
 ├── AGENTS.md            ← standalone instructions: type, repos, workflow (CLAUDE.md → symlink)
 ├── .agents/skills/      ← real copies of the PoP core workflow skills
 ├── .gitignore           ← worktrees/ + clones of the project's repos
@@ -80,14 +85,16 @@ The PoP is a **repository aggregator**: every project declares a **type** in its
 
 - IDs follow the hierarchy: epoch `1` → phase `1.1` → task `1.1.1-user-table-creation`. Slug in kebab-case, unique across the vault (if it collides with another project, adjust the slug).
 - **Task files move** between kanban stages, so all of them carry the task's unique name in the file name (`1.1.1-user-table-creation.md`, `1.1.1-user-table-creation.plan.md`…) and are linked **by name only**: `[[1.1.1-user-table-creation]]` resolves in any stage.
-- **Files that don't move** (sheets, roadmaps, specs, skills, indexes) are linked with full path + alias: `[[agents/my-project/PROJECT|My Project]]`.
+- **Files that don't move** (sheets, roadmaps, specs, skills, indexes) are linked with full path + alias: `[[categories/agents/my-project/PROJECT|My Project]]`.
 - **Links with a trigger:** in agent-facing navigation sections (the card's Links, related specs, memory, learnings, DOX contracts), every link carries 1 line saying **when** to follow it — a link without a trigger there is a link the agent rightly ignores.
 
-## Indexes and INBOX
+## Indexes, INBOX, drafts and open questions
 
 - **`INDEX.md` (root):** vault structure + every project, description of **up to 144 characters** each, and the **Aggregated repositories** list (repos to clone, with path and PR branch).
-- **`<category>/INDEX.md`:** per project: link, **status** and description of **up to 600 characters**.
-- **`INBOX.md` (root):** everything awaiting the human — generated **automatically via Dataview** from the cards' frontmatter (tasks in `003_human_approval`, critical items in `005_verifying`, blocked ones). Don't edit the lists by hand; it is the only file the human needs to open each day.
+- **`categories/<category>/INDEX.md`:** per project: link, **status** and description of **up to 600 characters**.
+- **`INBOX.md` (root):** everything awaiting the human — generated **automatically via Dataview** from the cards' frontmatter (tasks in `003_human_approval`, critical items in `005_verifying`, blocked ones) and from the open questions in `open_questions/`. Don't edit the lists by hand; it is the only file the human needs to open each day.
+- **`drafts/`:** project drafts filled in by the **human** from the templates [[_templates/NEW_PROJECT|NEW_PROJECT]] (→ `drafts/new/`) and [[_templates/IMPORT_PROJECT|IMPORT_PROJECT]] (→ `drafts/import/`) — they let you draft several projects before engaging an agent. The `new-project`/`import-project` skills consume the draft as a pre-answered interview (they confirm, they don't re-ask) and **delete it** when the project is materialized.
+- **`open_questions/`:** general questions from the agent that depend on the human and belong to no card — decisions about new projects, overall vault structure etc. One file per question ([[_templates/OPEN-QUESTION|template]], `status: open | answered`); the open ones show up in the INBOX. Answered → the agent applies the answer, marks it `answered` and, if it becomes a harness decision, records it in `notes/decisions/`.
 
 **Project status:** idea | planning | in progress | paused | completed | abandoned
 
@@ -97,8 +104,8 @@ The central procedures are **skills** in the open Agent Skills format (`SKILL.md
 
 | Skill | When to use |
 |-------|-------------|
-| `new-project` | Guided interview that creates a new project: essence, harness, roadmap and specs. |
-| `import-project` | Imports an existing repository: recon, fit into type/category and Epoch 1 of organization. |
+| `new-project` | Guided interview that creates a new project: essence, harness, roadmap and specs. Consumes a draft from `drafts/new/` if present. |
+| `import-project` | Imports an existing repository: recon, fit into type/category and Epoch 1 of organization. Consumes a draft from `drafts/import/` if present. |
 | `plan-roadmap` | Build/evolve the roadmap by interview (epochs → phases → candidate tasks). |
 | `new-task` | Quick interview that materializes a task in `kanban/001_initial_task`. |
 | `advance-task` | Move a task through the 001→006 flow, respecting the human gates. |

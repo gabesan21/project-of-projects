@@ -2,7 +2,7 @@
 
 > Blockquotes in this template are fill-in instructions — **delete them when filling it in**.
 
-- **Project:** [[<category>/<project>/PROJECT|<Project name>]] · **Roadmap:** [[<category>/<project>/ROADMAP|Roadmap]]
+- **Project:** [[categories/<category>/<project>/PROJECT|<Project name>]] · **Roadmap:** [[categories/<category>/<project>/ROADMAP|Roadmap]]
 - **Status:** pending | in progress | completed
 - **Description:** one line — what this chapter delivers.
 - **Abort/pause if:** objective condition, if any (audited by the `weekly-review`).
@@ -13,7 +13,7 @@
 
 > Researches in `researches/` that grounded the breakdown; whatever remained unanswered is RECON NEEDED, with the check that resolves it. Forks: pre-identified route changes.
 
-- [[<category>/<project>/researches/<topic>/<note>|<topic>]] — what it established, in one line.
+- [[categories/<category>/<project>/researches/<topic>/<note>|<topic>]] — what it established, in one line.
 - [ ] RECON NEEDED: <assumption> — check: <research/experiment/task that resolves it>.
 - Fork: if <observation/conclusion X> → <what changes in the epoch, in one line>.
 
@@ -21,7 +21,7 @@
 
 - **Status:** pending | in progress | completed
 - **Description:** one line.
-- **Specs:** [[<category>/<project>/specs/<spec>|<spec>]]
+- **Specs:** [[categories/<category>/<project>/specs/<spec>|<spec>]]
 
 | Task | Description (≤1 line) | Status |
 |------|-----------------------|--------|

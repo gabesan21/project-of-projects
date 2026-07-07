@@ -13,5 +13,5 @@ Implementation summary in up to **2000 characters**: what changed and where, dec
 
 Links with a trigger (1 line each — *when to follow it*):
 
-- **Affected spec:** [[<category>/<project>/specs/<spec>|<spec>]] — *follow if <condition>*.
-- **Generated learning:** [[<category>/<project>/notes/learnings/<note>|<note>]] — *follow if <condition>*.
+- **Affected spec:** [[categories/<category>/<project>/specs/<spec>|<spec>]] — *follow if <condition>*.
+- **Generated learning:** [[categories/<category>/<project>/notes/learnings/<note>|<note>]] — *follow if <condition>*.

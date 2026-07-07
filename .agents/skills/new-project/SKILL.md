@@ -5,7 +5,7 @@ description: Guided interview that creates a new project in the vault - essence,
 
 # new-project
 
-Creates a new project in `<category>/<project>/` **by interviewing the user in steps** — no creating the structure with placeholders and walking away. Anatomy: the "Anatomy of a project" section of [[AGENTS|AGENTS]]; variations per type: [[TYPES|TYPES]].
+Creates a new project in `categories/<category>/<project>/` **by interviewing the user in steps** — no creating the structure with placeholders and walking away. Anatomy: the "Anatomy of a project" section of [[AGENTS|AGENTS]]; variations per type: [[TYPES|TYPES]].
 
 **Delegate to subagents:** almost nothing — the interview is with the user; step 4's epoch recon delegates via `plan-roadmap`.
 
@@ -14,10 +14,11 @@ Creates a new project in `<category>/<project>/` **by interviewing the user in s
 - One step at a time, 2–4 questions per block. Reflect back what you understood before moving on.
 - "I don't know yet" is a valid answer → record it as an open question (in the project sheet or in a draft spec), don't block creation.
 - If the user already answered something spontaneously, don't ask again — confirm.
+- **Draft in `drafts/new/`?** Use it as a pre-answered interview ([[_templates/NEW_PROJECT|template]]): confirm what is filled in instead of asking; an empty field or "I don't know" follows the steps normally. An open question that **blocks** a human decision → file in `open_questions/` ([[_templates/OPEN-QUESTION|template]]). When materializing the project, **delete the draft** — its content now lives in the project.
 
 ## Step 1 — Essence
 
-Ask: **(a)** what is the project, in one or two sentences? **(b)** what does success look like — how will you know it worked? **(c)** what kind is it (programming, writing, business, research, personal...)? **(d)** which vault category does it belong to (`agents` | `applications` | `writing` | `work` — or propose a new one, confirming)? At the end, propose a kebab-case name and confirm.
+Ask: **(a)** what is the project, in one or two sentences? **(b)** what does success look like — how will you know it worked? **(c)** what kind is it (programming, writing, business, research, personal...)? **(d)** which vault category does it belong to (in `categories/`: `agents` | `applications` | `writing` | `work` — or propose a new one, confirming)? At the end, propose a kebab-case name and confirm.
 
 ## Step 2 — Type and repositories
 
@@ -38,13 +39,13 @@ From the topics that surfaced in the previous steps, propose which deserve a spe
 ## Step 6 — Materialization
 
 1. Create the structure — anatomy: the "Anatomy of a project" section of [[AGENTS|AGENTS]]; variations per type: [[TYPES|TYPES]]. This skill's specifics: the project's AGENTS.md from `_templates/AGENTS-PROJECT.md` (type, repos, PR branch, language, i18n) + CLAUDE.md symlink; real copies of the root core skills in `.agents/skills/` (new-task, advance-task, plan-roadmap, write-spec, sync-specs); PROJECT.md/ROADMAP.md from the templates, filled with steps 1–4; optional RESEARCHES.md (`_templates/RESEARCHES.md`); the 6 empty kanban folders.
-2. **Type `included` with a repo:** clone the repo into `<category>/<project>/` and build the anatomy **inside it**, with the core skill copies in `.agents/skills/` and `_templates/`, `WORKFLOW.md` and `TYPES.md` copied from the root; add the clone's path to the PoP **root** `.gitignore`. Never create tool-specific folders (`.claude/` etc.) — the vault is agent-agnostic.
+2. **Type `included` with a repo:** clone the repo into `categories/<category>/<project>/` and build the anatomy **inside it**, with the core skill copies in `.agents/skills/` and `_templates/`, `WORKFLOW.md` and `TYPES.md` copied from the root; add the clone's path to the PoP **root** `.gitignore`. Never create tool-specific folders (`.claude/` etc.) — the vault is agent-agnostic.
 3. **Application (programming):** paste into the project's AGENTS.md the full section from `_templates/DOX.md` (it may exceed ~150 lines to accommodate it) — the code's context follows the DOX process: a tree of AGENTS.md as per-subtree contracts, started when the code is born. Type `default` with a repo that must stay clean of AI files → ask whether the tree is committed (default) or only the root contract stays in the PoP.
-4. **Register the repositories and indexes in the same session:** `included`/`multi-repo` → **Aggregated repositories** table in the root `INDEX.md` (`default` → only in the project's AGENTS.md); `<category>/INDEX.md` (link, status, ≤600 chars) and root `INDEX.md` (link, ≤144 chars).
+4. **Register the repositories and indexes in the same session:** `included`/`multi-repo` → **Aggregated repositories** table in the root `INDEX.md` (`default` → only in the project's AGENTS.md); `categories/<category>/INDEX.md` (link, status, ≤600 chars) and root `INDEX.md` (link, ≤144 chars).
 5. No `<...>` placeholder may remain; dates in YYYY-MM-DD. Close with a summary: what was created, open questions and a suggestion for the first task (`new-task` skill).
 
 ## Cautions
 
 - **Project that already exists** (repository or folder with content) → use the `import-project` skill, not this one: there reality comes first and Epoch 1 is organization.
-- Wikilinks for fixed files: full path + alias (`[[agents/my-project/PROJECT|My Project]]`).
+- Wikilinks for fixed files: full path + alias (`[[categories/agents/my-project/PROJECT|My Project]]`).
 - Don't create tasks here — that's the `new-task` skill.
