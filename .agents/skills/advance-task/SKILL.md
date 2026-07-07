@@ -16,13 +16,13 @@ You are the **orchestrator**: identify the task's stage, resolve gates and trans
 ## Orchestrator loop
 
 0. **Claim first:** `scripts/pop_claim.py <task-id>` — refused (active claim by another agent)? **Do not touch the task**, report and finish.
-1. Read the card: `stage`, `critical`, `blocked`, `depends_on`, the "Skills per stage" table.
+1. Read the card: `stage`, `critical`, `blocked`, `depends_on`, the "Skills per stage" table. **Task in 001 without `- [x] Ready to plan`?** That's a human gate: release the claim, stop and report — the card still belongs to the human. Exception: the human explicitly commanded in this conversation to proceed right away → check the box on their behalf and record it in the Log (`released by human command`).
 2. While there is no pending human gate:
    - Read the current stage's section in the [[WORKFLOW|WORKFLOW]] and execute it — **001 and 006** yourself (they are cheap); **002/004/005** via a dedicated subagent (below). **Fast path:** a trivial task of very few steps (the same yardstick as the red-team waiver) → execute **004** yourself and record the fast path in the Log; **005 remains a subagent** (fresh eyes are not waived).
    - Transition: `scripts/pop_move.py <task-id> <stage>` moves the folder, updates `stage:`/`updated:` and appends the Log line — atomically (without the script, do all three by hand).
 3. Upon reaching a gate, **release the claim** (`scripts/pop_claim.py <task-id> --release`), **stop and report**: the current stage, what awaits the human and what the next call will do.
 
-**Human gates (the only stops):** approval at `003`; human verification if `critical: true` at `005`; a subtask `(user)` item; `blocked: true`; the merge round at `006`.
+**Human gates (the only stops):** release at `001` (`- [x] Ready to plan`); approval at `003`; human verification if `critical: true` at `005`; a subtask `(user)` item; `blocked: true`; the merge round at `006`.
 
 ## Subagents per stage
 
@@ -35,6 +35,7 @@ Each subagent receives **only** its stage's skill (the card's "Skills per stage"
 ## Cautions (of this skill; the flow's are in the Cross-cutting rules)
 
 - **Never skip stages or gates.** Allowed returns: 003→002, 004→002, 005→004 — the orchestrator decides the return; the subagent only reports.
+- **Another agent's active claim covers the task's whole folder** (card, `.plan.md`, `.verify.md`, `subtasks/`): reading ok, writing forbidden — `pop_move` also refuses the transition.
 - A subagent reported an abort, a `(user)` item or a discovery that changes the plan → stop/return per the WORKFLOW; **do not improvise in the main window**.
 - When unblocking a task, clear `blocked:` and `blocked_reason:`.
 - A learning in 006 **updates an existing note on the same theme** when there is one (don't duplicate); a contradiction with a previous note/decision becomes a visible `> Contradicts: [[target]] — <why>` line.

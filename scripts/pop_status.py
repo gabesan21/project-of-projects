@@ -2,8 +2,9 @@
 """pop_status — overview of the PoP vault.
 
 Shows, per project, the task count per kanban stage and the lists that
-require human attention: awaiting approval (003), critical verification
-(005 + critical), awaiting merge, blocked, and a WIP > 3 alert in 004.
+require human attention: awaiting release (001), awaiting approval (003),
+critical verification (005 + critical), awaiting merge, blocked, and a
+WIP > 3 alert in 004.
 
 Usage:
     python3 scripts/pop_status.py [--project <category>/<project>] [--vault DIR]
@@ -13,7 +14,6 @@ import argparse
 import datetime
 import sys
 
-import pop_claim
 import poplib
 
 WIP_LIMIT = 3
@@ -33,12 +33,14 @@ def _stale_since(meta):
 def collect(project):
     """Collects counts and attention lists for a project."""
     counts = {stage: 0 for stage in poplib.STAGES}
-    attention = {"approval": [], "critical": [], "merge": [], "blocked": [],
-                 "stale": [], "claimed": []}
+    attention = {"release": [], "approval": [], "critical": [], "merge": [],
+                 "blocked": [], "stale": [], "claimed": []}
     for stage, task_dir, card in poplib.iter_cards(project):
         counts[stage] += 1
         meta = poplib.read_card(card)
         tid = task_dir.name
+        if stage == "001_initial_task" and not poplib.task_released(card):
+            attention["release"].append(tid)
         if stage == "003_human_approval":
             attention["approval"].append(tid)
         if stage == "005_verifying" and meta.get("critical") is True:
@@ -52,11 +54,10 @@ def collect(project):
             days = _stale_since(meta)
             if days is not None and days > STALE_DAYS:
                 attention["stale"].append(f"{tid} — no update for {days} days")
-        by, at = pop_claim.parse_claim(meta)
+        by, at = poplib.parse_claim(meta)
         if by and stage != "006_done":
             when = at.isoformat(timespec="minutes") if at else "?"
-            mark = "" if not pop_claim.expired(
-                at, pop_claim.DEFAULT_LEASE_HOURS) else " [EXPIRED]"
+            mark = "" if not poplib.claim_expired(at) else " [EXPIRED]"
             attention["claimed"].append(f"{tid} — {by} since {when}{mark}")
     return counts, attention
 
@@ -105,8 +106,8 @@ def main():
         print("No project with a kanban found in the vault — all clear.")
         return 0
 
-    merged = {"approval": [], "critical": [], "merge": [], "blocked": [],
-              "stale": [], "claimed": []}
+    merged = {"release": [], "approval": [], "critical": [], "merge": [],
+              "blocked": [], "stale": [], "claimed": []}
     print(f"Vault: {root}")
     for project in projects:
         label = poplib.project_label(root, project)
@@ -115,6 +116,8 @@ def main():
         for key, items in attention.items():
             merged[key].extend(f"{tid} ({label})" for tid in items)
 
+    print_list("Awaiting human release (001, without "
+               "`- [x] Ready to plan`)", merged["release"])
     print_list("Awaiting human approval (003)", merged["approval"])
     print_list("Critical verification pending (005, critical)", merged["critical"])
     print_list("Awaiting merge (awaiting_merge)", merged["merge"])

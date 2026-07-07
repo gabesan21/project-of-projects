@@ -2,6 +2,16 @@
 
 Everything waiting on a decision from you. Lists generated **automatically** by the [Dataview](https://blacksmithgu.github.io/obsidian-dataview/) plugin from the cards' frontmatter — do not edit by hand. Flow: [[WORKFLOW|WORKFLOW]].
 
+## Awaiting your release (001)
+
+Freshly created cards are yours to edit — the task only goes to planning once you check `- [x] Ready to plan` on the card (Release section).
+
+```dataview
+TABLE WITHOUT ID file.link AS Task, project AS Project, updated AS "Since"
+WHERE stage = "001_initial_task"
+SORT updated ASC
+```
+
 ## Awaiting plan approval (003)
 
 ```dataview
@@ -61,4 +71,4 @@ Reports from the `weekly-review` skill are linked here, most recent first.
 
 ---
 
-Agents: nothing to maintain here beyond the **Reviews** section — the lists above derive from the frontmatter (`stage`, `critical`, `blocked`, `awaiting_merge` on cards; `status` on open questions). To locate gates without Obsidian, run `python3 scripts/pop_status.py` (grep on `stage:`/`awaiting_merge:` works as a fallback).
+Agents: nothing to maintain here beyond the **Reviews** section — the lists above derive from the frontmatter (`stage`, `critical`, `blocked`, `awaiting_merge` on cards; `status` on open questions) and from the release checkbox on 001 cards. To locate gates without Obsidian, run `python3 scripts/pop_status.py` (grep on `stage:`/`awaiting_merge:` works as a fallback).

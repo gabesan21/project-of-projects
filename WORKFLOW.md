@@ -8,7 +8,7 @@ Every task is a **folder** with the id `<epoch>.<phase>.<task>-<slug>` (e.g. `1.
 
 | Stage | Owner | Runs in | What happens |
 |---------|-------------|---------|----------------|
-| 001_initial_task | agent | orchestrator | Task is born from the roadmap, minimal card. |
+| 001_initial_task | agent (**+ user** releases) | orchestrator | Task is born from the roadmap, minimal card; it only leaves 001 with the human's `- [x] Ready to plan`. |
 | 002_planning | agent | planner subagent | Wargame: parallel recon, plan with forks/aborts, change specs, red-team. |
 | 003_human_approval | **user** | orchestrator prepares | Human reads the `.approval.md` and checks `- [ ] Done`. |
 | 004_processing | agent | executor subagent | Executes `(agent)` subtasks; pauses on `(user)` ones. |
@@ -45,9 +45,10 @@ Templates: [[_templates/TASK|TASK]] · [[_templates/TASK-PLAN|TASK-PLAN]] · [[_
 
 ## Stages
 
-### 001_initial_task — birth (agent)
+### 001_initial_task — birth (agent, + user releases)
 
 - Create the folder with the card ([[_templates/TASK|TASK]]): frontmatter, "What / Why", link to the phase.
+- **Release (user):** the card is born **unreleased** and, while it stays so, it is the human's territory — they edit at will, the agent only reads. The task only goes to 002 with `- [x] Ready to plan` checked (the card's "Release" section); `pop_move` refuses 001→002 without the mark. Only the human checks it — **exception:** an explicit command from the human in the conversation ("create it and advance") lets the agent check it, recording it in the Log (`released by human command`). Automation never checks it on its own.
 - **Declare the dependencies:** `depends_on:` in the frontmatter with the ids of the prerequisite tasks (and the card's "Dependencies" section). Empty = can run in parallel with the others — this is what drives parallelization.
 - **Size:** change too complex for a single plan (many fronts, plan would exceed 200 lines) → **propose splitting into more tasks** chained via `depends_on`, before planning.
 - Add the `[[<task-id>]]` link to the task's line in the epoch file.
@@ -100,15 +101,16 @@ You do not execute the task here — you **wargame** the execution, so that a si
 
 ## Cross-cutting rules
 
-- **One run = up to the next human gate:** the agent chains the agent-owned stages within a single call and only stops where a human decision is awaited, reporting the state. **Human gates:** approval in `003`; human verification when `critical: true` in `005`; a `(user)` subtask item; `blocked: true`; the merge round in `006`. No gate is skipped — only the stops that were waiting on no one are eliminated. Typical calls:
-  - **A:** 001 → 002 → prepares the `.approval.md` in 003 and **stops** (awaits approval).
-  - **B (post-approval):** 004 → 005 → opens the PR in 006 and **stops** (awaits merge) — pausing earlier on a `(user)` item, `critical: true` in 005, an abort condition, a block or a return to 002.
-  - **C (post-merge):** memory, sync-specs, derived status, wrap-up.
+- **One run = up to the next human gate:** the agent chains the agent-owned stages within a single call and only stops where a human decision is awaited, reporting the state. **Human gates:** release in `001` (`- [x] Ready to plan`); approval in `003`; human verification when `critical: true` in `005`; a `(user)` subtask item; `blocked: true`; the merge round in `006`. No gate is skipped — only the stops that were waiting on no one are eliminated. Typical calls:
+  - **A:** creates the card in 001 and **stops** (awaits the human's release) — unless explicitly commanded to proceed right away.
+  - **B (post-release):** 002 → prepares the `.approval.md` in 003 and **stops** (awaits approval).
+  - **C (post-approval):** 004 → 005 → opens the PR in 006 and **stops** (awaits merge) — pausing earlier on a `(user)` item, `critical: true` in 005, an abort condition, a block or a return to 002.
+  - **D (post-merge):** memory, sync-specs, derived status, wrap-up.
 - **No work outside a task:** changes to the real project (`project/` or external repository) only happen inside `004_processing`, with a plan approved in 003, **in the task's worktree**. No task, no change.
 - **Dependencies drive parallelism:** tasks (and subtask groups/items) with no pending prerequisite can run in parallel, each task in its own worktree — respecting the WIP limit of 3.
 - **The merge belongs to the human:** the agent never merges a task PR on its own — only when commanded in the merge round.
 - **Transition log:** every stage change adds a line to the card's Log: `YYYY-MM-DD — 002→003 — short reason`.
 - **Frontmatter always up to date:** when moving, update `stage:` and `updated:`; when blocking/unblocking, `blocked:` and `blocked_reason:`.
-- **Task claim — one agent per task:** when taking a task the orchestrator records `claimed_by:`/`claimed_at:` on the card (`scripts/pop_claim.py <id>`) and **releases when stopping** at a gate (`--release`). An active claim by another agent = busy task — do not touch it. Lease of ~2h: a claim older than that is orphaned and may be taken over (the script decides).
+- **Task claim — one agent per task:** when taking a task the orchestrator records `claimed_by:`/`claimed_at:` on the card (`scripts/pop_claim.py <id>`) and **releases when stopping** at a gate (`--release`). An active claim by another agent = busy task — do not touch **any file in the folder** (card, `.plan.md`, `.verify.md`, `subtasks/`): reading ok, writing forbidden. `pop_move` also refuses to transition a task with another agent's active claim (`--by` identifies the caller). Lease of ~2h: a claim older than that is orphaned and may be taken over (the script decides).
 - **Task files are linked by name only** (`[[1.1.1-user-table-creation]]`) — never by path, since the folder moves.
 - **Never skip stages.** Allowed returns: 003→002, 004→002, 005→004.

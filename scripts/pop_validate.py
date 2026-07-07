@@ -124,6 +124,15 @@ def check_cards(root, projects, violations):
                                   f"from folder `{stage}`")
 
 
+def check_release(root, projects, warnings):
+    """(g) card beyond 001 without the release checked (warning)."""
+    for project in projects:
+        for stage, task_dir, card in poplib.iter_cards(project):
+            if stage != "001_initial_task" and not poplib.task_released(card):
+                warnings.append(f"{card}:1: in {stage} without `- [x] Ready "
+                                f"to plan` — release gate skipped?")
+
+
 def check_worktrees(root, projects, warnings):
     """(e) non-empty worktrees without a task in 004_processing (warning)."""
     for project in projects:
@@ -187,6 +196,7 @@ def main():
     check_category_indexes(root, categories, violations)
     check_note_sizes(root, projects, violations)
     check_cards(root, projects, violations)
+    check_release(root, projects, warnings)
     check_worktrees(root, projects, warnings)
     check_wikilinks(root, warnings)
 

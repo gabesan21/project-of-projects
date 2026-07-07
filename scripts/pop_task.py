@@ -89,6 +89,8 @@ def main():
     print(f"OK: task created at {card}")
     print("Reminder: fill in 'What', 'Why' and depends_on, and link "
           "[[{}]] in the epoch file.".format(args.task_id))
+    print("The task only leaves 001 once the human checks "
+          "`- [x] Ready to plan` (Release section of the card).")
     return 0
 
 

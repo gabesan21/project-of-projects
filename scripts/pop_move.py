@@ -6,8 +6,14 @@ Finds the task folder in any project/stage, validates the transition
 allows exceptions), moves the whole folder, updates `stage:` and `updated:`
 in the card's frontmatter and records the line in `## Log`.
 
+Locks (overridden only with `--force`): a task with an active claim by
+**another** agent doesn't move (`--by` identifies the caller, default
+user@host); 001→002 requires the human release `- [x] Ready to plan`
+on the card.
+
 Usage:
-    python3 scripts/pop_move.py <task-id> <stage> [--reason "..."] [--force]
+    python3 scripts/pop_move.py <task-id> <stage> [--reason "..."]
+                                [--by NAME] [--force]
 """
 
 import argparse
@@ -73,8 +79,12 @@ def main():
                         help="destination stage")
     parser.add_argument("--reason", default="transition via pop_move",
                         help="short reason recorded in the card's Log")
+    parser.add_argument("--by", default=poplib.default_agent(),
+                        help="agent identifier (default: user@host; same as "
+                             "pop_claim)")
     parser.add_argument("--force", action="store_true",
-                        help="allows a transition outside the standard flow")
+                        help="allows a transition outside the standard flow "
+                             "and overrides claim/release locks")
     parser.add_argument("--vault", metavar="DIR",
                         help="vault root (default: folder above scripts/)")
     args = parser.parse_args()
@@ -94,6 +104,22 @@ def main():
               f"Flow: 001→002→003→004→005→006; returns: 003→002, "
               f"004→002, 005→004. Use --force for exceptions.")
         return 1
+
+    card_src = task_dir / f"{args.task_id}.md"
+    if card_src.is_file() and not args.force:
+        by, at = poplib.parse_claim(poplib.read_card(card_src))
+        if by and by != args.by and not poplib.claim_expired(at):
+            print(f"BUSY: {args.task_id} has an active claim by {by} since "
+                  f"{at.isoformat(timespec='minutes')} — don't move another "
+                  f"agent's task (use --force for exceptions).")
+            return 1
+        if (src == "001_initial_task" and args.stage == "002_planning"
+                and not poplib.task_released(card_src)):
+            print(f"NOT RELEASED: {args.task_id} doesn't have "
+                  f"`- [x] Ready to plan` on the card yet (Release section) — "
+                  f"the human releases the exit from 001 (use --force for "
+                  f"exceptions).")
+            return 1
 
     dest_dir = project / "kanban" / args.stage
     dest_dir.mkdir(parents=True, exist_ok=True)

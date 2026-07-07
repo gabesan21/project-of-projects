@@ -56,9 +56,10 @@ flowchart LR
 
 <p align="center"><sub>🟧 orange = a human gate — each agent run flows until the next one &nbsp;·&nbsp; ⬛ dark = an agent executes</sub></p>
 
-- **One run = up to the next human gate:** an agent invocation chains the agent-owned stages and only stops where a decision is yours — plan approval in 003, critical verification in 005, a `(user)` item, a block, the merge round in 006. No gate is ever skipped; you stay in the loop.
+- **One run = up to the next human gate:** an agent invocation chains the agent-owned stages and only stops where a decision is yours — the release in 001, plan approval in 003, critical verification in 005, a `(user)` item, a block, the merge round in 006. No gate is ever skipped; you stay in the loop.
 - **An orchestrator with dedicated subagents:** the main agent handles the card, gates and transitions; a **planner** subagent writes the plan (002), an **executor** runs it (004) and a separate **verifier** judges it with evidence (005) — verifier ≠ executor by design.
 - **002 is a wargame:** the planner recons with parallel subagents, then writes a plan a blind executor can follow — route, forks with triggers, abort conditions, acceptance criteria with verification runs, change specs, red-team pass — plus a "Minimal executor context" section, so the executor reads only what it needs (the vault's context protocol).
+- **001 ends with your release:** the card is yours to edit until you check `- [x] Ready to plan` — agents (and automation) can't move an unfinished task into planning.
 - **003 is yours:** nothing touches a repository until you check `- [x] Done`.
 - **004 runs in a git worktree** per task (`worktrees/<id>`, branch `task/<id>`), enabling safe parallel tasks.
 - **006 opens a PR** — you merge it, the agent writes the memory record and syncs specs.

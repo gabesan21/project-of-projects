@@ -25,9 +25,10 @@ Materializes a roadmap task as a folder in the kanban, at stage `001_initial_tas
 2. Create the folder `kanban/001_initial_task/<id>-<slug>/` with the card `<id>-<slug>.md` copied from `_templates/TASK.md`:
    - Full frontmatter (`id`, `project`, `epoch`, `phase`, `stage: 001_initial_task`, `critical`, `blocked: false`, `depends_on: [...]`, `awaiting_merge: false`, dates).
    - "What", "Why", "Dependencies" section and spec links filled in with the interview answers; first Log line.
+   - The **Release** section stays with `- [ ] Ready to plan` **unchecked** — the card is born unreleased.
 3. In the epoch table, turn the task id into the wikilink `[[<id>-<slug>]]` and update the status to `001_initial_task`.
 4. If it is the project's first active task, check whether the project status in the INDEX files (category + root) should change to "in progress".
-5. Close by offering to **chain straight into planning** via the `advance-task` skill: since one run goes **until the next human gate**, creating the task can proceed to 002 and stop at the `.approval.md` in 003 in the same call — if the user prefers, stop here and leave the advance for another call.
+5. Close by pointing at the **release gate**: the card stays in 001 waiting for the human to edit it and check `- [x] Ready to plan` (Release section) — the advance to 002 (`advance-task`) only happens after that. **Exception:** the user explicitly commanded in the conversation to proceed right away ("create it and advance") → check the box on their behalf, record it in the Log (`released by human command`) and chain into `advance-task` up to the `.approval.md` in 003.
 
 ## Cautions
 

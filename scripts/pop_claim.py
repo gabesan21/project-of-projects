@@ -14,42 +14,11 @@ Usage:
 """
 
 import argparse
-import datetime
-import getpass
-import socket
 import sys
 
 import poplib
 
-DEFAULT_LEASE_HOURS = 2
-
-
-def default_agent():
-    """Default agent identifier: user@host."""
-    return f"{getpass.getuser()}@{socket.gethostname()}"
-
-
-def now():
-    return datetime.datetime.now().astimezone()
-
-
-def parse_claim(meta):
-    """Returns (claimed_by, claimed_at | None)."""
-    by = meta.get("claimed_by") or None
-    raw = str(meta.get("claimed_at") or "")
-    try:
-        at = datetime.datetime.fromisoformat(raw)
-        if at.tzinfo is None:
-            at = at.astimezone()
-    except ValueError:
-        at = None
-    return by, at
-
-
-def expired(at, lease_hours):
-    if at is None:
-        return True  # a claim without a valid timestamp holds no lease
-    return now() - at > datetime.timedelta(hours=lease_hours)
+DEFAULT_LEASE_HOURS = poplib.DEFAULT_LEASE_HOURS
 
 
 def set_fields(card, updates):
@@ -73,7 +42,7 @@ def main():
     parser = argparse.ArgumentParser(
         description="Task claim (lease) to avoid duplicated work.")
     parser.add_argument("task_id")
-    parser.add_argument("--by", default=default_agent(),
+    parser.add_argument("--by", default=poplib.default_agent(),
                         help="agent identifier (default: user@host)")
     parser.add_argument("--release", action="store_true",
                         help="releases the claim instead of taking it")
@@ -96,8 +65,8 @@ def main():
     if not card.is_file():
         sys.exit(f"Card not found: {card}")
     meta = poplib.read_card(card)
-    by, at = parse_claim(meta)
-    holds = by is not None and not expired(at, args.lease_hours)
+    by, at = poplib.parse_claim(meta)
+    holds = by is not None and not poplib.claim_expired(at, args.lease_hours)
 
     if args.status:
         if by is None:
@@ -130,7 +99,7 @@ def main():
         why = "expired" if not holds else "forced (--force)"
         print(f"{args.task_id}: taking over {why} claim from {by}.")
     set_fields(card, {"claimed_by": args.by,
-                      "claimed_at": now().isoformat(timespec="minutes")})
+                      "claimed_at": poplib.now().isoformat(timespec="minutes")})
     print(f"{args.task_id} [{stage}]: claim registered for {args.by} "
           f"(lease {args.lease_hours}h — renew by re-claiming).")
     return 0

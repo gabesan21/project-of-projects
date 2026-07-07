@@ -32,6 +32,12 @@ One or two sentences: what this task delivers.
 
 One sentence: why now, and what it unblocks.
 
+## Release (user)
+
+> Only the human checks it (or the agent, **under an explicit command** from the human, recording it in the Log). Without `[x]`, the task doesn't leave 001 — the card is yours to edit; `pop_move` refuses 001→002.
+
+- [ ] Ready to plan
+
 ## Skills per stage
 
 > The 002 row is filled in at task creation (001); the 004/005 rows are filled in during 002_planning. Owners per stage: see [[WORKFLOW|WORKFLOW]].

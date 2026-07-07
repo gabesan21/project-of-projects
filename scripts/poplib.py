@@ -9,6 +9,9 @@ Stdlib only (Python >= 3.9).
 from __future__ import annotations
 
 import datetime
+import getpass
+import re
+import socket
 from pathlib import Path
 from typing import Iterator, Optional, Tuple
 
@@ -20,6 +23,12 @@ STAGES = [
     "005_verifying",
     "006_done",
 ]
+
+# Default lease for the task claim (see pop_claim.py).
+DEFAULT_LEASE_HOURS = 2
+
+# Human release checkbox on the card (gate for leaving 001).
+RELEASE_MARK = re.compile(r"^\s*[-*]\s*\[[xX]\]\s*Ready to plan")
 
 def vault_root(override: Optional[str] = None) -> Path:
     """Vault root: `--vault` if given, otherwise the folder above `scripts/`."""
@@ -124,6 +133,47 @@ def read_card(card: Path) -> dict:
     """Frontmatter of a card, as a dict (empty if absent)."""
     meta, _ = parse_frontmatter(card.read_text(encoding="utf-8"))
     return meta
+
+
+def task_released(card: Path) -> bool:
+    """True if the card has `- [x] Ready to plan` outside code fences."""
+    in_fence = False
+    for line in card.read_text(encoding="utf-8").splitlines():
+        if line.lstrip().startswith("```"):
+            in_fence = not in_fence
+            continue
+        if not in_fence and RELEASE_MARK.match(line):
+            return True
+    return False
+
+
+def default_agent() -> str:
+    """Default agent identifier: user@host."""
+    return f"{getpass.getuser()}@{socket.gethostname()}"
+
+
+def now() -> datetime.datetime:
+    return datetime.datetime.now().astimezone()
+
+
+def parse_claim(meta: dict) -> Tuple[Optional[str], Optional[datetime.datetime]]:
+    """Returns (claimed_by, claimed_at | None) from a card's frontmatter."""
+    by = meta.get("claimed_by") or None
+    raw = str(meta.get("claimed_at") or "")
+    try:
+        at = datetime.datetime.fromisoformat(raw)
+        if at.tzinfo is None:
+            at = at.astimezone()
+    except ValueError:
+        at = None
+    return by, at
+
+
+def claim_expired(at: Optional[datetime.datetime],
+                  lease_hours: float = DEFAULT_LEASE_HOURS) -> bool:
+    if at is None:
+        return True  # a claim without a valid timestamp holds no lease
+    return now() - at > datetime.timedelta(hours=lease_hours)
 
 
 def find_task(root: Path, task_id: str):
