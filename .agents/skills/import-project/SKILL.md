@@ -24,7 +24,7 @@ Brings a project **that already exists** (repository or local folder) into the P
 
 ## Step 2 — Fit into the vault
 
-Ask: **(a)** which category (in `categories/`: `agents` | `applications` | `writing` | `work` — or a new one)? **(b)** which **type** (explain using TYPES.md): AI specs can be committed to the repo → `included`; repo must stay clean of harness → `default` (clone in `project/`); it's one of several repos of the same project → `multi-repo`? **(c)** what is the tasks' **PR branch**? **(d)** project name in kebab-case (propose one; it may differ from the repo name). **(e)** what is the **project's default language** — the recon indicates the current language of code and docs; confirm. Specs, notes, research, code comments and the flow follow that language (declared in the project's AGENTS.md). **(f)** if it is an application: which **languages must it support** (i18n) — the recon shows what i18n already exists; the confirmed list goes into the AGENTS.md and is handled in the roadmap and specs.
+Ask: **(a)** which category (in `categories/`: `agents` | `applications` | `writing` | `work` — or a new one)? **(b)** which **type** (explain using TYPES.md): AI specs can be committed to the repo → `included`; repo must stay clean of harness → `default` (clone in `project/`); it's one of several repos of the same project → `multi-repo`; several repos that must work standalone, each with a harness committed inside → `full-multi-repo`? **(c)** what is the tasks' **PR branch**? **(d)** project name in kebab-case (propose one; it may differ from the repo name). **(e)** what is the **project's default language** — the recon indicates the current language of code and docs; confirm. Specs, notes, research, code comments and the flow follow that language (declared in the project's AGENTS.md). **(f)** if it is an application: which **languages must it support** (i18n) — the recon shows what i18n already exists; the confirmed list goes into the AGENTS.md and is handled in the roadmap and specs.
 
 ## Step 3 — Project flow (what makes the specs faithful)
 
@@ -37,7 +37,7 @@ Ask what the code doesn't show: **(a)** what the project does today, in the user
 
 ## Step 5 — Materialization
 
-1. Create the full structure as in `new-project` step 6 (anatomy per type, clones, `.gitignore`, indexes, Aggregated repositories when `included`/`multi-repo`).
+1. Create the full structure as in `new-project` step 6 (anatomy per type, clones, `.gitignore`, indexes, Aggregated repositories when `included`/`multi-repo`/`full-multi-repo`).
 2. **Organization gate** — add to the "Essential rules" of the project's AGENTS.md:
    > **Imported project:** until Epoch 1 (Organization) is `completed` in the ROADMAP, no task may change `project/` or the repository — only the harness (specs, skills, researches, notes). A change request during this period → record it in `notes/ideas/` or as a future-epoch task, explaining the gate.
 3. **PROJECT.md** receives the summarized recon map; **ROADMAP.md** with Epoch 1 = Organization; the epoch file carries the **RECON NEEDED** items left open (with each one's check).

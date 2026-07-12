@@ -8,7 +8,7 @@ Overview of every project in the vault. Descriptions of up to 144 characters —
 ProjectOfProjects/
 ├── INBOX.md         → [[INBOX|what awaits human decision]]
 ├── WORKFLOW.md      → [[WORKFLOW|task flow on the kanban]]
-├── TYPES.md         → [[TYPES|project types: default, included, multi-repo]]
+├── TYPES.md         → [[TYPES|project types: default, included, multi-repo, full-multi-repo]]
 ├── drafts/          → the human's project drafts: new/ and import/ ([[_templates/NEW_PROJECT|NEW_PROJECT]] · [[_templates/IMPORT_PROJECT|IMPORT_PROJECT]])
 ├── open_questions/  → open questions for the human, outside any task — the open ones show up in the [[INBOX|INBOX]]
 └── categories/      → every project category
@@ -44,7 +44,7 @@ _No projects yet._
 
 ## Aggregated repositories
 
-Repositories this PoP aggregates — `included` projects with a repo and **all** repos of `multi-repo` projects (see [[TYPES|TYPES]]; a `default` project's repo lives only in the project's AGENTS.md). The clones are gitignored: whoever forks the PoP clones from this list, each at the indicated path.
+Repositories this PoP aggregates — `included` projects with a repo and **all** repos of `multi-repo` and `full-multi-repo` projects (see [[TYPES|TYPES]]; a `default` project's repo lives only in the project's AGENTS.md). The clones are gitignored: whoever forks the PoP clones from this list, each at the indicated path.
 
 _No repositories yet._
 

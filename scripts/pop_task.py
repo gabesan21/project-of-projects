@@ -9,6 +9,7 @@ in any project/stage (ids are unique across the vault).
 Usage:
     python3 scripts/pop_task.py <category>/<project> <task-id> [--title "..."]
     e.g.: python3 scripts/pop_task.py agents/my-project 1.2.3-user-table-creation
+    Embedded repo (full-multi-repo): <category>/<project>/<repo>.
 """
 
 import argparse
@@ -48,7 +49,8 @@ def main():
         description="Creates the folder and card of a new task in "
                     "kanban/001_initial_task, from _templates/TASK.md.")
     parser.add_argument("project", metavar="CATEGORY/PROJECT",
-                        help="destination project (e.g. agents/my-project)")
+                        help="destination project (e.g. agents/my-project; "
+                             "embedded repo: applications/my-app/frontend)")
     parser.add_argument("task_id", metavar="TASK-ID",
                         help="full task id (e.g. 1.2.3-user-table-creation)")
     parser.add_argument("--title", help="short card title "
@@ -63,10 +65,10 @@ def main():
         return 1
 
     root = poplib.vault_root(args.vault)
-    project_dir = root / "categories" / args.project
+    project_dir = poplib.project_dir(root, args.project)
     if not (project_dir / "kanban").is_dir():
         print(f"Project without kanban/: {project_dir} — check "
-              f"<category>/<project>.")
+              f"<category>/<project>[/<repo>].")
         return 1
     existing = poplib.find_task(root, args.task_id)
     if existing:

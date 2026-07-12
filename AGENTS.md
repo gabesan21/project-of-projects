@@ -17,7 +17,7 @@ ProjectOfProjects/
 ├── INDEX.md             ← master index: every project, 144 chars each
 ├── INBOX.md             ← the human's inbox: everything awaiting a decision
 ├── WORKFLOW.md          ← kanban state machine (task flow)
-├── TYPES.md             ← project types: default | included | multi-repo
+├── TYPES.md             ← project types: default | included | multi-repo | full-multi-repo
 ├── _templates/          ← templates for every standard file
 ├── notes/               ← vault notes: decisions/ holds the harness decisions
 ├── researches/          ← the PoP's own deep researches (raw source in raw/, synthesis alongside)
@@ -79,7 +79,7 @@ When creating a project, **copy the templates from `_templates/`** and create th
 
 ## Types and repositories
 
-The PoP is a **repository aggregator**: every project declares a **type** in its AGENTS.md — `default` (work in `project/`, optional repo declared only there), `included` (harness at the root of the project's repo) or `multi-repo` (`project/` with several repos) — detail in [[TYPES|TYPES]]. Repos of `included` and `multi-repo` go in the **Aggregated repositories** section of the root [[INDEX|INDEX]]; clones are never committed to the PoP (`.gitignore`).
+The PoP is a **repository aggregator**: every project declares a **type** in its AGENTS.md — `default` (work in `project/`, optional repo declared only there), `included` (harness at the root of the project's repo), `multi-repo` (`project/` with several repos) or `full-multi-repo` (several repos, each with an embedded `included` harness; the PoP keeps the general ROADMAP and a kanban for cross-repo tasks only) — detail in [[TYPES|TYPES]]. Repos of `included`, `multi-repo` and `full-multi-repo` go in the **Aggregated repositories** section of the root [[INDEX|INDEX]]; clones are never committed to the PoP (`.gitignore`).
 
 ## IDs and link convention
 

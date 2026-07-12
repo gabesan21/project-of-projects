@@ -22,7 +22,7 @@ Ask: **(a)** what is the project, in one or two sentences? **(b)** what does suc
 
 ## Step 2 — Type and repositories
 
-Ask: **(a)** what is the **type** — `default` | `included` | `multi-repo` (explain using [[TYPES|TYPES]])? **(b)** are there repository(ies)? URL(s) and name of each — **listing all of them is mandatory** if `multi-repo`. **(c)** what is the **PR branch** — where task worktrees open PRs to (e.g. `main`)?
+Ask: **(a)** what is the **type** — `default` | `included` | `multi-repo` | `full-multi-repo` (explain using [[TYPES|TYPES]])? **(b)** are there repository(ies)? URL(s) and name of each — **listing all of them is mandatory** if `multi-repo`/`full-multi-repo`. **(c)** what is the **PR branch** — where task worktrees open PRs to (e.g. `main`)?
 
 ## Step 3 — Context and harness
 
@@ -40,9 +40,10 @@ From the topics that surfaced in the previous steps, propose which deserve a spe
 
 1. Create the structure — anatomy: the "Anatomy of a project" section of [[AGENTS|AGENTS]]; variations per type: [[TYPES|TYPES]]. This skill's specifics: the project's AGENTS.md from `_templates/AGENTS-PROJECT.md` (type, repos, PR branch, language, i18n) + CLAUDE.md symlink; real copies of the root core skills in `.agents/skills/` (new-task, advance-task, plan-roadmap, write-spec, sync-specs); PROJECT.md/ROADMAP.md from the templates, filled with steps 1–4; optional RESEARCHES.md (`_templates/RESEARCHES.md`); the 6 empty kanban folders.
 2. **Type `included` with a repo:** clone the repo into `categories/<category>/<project>/` and build the anatomy **inside it**, with the core skill copies in `.agents/skills/` and `_templates/`, `WORKFLOW.md` and `TYPES.md` copied from the root; add the clone's path to the PoP **root** `.gitignore`. Never create tool-specific folders (`.claude/` etc.) — the vault is agent-agnostic.
-3. **Application (programming):** paste into the project's AGENTS.md the full section from `_templates/DOX.md` (it may exceed ~150 lines to accommodate it) — the code's context follows the DOX process: a tree of AGENTS.md as per-subtree contracts, started when the code is born. Type `default` with a repo that must stay clean of AI files → ask whether the tree is committed (default) or only the root contract stays in the PoP.
-4. **Register the repositories and indexes in the same session:** `included`/`multi-repo` → **Aggregated repositories** table in the root `INDEX.md` (`default` → only in the project's AGENTS.md); `categories/<category>/INDEX.md` (link, status, ≤600 chars) and root `INDEX.md` (link, ≤144 chars).
-5. No `<...>` placeholder may remain; dates in YYYY-MM-DD. Close with a summary: what was created, open questions and a suggestion for the first task (`new-task` skill).
+3. **Type `full-multi-repo`:** the main folder in the PoP stays **reduced** — no `specs/` and no `memory/`, kanban **for cross-repo tasks only** — and each repo is cloned into `project/<repo>/` receiving **inside it** the full `included` installation from item 2 (anatomy, core skills, `_templates/`, `WORKFLOW.md`, `TYPES.md`), with `worktrees/` in the **repo's** `.gitignore`. Each repo's AGENTS.md declares `type: included` + a **"Part of"** section linking the parent project, the general ROADMAP and the cross kanban. The **project's** `.gitignore` ignores `worktrees/` and the clones; each repo gets its own ROADMAP and the general ROADMAP points to them with a trigger.
+4. **Application (programming):** paste into the project's AGENTS.md the full section from `_templates/DOX.md` (it may exceed ~150 lines to accommodate it) — the code's context follows the DOX process: a tree of AGENTS.md as per-subtree contracts, started when the code is born. Type `default` with a repo that must stay clean of AI files → ask whether the tree is committed (default) or only the root contract stays in the PoP.
+5. **Register the repositories and indexes in the same session:** `included`/`multi-repo`/`full-multi-repo` → **Aggregated repositories** table in the root `INDEX.md` (`default` → only in the project's AGENTS.md); `categories/<category>/INDEX.md` (link, status, ≤600 chars) and root `INDEX.md` (link, ≤144 chars).
+6. No `<...>` placeholder may remain; dates in YYYY-MM-DD. Close with a summary: what was created, open questions and a suggestion for the first task (`new-task` skill).
 
 ## Cautions
 

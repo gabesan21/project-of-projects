@@ -8,10 +8,10 @@ Scripts in **Python 3 (≥3.9), stdlib only** — agent-agnostic and cross-platf
 | `pop_claim.py <task>` | Task claim (lease) — one agent per task: writes `claimed_by:`/`claimed_at:` to the card; active claim by another agent → refusal (exit 1); a 2h lease expires an orphan claim. `--release` releases, `--status` queries, `--by` identifies the agent. |
 | `pop_validate.py` | Validates limits: 144/600 chars in the indexes, ≤150 lines per note (plans ≤200; research `raw/` exempt), card frontmatter, consistent `stage:`; warnings: orphan worktrees and broken wikilinks. Exit 1 on violation. |
 | `pop_move.py <task> <stage>` | Moves the task folder, validates the transition (returns: 003→002, 004→002, 005→004; `--force` for exceptions), updates `stage:`/`updated:` and the `## Log` (`--reason`). Refuses a task with another agent's active claim (`--by`) and 001→002 without `- [x] Ready to plan`. |
-| `pop_task.py <cat>/<proj> <id>` | Scaffolding: card in `001_initial_task` from `_templates/TASK.md` + empty `subtasks/`. `--title "..."` sets the title. |
-| `pop_worktree.py add\|remove <task>` | Creates/removes `worktrees/<id>` + branch `task/<id>` via git (`--repo` for an external repo, `--base`, `--delete-branch`). |
+| `pop_task.py <cat>/<proj> <id>` | Scaffolding: card in `001_initial_task` from `_templates/TASK.md` + empty `subtasks/`. `--title "..."` sets the title. Embedded repo of a `full-multi-repo`: `<cat>/<proj>/<repo>`. |
+| `pop_worktree.py add\|remove <task>` | Creates/removes `worktrees/<id>` + branch `task/<id>` via git. Target repo: `--repo` (a path, or a **clone name** in `project/<name>/` → nested worktree `worktrees/<id>/<name>/`, for a cross task of `multi-repo`/`full-multi-repo`); default: the project folder if it is a git repo (included/embedded repo), otherwise the vault root. `--base`, `--delete-branch`. |
 
-`poplib.py` is the shared module: vault root, project discovery (glob `categories/*/*/kanban/`; `<cat>/<proj>` in the arguments is always relative to `categories/`) and its own frontmatter parser (no PyYAML).
+`poplib.py` is the shared module: vault root, project discovery (globs `categories/*/*/kanban/` and `categories/*/*/project/*/kanban/` — embedded repos of `full-multi-repo`; labels `<cat>/<proj>` or `<cat>/<proj>/<repo>`, always relative to `categories/` and without the `project/` segment) and its own frontmatter parser (no PyYAML).
 
 Example:
 

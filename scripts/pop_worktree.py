@@ -2,13 +2,18 @@
 """pop_worktree — creates/removes a task's git worktree.
 
 `add` creates `worktrees/<task-id>` in the task's project folder, with the
-branch `task/<task-id>`, in the given repository (`--repo`; default: vault
-root). `remove` undoes the worktree and deletes the branch if it is already
-merged (`--delete-branch` forces the deletion).
+branch `task/<task-id>`. Target repository: `--repo`, or the project's own
+folder when it is a git repo (an `included` clone / embedded repo of a
+`full-multi-repo`), otherwise the vault root. A `--repo <name>` that matches
+the project's `project/<name>/` uses that clone and nests the worktree in
+`worktrees/<task-id>/<name>/` (cross task of `multi-repo`/`full-multi-repo` —
+repeat the command for each affected repo). `remove` undoes the worktree and
+deletes the branch if it is already merged (`--delete-branch` forces the
+deletion).
 
 Usage:
-    python3 scripts/pop_worktree.py add    <task-id> [--repo DIR] [--base BRANCH]
-    python3 scripts/pop_worktree.py remove <task-id> [--repo DIR] [--delete-branch]
+    python3 scripts/pop_worktree.py add    <task-id> [--repo DIR|NAME] [--base BRANCH]
+    python3 scripts/pop_worktree.py remove <task-id> [--repo DIR|NAME] [--delete-branch]
 """
 
 import argparse
@@ -31,8 +36,8 @@ def fail(action, result):
     return 1
 
 
-def cmd_add(repo, worktree, branch, base):
-    """git worktree add worktrees/<id> -b task/<id> [<base>]."""
+def cmd_add(repo, worktree, branch, base, rel):
+    """git worktree add worktrees/<id>[/<repo>] -b task/<id> [<base>]."""
     if worktree.exists():
         print(f"Worktree already exists: {worktree}")
         return 1
@@ -45,8 +50,7 @@ def cmd_add(repo, worktree, branch, base):
         return fail(f"create the worktree {worktree}", result)
     print(f"OK: worktree {worktree} created on branch {branch}"
           + (f" from {base}." if base else "."))
-    print(f"Reminder: record `worktree: worktrees/{worktree.name}` in the "
-          f"card's frontmatter.")
+    print(f"Reminder: record `worktree: {rel}` in the card's frontmatter.")
     return 0
 
 
@@ -81,8 +85,12 @@ def main():
     parser.add_argument("action", choices=["add", "remove"],
                         help="add: creates worktree and branch; remove: undoes")
     parser.add_argument("task_id", help="task id (folder name in the kanban)")
-    parser.add_argument("--repo", metavar="DIR",
-                        help="target git repository (default: vault root)")
+    parser.add_argument("--repo", metavar="DIR|NAME",
+                        help="target git repository: a path, or the name of a "
+                             "clone in the task's project project/<name>/ "
+                             "(worktree nested in worktrees/<id>/<name>/); "
+                             "default: the project folder if it is a git "
+                             "repo, otherwise the vault root")
     parser.add_argument("--base", metavar="BRANCH",
                         help="starting branch for the new branch (add only)")
     parser.add_argument("--delete-branch", action="store_true",
@@ -100,14 +108,26 @@ def main():
     print(f"Task {args.task_id} in {poplib.project_label(root, project)} "
           f"({stage}).")
 
-    repo = poplib.vault_root(args.repo) if args.repo else root
+    worktree = project / "worktrees" / args.task_id
+    if args.repo:
+        embedded = project / "project" / args.repo
+        if "/" not in args.repo and embedded.is_dir():
+            # clone name of the project: nested worktree, one per affected repo
+            repo = embedded
+            worktree = worktree / args.repo
+        else:
+            repo = poplib.vault_root(args.repo)
+    elif (project / ".git").exists():
+        repo = project  # included clone or embedded repo of a full-multi-repo
+    else:
+        repo = root
     if not (repo / ".git").exists():
         print(f"Not a git repository: {repo}")
         return 1
-    worktree = project / "worktrees" / args.task_id
     branch = f"task/{args.task_id}"
     if args.action == "add":
-        return cmd_add(repo, worktree, branch, args.base)
+        return cmd_add(repo, worktree, branch, args.base,
+                       worktree.relative_to(project).as_posix())
     return cmd_remove(repo, worktree, branch, args.delete_branch)
 
 

@@ -2,8 +2,9 @@
 """pop_validate — validates the PoP vault's limits and invariants.
 
 Checks: root INDEX.md descriptions (<=144 chars) and category INDEX.md
-descriptions (<=600 chars); project notes with <=150 lines (plans <=200);
-required frontmatter on task cards and `stage:` consistency with the
+descriptions (<=600 chars); project notes with <=150 lines (plans <=200;
+`project/` — execution and clones — is outside the yardstick); required
+frontmatter on task cards and `stage:` consistency with the
 folder; orphan worktrees (warning); and broken wikilinks (warning — a
 link to a future note is legitimate). Exit 1 if there is a violation;
 warnings do not fail.
@@ -103,6 +104,9 @@ def check_note_sizes(root, projects, violations):
                 continue
             if "raw" in path.parts:
                 continue  # raw research source: immutable, not a note
+            if "project" in path.relative_to(scope).parts:
+                continue  # execution/clones: not notes; an embedded repo
+                          # (full-multi-repo) is swept as its own scope
             limit = note_limit(path)
             if limit is None:
                 continue

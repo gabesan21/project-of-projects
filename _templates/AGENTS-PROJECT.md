@@ -4,7 +4,7 @@
 
 > Project managed by the **ProjectOfProjects (PoP)** workflow. `CLAUDE.md` is a symlink to this file — always edit this one.
 
-- **Type:** default | included | multi-repo — see [[TYPES|TYPES]].
+- **Type:** default | included | multi-repo | full-multi-repo — see [[TYPES|TYPES]].
 - **Project language:** <en> — specs, notes, researches, code comments and the entire kanban flow follow this language.
 - **Supported languages (i18n):** <list of languages the application must support — handled in the roadmap and specs. Applications only; remove if not applicable.>
 - **Profile:** [[categories/<category>/<project>/PROJECT|PROJECT]] · **Roadmap:** [[categories/<category>/<project>/ROADMAP|ROADMAP]]
@@ -13,9 +13,11 @@
 
 | Repo | URL | Clone at | PR branch |
 |------|-----|----------|-----------|
-| <name> | <url> | `project/<name>/` (default/multi-repo) \| project root (included) | <main> |
+| <name> | <url> | `project/<name>/` (default/multi-repo/full-multi-repo) \| project root (included) | <main> |
 
 _No external repository: the work lives in the PoP repository and task PRs target its main branch._
+
+> **`full-multi-repo`:** each embedded repo has its **own AGENTS.md** (type `included`) with a **"Part of"** section linking this parent project, the general ROADMAP and the cross-repo kanban. Specs and memory live only in the repos — see [[TYPES|TYPES]].
 
 ## Workflow
 

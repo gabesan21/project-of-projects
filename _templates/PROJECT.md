@@ -22,7 +22,7 @@ Standard anatomy (see the root AGENTS.md): project `AGENTS.md` + `.agents/skills
 
 Project-specific rules for agents working on this project:
 
-- **Type and repositories:** declared in the [[categories/<category>/<project>/AGENTS|project AGENTS]] (`default` | `included` | `multi-repo`, repos and PR branch — see [[TYPES|TYPES]]).
+- **Type and repositories:** declared in the [[categories/<category>/<project>/AGENTS|project AGENTS]] (`default` | `included` | `multi-repo` | `full-multi-repo`, repos and PR branch — see [[TYPES|TYPES]]).
 - **Worktree per task:** yes (default) | no (acceptable only in a project without a git repository — tasks lose isolation and the PR).
 - **Tools and restrictions:** what is allowed and what is not.
 - **Tone/style:** if applicable.

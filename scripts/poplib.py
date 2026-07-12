@@ -1,9 +1,10 @@
 """poplib — shared utilities for the PoP CLI scripts.
 
-Provides: vault root detection, project discovery (`categories/<category>/<project>/`
-folders with `kanban/`), a simple YAML frontmatter parser (key: value,
-inline `[a, b]` lists and block `- item` lists) and task card helpers.
-Stdlib only (Python >= 3.9).
+Provides: vault root detection, project discovery (folders with
+`kanban/`: `categories/<category>/<project>/` and embedded repos of
+`full-multi-repo` projects in `project/<repo>/`), a simple YAML frontmatter
+parser (key: value, inline `[a, b]` lists and block `- item` lists) and
+task card helpers. Stdlib only (Python >= 3.9).
 """
 
 from __future__ import annotations
@@ -102,19 +103,38 @@ def parse_frontmatter(text: str) -> Tuple[dict, str]:
 
 
 def discover_projects(root: Path) -> list:
-    """Vault projects: `categories/<category>/<project>/` folders with `kanban/`."""
+    """Vault projects: folders with `kanban/` — `categories/<category>/<project>/`
+    and, in `full-multi-repo` projects, the embedded repos in `project/<repo>/`."""
     projects = []
-    for kanban in sorted(root.glob("categories/*/*/kanban")):
-        if kanban.parent.parent.name.startswith("."):
-            continue
-        if kanban.is_dir():
-            projects.append(kanban.parent)
+    for pattern in ("categories/*/*/kanban", "categories/*/*/project/*/kanban"):
+        for kanban in sorted(root.glob(pattern)):
+            rel = kanban.parent.relative_to(root)
+            if any(part.startswith(".") for part in rel.parts):
+                continue
+            if kanban.is_dir():
+                projects.append(kanban.parent)
     return projects
 
 
 def project_label(root: Path, project: Path) -> str:
-    """Short `<category>/<project>` name of a project folder."""
-    return project.relative_to(root / "categories").as_posix()
+    """Short `<category>/<project>` name of a project folder — or
+    `<category>/<project>/<repo>` for an embedded repo (`project/` segment omitted)."""
+    parts = project.relative_to(root / "categories").parts
+    if len(parts) == 4 and parts[2] == "project":
+        return "/".join((parts[0], parts[1], parts[3]))
+    return "/".join(parts)
+
+
+def project_dir(root: Path, label: str) -> Path:
+    """Inverse of `project_label`: project folder from the label.
+
+    `<cat>/<proj>` -> `categories/<cat>/<proj>`;
+    `<cat>/<proj>/<repo>` -> `categories/<cat>/<proj>/project/<repo>`.
+    """
+    parts = [p for p in label.split("/") if p]
+    if len(parts) == 3:
+        return root / "categories" / parts[0] / parts[1] / "project" / parts[2]
+    return root.joinpath("categories", *parts)
 
 
 def iter_cards(project: Path) -> Iterator[Tuple[str, Path, Path]]:
