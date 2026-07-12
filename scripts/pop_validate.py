@@ -5,15 +5,18 @@ Checks: root INDEX.md descriptions (<=144 chars) and category INDEX.md
 descriptions (<=600 chars); project notes with <=150 lines (plans <=200;
 `project/` — execution and clones — is outside the yardstick); required
 frontmatter on task cards and `stage:` consistency with the
-folder; orphan worktrees (warning); and broken wikilinks (warning — a
-link to a future note is legitimate). Exit 1 if there is a violation;
-warnings do not fail.
+folder; orphan worktrees (warning); broken wikilinks (warning — a
+link to a future note is legitimate); and `<!-- pop-hash: <path>
+sha256=<hash> -->` code-citation annotations (fail-closed: a nonexistent
+cited file or a divergent hash is a violation — see DOX rule 9). Exit 1
+if there is a violation; warnings do not fail.
 
 Usage:
     python3 scripts/pop_validate.py [--vault DIR]
 """
 
 import argparse
+import hashlib
 import re
 import sys
 
@@ -28,6 +31,7 @@ CARD_REQUIRED = ("id", "project", "stage", "created", "updated")
 
 ROOT_ENTRY = re.compile(r"^- \[\[.*?\]\]\s*—\s*(.+)$")
 WIKILINK = re.compile(r"!?\[\[([^\]|#^]*)")
+POP_HASH = re.compile(r"<!--\s*pop-hash:\s*(\S+)\s+sha256=([0-9a-fA-F]+)\s*-->")
 INLINE_CODE = re.compile(r"`[^`]*`")
 LINK_SKIP_PARTS = {"external-repository", ".obsidian", ".git", "worktrees",
                    "__pycache__", "node_modules"}
@@ -182,11 +186,44 @@ def check_wikilinks(root, warnings):
                 warnings.append(f"{path}:{n}: broken wikilink [[{target}]]")
 
 
+def check_hash_pins(root, violations):
+    """(h) pop-hash annotations: the cited file exists and the hash matches.
+
+    Fail-closed (DOX rule 9): a malformed annotation, a nonexistent cited
+    file or a divergent hash is a violation. The path is relative to the
+    folder of the file carrying the annotation; the divergence message
+    prints the current hash to paste after revising the citation.
+    """
+    for path in sorted(root.rglob("*.md")):
+        parts = set(path.relative_to(root).parts)
+        if parts & LINK_SKIP_PARTS or "_templates" in parts or "raw" in parts:
+            continue
+        for n, line in lines_outside_fences(path):
+            for m in POP_HASH.finditer(line):
+                relpath, digest = m.group(1), m.group(2).lower()
+                if len(digest) != 64:
+                    violations.append(f"{path}:{n}: malformed pop-hash "
+                                      f"(sha256 with {len(digest)} hex "
+                                      f"chars, expected 64)")
+                    continue
+                target = (path.parent / relpath).resolve()
+                if not target.is_file():
+                    violations.append(f"{path}:{n}: pop-hash cites a "
+                                      f"nonexistent file `{relpath}`")
+                    continue
+                actual = hashlib.sha256(target.read_bytes()).hexdigest()
+                if actual != digest:
+                    violations.append(
+                        f"{path}:{n}: divergent pop-hash for `{relpath}` "
+                        f"— the cited file changed; revise the citation "
+                        f"and update to sha256={actual}")
+
+
 def main():
     parser = argparse.ArgumentParser(
         description="Validates vault limits: 144/600 chars, 150 lines, "
-                    "card frontmatter, orphan worktrees and broken "
-                    "wikilinks.")
+                    "card frontmatter, orphan worktrees, broken wikilinks "
+                    "and pop-hash code-citation annotations.")
     parser.add_argument("--vault", metavar="DIR",
                         help="vault root (default: folder above scripts/)")
     args = parser.parse_args()
@@ -203,6 +240,7 @@ def main():
     check_release(root, projects, warnings)
     check_worktrees(root, projects, warnings)
     check_wikilinks(root, warnings)
+    check_hash_pins(root, violations)
 
     for w in warnings:
         print(f"[WARNING] {w}")

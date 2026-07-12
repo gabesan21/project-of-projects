@@ -114,6 +114,10 @@ The central procedures are **skills** in the open Agent Skills format (`SKILL.md
 | `ingest-research` | Ingests a delivered research result: immutable raw source in `raw/`, synthesis with triggered links and a contradiction check against specs/notes. |
 | `weekly-review` | Vault overview: what awaits the human, what is stalled, proposals. |
 | `excalidraw-diagram` *(optional, external)* | `.excalidraw` diagrams that argue visually — for specs, plans and notes (pairs with the Obsidian Excalidraw plugin). By [coleam00](https://github.com/coleam00/excalidraw-diagram-skill) — clone it into `.agents/skills/excalidraw-diagram/`. |
+| `delegate-coding` | Hub of the coding-skill family: contract for delegating coding work to a headless CLI (always yolo, pre-existing auth with abort on error) and tool choice. Integration into the PoP workflow is a future decision. |
+| `run-claude-code` | Invoke headless Claude Code (`claude -p`) as the executor of a delegated coding task. |
+| `run-cursor-agent` | Invoke the headless Cursor CLI (`cursor-agent -p --force`) as the executor of a delegated coding task. |
+| `run-opencode` | Invoke headless opencode (`opencode run`) as the executor of a delegated coding task. |
 
 When creating a new skill: create the folder at `.agents/skills/<name>/SKILL.md` and register it in the table above. When changing a core workflow skill, propagate the copy to the projects' `.agents/skills/` (the `weekly-review` audits the drift). Third-party skills are not edited locally — update them from upstream.
 
