@@ -1,0 +1,4 @@
+# Vault worktree contents are never versioned; this folder exists only to host them.
+# Every agent working on the PoP itself creates its own worktree + branch here (see AGENTS.md).
+*
+!.gitignore

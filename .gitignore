@@ -1,5 +1,9 @@
-# Task worktrees are never committed (see WORKFLOW.md)
+# Worktree contents are never committed (see WORKFLOW.md) — git worktree add creates them on demand
 **/worktrees/
+# Exception: the PoP ROOT worktrees/ folder exists versioned (it hosts the vault work of parallel agents); only its contents are ignored — see worktrees/.gitignore
+!/worktrees/
+/worktrees/*
+!/worktrees/.gitignore
 
 # Clones of aggregated repositories (keep in sync with "Aggregated repositories" in INDEX.md)
 # `included` projects with a repo: categories/<category>/<project>/
