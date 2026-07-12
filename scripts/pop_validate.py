@@ -175,7 +175,8 @@ def check_wikilinks(root, warnings):
             continue
         for n, line in lines_outside_fences(path):
             for m in WIKILINK.finditer(INLINE_CODE.sub("", line)):
-                target = m.group(1).strip()
+                # trailing `\`: alias with an escaped pipe (`[[x\|y]]` in a table)
+                target = m.group(1).strip().rstrip("\\")
                 # skip empty (heading-only link), placeholder and ellipsis
                 if not target or "<" in target or set(target) <= {"."}:
                     continue
