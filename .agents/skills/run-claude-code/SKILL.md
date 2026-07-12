@@ -91,4 +91,4 @@ claude --resume "refactor-auth" -p "now run the tests" --dangerously-skip-permis
 
 ## See also
 
-- Contract and choice: `delegate-coding` · Same operation in another tool: `run-cursor-agent`, `run-opencode`.
+- Contract and choice: `delegate-coding` · Same operation in another tool: `run-cursor-agent`, `run-opencode`, `run-codex`.

@@ -90,4 +90,4 @@ opencode run --session ses_abc123 --fork --auto --format json "Try an alternativ
 
 ## See also
 
-- Contract and choice: `delegate-coding` · Same operation in another tool: `run-claude-code`, `run-cursor-agent`.
+- Contract and choice: `delegate-coding` · Same operation in another tool: `run-claude-code`, `run-cursor-agent`, `run-codex`.

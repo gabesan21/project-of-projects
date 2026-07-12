@@ -118,6 +118,7 @@ The central procedures are **skills** in the open Agent Skills format (`SKILL.md
 | `run-claude-code` | Invoke headless Claude Code (`claude -p`) as the executor of a delegated coding task. |
 | `run-cursor-agent` | Invoke the headless Cursor CLI (`cursor-agent -p --force`) as the executor of a delegated coding task. |
 | `run-opencode` | Invoke headless opencode (`opencode run`) as the executor of a delegated coding task. |
+| `run-codex` | Invoke the headless Codex CLI (`codex exec`) as the executor of a delegated coding task. |
 
 When creating a new skill: create the folder at `.agents/skills/<name>/SKILL.md` and register it in the table above. When changing a core workflow skill, propagate the copy to the projects' `.agents/skills/` (the `weekly-review` audits the drift). Third-party skills are not edited locally — update them from upstream.
 
