@@ -16,13 +16,15 @@ You are the **orchestrator**: identify the task's stage, resolve gates and trans
 ## Orchestrator loop
 
 0. **Claim first:** `scripts/pop_claim.py <task-id>` — refused (active claim by another agent)? **Do not touch the task**, report and finish.
-1. Read the card: `stage`, `critical`, `blocked`, `depends_on`, the "Skills per stage" table. **Task in 001 without `- [x] Ready to plan`?** That's a human gate: release the claim, stop and report — the card still belongs to the human. Exception: the human explicitly commanded in this conversation to proceed right away → check the box on their behalf and record it in the Log (`released by human command`).
+1. Read the card: `stage`, `critical`, `yolo`, `blocked`, `depends_on`, the "Skills per stage" table. **Task in 001 without `- [x] Ready to plan`?** That's a human gate: release the claim, stop and report — the card still belongs to the human. Exceptions: the human explicitly commanded in this conversation to proceed right away → check the box on their behalf and record it in the Log (`released by human command`); `yolo: true` → the roadmap mark is the release — check it with Log `released by yolo (marked on the roadmap)`.
 2. While there is no pending human gate:
    - Read the current stage's section in the [[WORKFLOW|WORKFLOW]] and execute it — **001 and 006** yourself (they are cheap); **002/004/005** via a dedicated subagent (below). **Fast path:** a trivial task of very few steps (the same yardstick as the red-team waiver) → execute **004** yourself and record the fast path in the Log; **005 remains a subagent** (fresh eyes are not waived).
    - Transition: `scripts/pop_move.py <task-id> <stage>` moves the folder, updates `stage:`/`updated:` and appends the Log line — atomically (without the script, do all three by hand).
 3. Upon reaching a gate, **release the claim** (`scripts/pop_claim.py <task-id> --release`), **stop and report**: the current stage, what awaits the human and what the next call will do.
 
 **Human gates (the only stops):** release at `001` (`- [x] Ready to plan`); approval at `003`; human verification if `critical: true` at `005`; a subtask `(user)` item; `blocked: true`; the merge round at `006`.
+
+**`yolo: true` task** (Yolo mode section of the [[WORKFLOW|WORKFLOW]]): the gates at 001, 003 and the task merge in 006 are resolved by the **critic** subagent ([[.agents/skills/yolo-critic/SKILL|yolo-critic]]) — the remaining stops stay human. **Scope loop:** once a yolo-scope task completes, materialize the next eligible task of the phase/epoch (`new-task` without an interview, in `depends_on` order, WIP 3) until the scope is done — then open the scope close-out (`develop` → PR-branch PR + open question, protocol in the critic's skill). A yolo mark removed mid-flight takes effect at the next gate.
 
 ## Subagents per stage
 
@@ -31,6 +33,7 @@ Each subagent receives **only** its stage's skill (the card's "Skills per stage"
 - **002 — planner:** receives the card + linked specs → returns the `.plan.md` (spawns its own wargame recon wave, **3-5 per wave**; recon workers are leaves — they report "Gaps / Not found", never spawn subagents).
 - **004 — executor:** receives the plan + the "Minimal executor context" section → works in the task's worktree, returns checked checkboxes + divergences.
 - **005 — verifier:** receives the plan's verification table → returns the `.verify.md` with evidence. **Never the same agent that executed** — it judges without the bias of whoever did the work.
+- **003/006 yolo — critic:** receives the card + `.plan.md` + `.approval.md` (006: + `.verify.md` and the PR) → signs the round or sends it back with reasons (skill [[.agents/skills/yolo-critic/SKILL|yolo-critic]]; cap of 2 send-backs). Distinct from planner/executor/verifier.
 
 ## Cautions (of this skill; the flow's are in the Cross-cutting rules)
 

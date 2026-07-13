@@ -9,7 +9,9 @@ in the card's frontmatter and records the line in `## Log`.
 Locks (overridden only with `--force`): a task with an active claim by
 **another** agent doesn't move (`--by` identifies the caller, default
 user@host); 001→002 requires the human release `- [x] Ready to plan`
-on the card.
+on the card — or `yolo: true` in the frontmatter (the roadmap mark is
+the early release; see the Yolo mode section of the WORKFLOW). The claim
+also applies to yolo tasks.
 
 Usage:
     python3 scripts/pop_move.py <task-id> <stage> [--reason "..."]
@@ -107,13 +109,15 @@ def main():
 
     card_src = task_dir / f"{args.task_id}.md"
     if card_src.is_file() and not args.force:
-        by, at = poplib.parse_claim(poplib.read_card(card_src))
+        meta = poplib.read_card(card_src)
+        by, at = poplib.parse_claim(meta)
         if by and by != args.by and not poplib.claim_expired(at):
             print(f"BUSY: {args.task_id} has an active claim by {by} since "
                   f"{at.isoformat(timespec='minutes')} — don't move another "
                   f"agent's task (use --force for exceptions).")
             return 1
         if (src == "001_initial_task" and args.stage == "002_planning"
+                and meta.get("yolo") is not True
                 and not poplib.task_released(card_src)):
             print(f"NOT RELEASED: {args.task_id} doesn't have "
                   f"`- [x] Ready to plan` on the card yet (Release section) — "

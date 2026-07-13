@@ -7,6 +7,8 @@ description: Quick interview that creates a task from a roadmap phase as a folde
 
 Materializes a roadmap task as a folder in the kanban, at stage `001_initial_task` — **confirming the essentials with the user before creating**. Full flow: [[WORKFLOW|WORKFLOW]].
 
+**Yolo mode (no interview):** a yolo-scope task (Yolo mode section of the WORKFLOW) is materialized directly by the orchestrator — the answers come from the roadmap (task/phase description, dependencies from the table, `critical` from the project's default); skip the interview and follow the Procedure with the yolo adjustments.
+
 **Delegate to subagents:** almost nothing — it is a short interview with the user; delegation begins at planning (`advance-task`).
 
 ## Interview (skip what the user already answered)
@@ -23,12 +25,13 @@ Materializes a roadmap task as a folder in the kanban, at stage `001_initial_tas
 
 1. Confirm the task exists (or add it) in the phase table in `roadmap/<n>-<epoch-slug>.md`.
 2. Create the folder `kanban/001_initial_task/<id>-<slug>/` with the card `<id>-<slug>.md` copied from `_templates/TASK.md`:
-   - Full frontmatter (`id`, `project`, `epoch`, `phase`, `stage: 001_initial_task`, `critical`, `blocked: false`, `depends_on: [...]`, `awaiting_merge: false`, dates).
+   - Full frontmatter (`id`, `project`, `epoch`, `phase`, `stage: 001_initial_task`, `critical`, `yolo`, `blocked: false`, `depends_on: [...]`, `awaiting_merge: false`, dates).
+   - **Resolve the yolo inheritance** (epoch → phase → task marker; the ` · yolo: no` opt-out wins): inherited/marked → `yolo: true` + a Log line with the origin (`yolo inherited from phase X.Y`).
    - "What", "Why", "Dependencies" section and spec links filled in with the interview answers; first Log line.
-   - The **Release** section stays with `- [ ] Ready to plan` **unchecked** — the card is born unreleased.
+   - The **Release** section stays with `- [ ] Ready to plan` **unchecked** — the card is born unreleased. **Exception:** a `yolo: true` task is born **checked**, with Log `released by yolo (marked on the roadmap)`.
 3. In the epoch table, turn the task id into the wikilink `[[<id>-<slug>]]` and update the status to `001_initial_task`.
 4. If it is the project's first active task, check whether the project status in the INDEX files (category + root) should change to "in progress".
-5. Close by pointing at the **release gate**: the card stays in 001 waiting for the human to edit it and check `- [x] Ready to plan` (Release section) — the advance to 002 (`advance-task`) only happens after that. **Exception:** the user explicitly commanded in the conversation to proceed right away ("create it and advance") → check the box on their behalf, record it in the Log (`released by human command`) and chain into `advance-task` up to the `.approval.md` in 003.
+5. Close by pointing at the **release gate**: the card stays in 001 waiting for the human to edit it and check `- [x] Ready to plan` (Release section) — the advance to 002 (`advance-task`) only happens after that. **Exceptions:** the user explicitly commanded in the conversation to proceed right away ("create it and advance") → check the box on their behalf, record it in the Log (`released by human command`) and chain into `advance-task` up to the `.approval.md` in 003; a `yolo: true` task → chain straight into `advance-task` (the 003 gate belongs to the critic).
 
 ## Cautions
 

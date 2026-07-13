@@ -5,9 +5,11 @@
 - **Project:** [[categories/<category>/<project>/PROJECT|<Project name>]] · **Roadmap:** [[categories/<category>/<project>/ROADMAP|Roadmap]]
 - **Status:** pending | in progress | completed
 - **Description:** one line — what this chapter delivers.
+- **Yolo:** yes | no — **optional** bullet (absent = no); only the human marks it.
 - **Abort/pause if:** objective condition, if any (audited by the `weekly-review`).
 
 > One phase per section; under each phase, its tasks — **always one-line descriptions**. Detail goes to the spec or to the task's folder in the kanban. A started task gets a `[[<id>]]` link to the card (see [[WORKFLOW|WORKFLOW]]).
+> **Yolo inherits:** a yolo epoch → phases and tasks inherit; a yolo phase → tasks inherit. Per-task opt-out/opt-in: append ` · yolo: no` (or ` · yolo: yes`) to the end of the Description cell — no new column. `new-task` resolves the inheritance and stamps the card (Yolo mode section of [[WORKFLOW|WORKFLOW]]).
 
 ## Recon and forks
 
@@ -21,6 +23,7 @@
 
 - **Status:** pending | in progress | completed
 - **Description:** one line.
+- **Yolo:** yes | no — **optional** bullet (absent = inherits from the epoch).
 - **Specs:** [[categories/<category>/<project>/specs/<spec>|<spec>]]
 
 | Task | Description (≤1 line) | Status |

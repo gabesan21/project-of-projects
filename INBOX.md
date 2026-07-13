@@ -8,7 +8,7 @@ Freshly created cards are yours to edit — the task only goes to planning once 
 
 ```dataview
 TABLE WITHOUT ID file.link AS Task, project AS Project, updated AS "Since"
-WHERE stage = "001_initial_task"
+WHERE stage = "001_initial_task" AND yolo != true
 SORT updated ASC
 ```
 
@@ -16,7 +16,7 @@ SORT updated ASC
 
 ```dataview
 TABLE WITHOUT ID file.link AS Task, project AS Project, updated AS "Since"
-WHERE stage = "003_human_approval"
+WHERE stage = "003_human_approval" AND yolo != true
 SORT updated ASC
 ```
 
@@ -55,6 +55,16 @@ WHERE status = "open"
 SORT created ASC
 ```
 
+## Yolo in progress
+
+Informational (no decision needed): tasks with gates delegated to the critic agent — see the Yolo mode section of [[WORKFLOW|WORKFLOW]]. Blocks show up under **Blocked**; the scope's final PR arrives as an open question.
+
+```dataview
+TABLE WITHOUT ID file.link AS Task, project AS Project, stage AS Stage, updated AS "Since"
+WHERE yolo = true AND stage != "006_done"
+SORT updated ASC
+```
+
 ## In progress now
 
 Informational (no decision needed): tasks with an active agent claim — see the claim rule in [[WORKFLOW|WORKFLOW]].
@@ -71,4 +81,4 @@ Reports from the `weekly-review` skill are linked here, most recent first.
 
 ---
 
-Agents: nothing to maintain here beyond the **Reviews** section — the lists above derive from the frontmatter (`stage`, `critical`, `blocked`, `awaiting_merge` on cards; `status` on open questions) and from the release checkbox on 001 cards. To locate gates without Obsidian, run `python3 scripts/pop_status.py` (grep on `stage:`/`awaiting_merge:` works as a fallback).
+Agents: nothing to maintain here beyond the **Reviews** section — the lists above derive from the frontmatter (`stage`, `critical`, `yolo`, `blocked`, `awaiting_merge` on cards; `status` on open questions) and from the release checkbox on 001 cards. To locate gates without Obsidian, run `python3 scripts/pop_status.py` (grep on `stage:`/`awaiting_merge:` works as a fallback).

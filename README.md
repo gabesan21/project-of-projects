@@ -63,6 +63,7 @@ flowchart LR
 - **003 is yours:** nothing touches a repository until you check `- [x] Done`.
 - **004 runs in a git worktree** per task (`worktrees/<id>`, branch `task/<id>`), enabling safe parallel tasks.
 - **006 opens a PR** — you merge it, the agent writes the memory record and syncs specs.
+- **Yolo mode (opt-in):** mark an epoch, phase or task as yolo on the roadmap and a **critic** agent takes over the judgment gates — tasks are planned, executed and merged into a `develop` branch autonomously, and you review **one** final PR per scope. `critical: true` and real-world `(user)` items still stop for you.
 
 Everything waiting on you shows up in **`INBOX.md`**, generated automatically via Dataview — the one file to open every day.
 
@@ -71,7 +72,7 @@ Everything waiting on you shows up in **`INBOX.md`**, generated automatically vi
 ```
 project-of-projects/
 ├── AGENTS.md            ← vault rules — the contract every agent reads first (CLAUDE.md → symlink)
-├── .agents/skills/      ← the 8 core skills (SKILL.md, agent-agnostic)
+├── .agents/skills/      ← the core skills (SKILL.md, agent-agnostic)
 ├── INDEX.md             ← all projects at a glance + aggregated repositories
 ├── INBOX.md             ← everything waiting for a human decision (Dataview)
 ├── WORKFLOW.md          ← the kanban state machine
@@ -97,6 +98,7 @@ project-of-projects/
 | `plan-roadmap` | Builds/evolves a roadmap by interview (epochs → phases → candidate tasks). |
 | `new-task` | Quick interview that materializes a task into the kanban. |
 | `advance-task` | Moves a task through the flow 001→006, respecting human gates. |
+| `yolo-critic` | Critic agent for yolo tasks: adversarial plan approval in 003, task merges into `develop`. |
 | `write-spec` | Creates/rewrites a standardized spec. |
 | `sync-specs` | Keeps specs faithful to reality as tasks progress. |
 | `weekly-review` | Vault-wide review: what waits on you, what stalled, proposals. |

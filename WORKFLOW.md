@@ -101,16 +101,27 @@ You do not execute the task here — you **wargame** the execution, so that a si
 
 ## Cross-cutting rules
 
-- **One run = up to the next human gate:** the agent chains the agent-owned stages within a single call and only stops where a human decision is awaited, reporting the state. **Human gates:** release in `001` (`- [x] Ready to plan`); approval in `003`; human verification when `critical: true` in `005`; a `(user)` subtask item; `blocked: true`; the merge round in `006`. No gate is skipped — only the stops that were waiting on no one are eliminated. Typical calls:
+- **One run = up to the next human gate:** the agent chains the agent-owned stages within a single call and only stops where a human decision is awaited, reporting the state. **Human gates:** release in `001` (`- [x] Ready to plan`); approval in `003`; human verification when `critical: true` in `005`; a `(user)` subtask item; `blocked: true`; the merge round in `006`. No gate is skipped — only the stops that were waiting on no one are eliminated. **Task `yolo: true`:** the judgment gates (001, 003, task merge) are delegated to the critic agent — see the Yolo mode section. Typical calls:
   - **A:** creates the card in 001 and **stops** (awaits the human's release) — unless explicitly commanded to proceed right away.
   - **B (post-release):** 002 → prepares the `.approval.md` in 003 and **stops** (awaits approval).
   - **C (post-approval):** 004 → 005 → opens the PR in 006 and **stops** (awaits merge) — pausing earlier on a `(user)` item, `critical: true` in 005, an abort condition, a block or a return to 002.
   - **D (post-merge):** memory, sync-specs, derived status, wrap-up.
 - **No work outside a task:** changes to the real project (`project/` or external repository) only happen inside `004_processing`, with a plan approved in 003, **in the task's worktree**. No task, no change.
 - **Dependencies drive parallelism:** tasks (and subtask groups/items) with no pending prerequisite can run in parallel, each task in its own worktree — respecting the WIP limit of 3.
-- **The merge belongs to the human:** the agent never merges a task PR on its own — only when commanded in the merge round.
+- **The merge belongs to the human:** the agent never merges a task PR on its own — only when commanded in the merge round. Exception: a yolo task, whose PR targets `develop` and is merged by the critic; the final `develop` → PR-branch PR still belongs to the human (Yolo mode section).
 - **Transition log:** every stage change adds a line to the card's Log: `YYYY-MM-DD — 002→003 — short reason`.
 - **Frontmatter always up to date:** when moving, update `stage:` and `updated:`; when blocking/unblocking, `blocked:` and `blocked_reason:`.
 - **Task claim — one agent per task:** when taking a task the orchestrator records `claimed_by:`/`claimed_at:` on the card (`scripts/pop_claim.py <id>`) and **releases when stopping** at a gate (`--release`). An active claim by another agent = busy task — do not touch **any file in the folder** (card, `.plan.md`, `.verify.md`, `subtasks/`): reading ok, writing forbidden. `pop_move` also refuses to transition a task with another agent's active claim (`--by` identifies the caller). Lease of ~2h: a claim older than that is orphaned and may be taken over (the script decides).
 - **Task files are linked by name only** (`[[1.1.1-user-table-creation]]`) — never by path, since the folder moves.
 - **Never skip stages.** Allowed returns: 003→002, 004→002, 005→004.
+
+## Yolo mode
+
+Delegation of the **judgment gates** to the **critic agent** ([[.agents/skills/yolo-critic/SKILL|yolo-critic]]) when the task has `yolo: true` — same state machine, same artifacts, only the signer changes. *(Not to be confused with the headless-CLI "yolo" of `delegate-coding`.)*
+
+- **Marking (human, on the roadmap):** a `**Yolo:** yes` bullet on the epoch or phase, or a ` · yolo: yes` marker on the task's row ([[_templates/EPOCH|template]]). **Inheritance with opt-out:** epoch → phases → tasks; a task may mark ` · yolo: no`. Only the human marks it (or the agent under their explicit command).
+- **Stamping (card):** when the task is materialized (`new-task`), inheritance is resolved and the card gets `yolo: true` in the frontmatter + a Log line with the origin (`yolo inherited from phase X.Y`). The frontmatter is the runtime source (INBOX, `pop_move`). Removing the mark mid-flight takes effect at the **next** gate.
+- **The scope self-materializes:** the orchestrator creates the cards for the tasks listed in the roadmap **without an interview**, in `depends_on` order, respecting the WIP limit of 3 — and stops when the scope (phase/epoch) is done. Closed scope: splitting a task is allowed (the 001 rule); inventing a new phase/task is not.
+- **Gates delegated to the critic:** release in 001 (the roadmap mark is the early release — `pop_move` accepts 001→002 with `yolo: true`); approval in 003 (adversarial reading; **cap of 2 send-backs**, the 3rd becomes `blocked`; an acceptance criterion without an executable run and observable pass is sent back); merging the task's PR in 006.
+- **Gates that remain human:** `critical: true` in 005 (never overridden — aware that the human verifies there a plan they did not approve in 003); a capability `(user)` item (→ `blocked`); `blocked: true`; the scope's final PR.
+- **Integration via `develop`:** created from the project's PR branch (multi-repo: one per affected repo); yolo task PRs target `develop` and the critic merges there, syncing `develop` with the PR branch before each merge. End of scope → **one** `develop` → PR-branch PR + an open question with the link (shows up in the INBOX); merge **by the human only**, after testing the deliverable. Without git: the merge round = final approval of the deliverable.

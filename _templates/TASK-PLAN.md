@@ -36,7 +36,7 @@ How the task will be executed, in a few paragraphs. Discarded alternatives in on
 
 ## Acceptance criteria and verification
 
-> This is the table 005 runs against — each criterion with the exact run and what a pass looks like. The `.verify.md` is born from it.
+> This is the table 005 runs against — each criterion with the exact run and what a pass looks like. The `.verify.md` is born from it. **Yolo task:** a criterion without an executable run and an observable "Pass looks like" will be **sent back by the critic** in 003 — nothing subjective.
 
 | # | Criterion | Verification run | Pass looks like |
 |---|-----------|------------------|-----------------|
@@ -57,6 +57,8 @@ How the task will be executed, in a few paragraphs. Discarded alternatives in on
 ## Groups
 
 One file per group in `subtasks/` ([[_templates/SUBTASKS|template]]), with the detailed moves (expected observation, likely failure → counter-move):
+
+> **Yolo task:** avoid `(user)` items — the critic does not perform real-world human actions; an unavoidable `(user)` item blocks the task (`blocked: true`) and hands it back to the human via the INBOX.
 
 1. [[<id>-<slug>.g01-<group-slug>]] — one line about the group.
 2. [[<id>-<slug>.g02-<group-slug>]] — ...

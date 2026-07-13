@@ -5,6 +5,7 @@ epoch: <n>
 phase: "<n>.<m>"
 stage: 001_initial_task
 critical: false
+yolo: false
 blocked: false
 blocked_reason:
 depends_on: []
@@ -34,7 +35,7 @@ One sentence: why now, and what it unblocks.
 
 ## Release (user)
 
-> Only the human checks it (or the agent, **under an explicit command** from the human, recording it in the Log). Without `[x]`, the task doesn't leave 001 — the card is yours to edit; `pop_move` refuses 001→002.
+> Only the human checks it (or the agent, **under an explicit command** from the human, recording it in the Log). Without `[x]`, the task doesn't leave 001 — the card is yours to edit; `pop_move` refuses 001→002. **Yolo exception:** a `yolo: true` task is born with the checkbox checked by the agent — the roadmap mark is the early release (Log: `released by yolo (marked on the roadmap)`); see the Yolo mode section of [[WORKFLOW|WORKFLOW]].
 
 - [ ] Ready to plan
 
