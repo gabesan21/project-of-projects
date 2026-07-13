@@ -62,7 +62,7 @@ Servers in `settings.json` under `mcpServers`; `claude mcp list` checks. MCP add
 
 ## Auth
 
-Precondition: already logged in (or `ANTHROPIC_API_KEY` in the environment). **Do not configure login in this skill.** If the output mentions credential/API key/login/401 or fails immediately with no work done: **abort the orchestrator's entire task** — no retry, no fallback (rule 2 of `delegate-coding`).
+Precondition: already logged in (or `ANTHROPIC_API_KEY` in the environment). **Do not configure login in this skill.** If the output mentions credential/API key/login/401: **abort the orchestrator's entire task** — no retry, no fallback; an immediate failure with **no** auth signal is an invocation error, not a login one (rule 2 of `delegate-coding`).
 
 ## Gotchas
 

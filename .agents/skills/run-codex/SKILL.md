@@ -66,13 +66,13 @@ Servers in `[mcp_servers.NAME]` in `~/.codex/config.toml` (stdio: `command`/`arg
 
 ## Auth
 
-Precondition: already logged in (`codex login` already done by the human, or `CODEX_API_KEY` in the environment). **Do not configure login in this skill.** Mechanical check before invoking: `codex login status` (exit 0 = logged in). If the output mentions credential/API key/login/401 or fails immediately with no work done: **abort the orchestrator's entire task** — no retry, no fallback (rule 2 of `delegate-coding`). Gotcha: `OPENAI_API_KEY` in the env makes codex **silently** switch from the ChatGPT plan to API key (separate billing) — don't export that variable without intent.
+Precondition: already logged in (`codex login` already done by the human, or `CODEX_API_KEY` in the environment). **Do not configure login in this skill.** Mechanical check before invoking: `codex login status` (exit 0 = logged in). If the output mentions credential/API key/login/401: **abort the orchestrator's entire task** — no retry, no fallback; an immediate failure with **no** auth signal is an invocation error, not a login one (rule 2 of `delegate-coding`). Gotcha: `OPENAI_API_KEY` in the env makes codex **silently** switch from the ChatGPT plan to API key (separate billing) — don't export that variable without intent.
 
 ## Gotchas
 
-- **No per-run cost cap** in the local CLI — only the OpenAI dashboard budget; the ChatGPT plan drains the same quota as the interactive session. The circuit breaker is the OS `timeout` (+ `--effort low`/mini model to reduce tokens).
+- **No per-run cost cap** in the local CLI — only the OpenAI dashboard budget; the ChatGPT plan drains the same quota as the interactive session. The circuit breaker is the OS `timeout` (+ a mini model to reduce tokens).
 - `--output-schema` silently ignored with MCP tools active (above).
-- Without `--json`, old versions didn't expose the session id — parse the `thread.started`.
+- Old versions of `codex exec --json` didn't return the session id — parse the `thread.started`.
 - Resume "can't find" a session created in another directory — use `--all`.
 
 ## Recipes

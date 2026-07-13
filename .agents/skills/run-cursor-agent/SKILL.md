@@ -64,7 +64,7 @@ cursor-agent -p --force --output-format json "..." | jq -r '.result, .summary'
 
 ## Auth
 
-Precondition: already logged in (or `CURSOR_API_KEY` in the environment). **Do not configure login in this skill.** If the output mentions credential/API key/login/401 or fails immediately with no work done: **abort the orchestrator's entire task** — no retry, no fallback (rule 2 of `delegate-coding`).
+Precondition: already logged in (or `CURSOR_API_KEY` in the environment). **Do not configure login in this skill.** If the output mentions credential/API key/login/401: **abort the orchestrator's entire task** — no retry, no fallback; an immediate failure with **no** auth signal is an invocation error, not a login one (rule 2 of `delegate-coding`).
 
 ## Gotchas
 

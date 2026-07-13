@@ -60,7 +60,7 @@ The source only documents MCP **permissions** (`"mymcp_*"` patterns in the `perm
 
 ## Auth
 
-Precondition: already logged in (`opencode auth login` already done by the human; credentials in `~/.local/share/opencode/auth.json` or `ANTHROPIC_API_KEY`/`OPENAI_API_KEY` in the environment). **Do not configure login in this skill.** If the output mentions credential/API key/provider auth/401 or fails immediately with no work done: **abort the orchestrator's entire task** — no retry, no fallback (rule 2 of `delegate-coding`).
+Precondition: already logged in (`opencode auth login` already done by the human; credentials in `~/.local/share/opencode/auth.json` or `ANTHROPIC_API_KEY`/`OPENAI_API_KEY` in the environment). **Do not configure login in this skill.** If the output mentions credential/API key/provider auth/401: **abort the orchestrator's entire task** — no retry, no fallback; an immediate failure with **no** auth signal is an invocation error, not a login one (rule 2 of `delegate-coding`).
 
 ## Gotchas
 

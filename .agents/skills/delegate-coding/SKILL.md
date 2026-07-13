@@ -10,7 +10,7 @@ description: Delegates coding work to a headless coding agent CLI (Claude Code, 
 ## Invocation contract (applies to all 4 tools)
 
 1. **Yolo mode always.** The delegated CLI runs with full auto-approval (flags in the table below). Never configure fine-grained permissioning in the CLI — planning and permissions are the orchestrator's responsibility.
-2. **Login is a precondition.** The tools are already authenticated on the machine. **An authentication error (mention of credential/login/API key/401/403 in the output, or immediate failure with no work done) completely aborts the orchestrator's task** — no retry, no fallback to another tool, no proceeding with the implementation. Report to the human and stop.
+2. **Login is a precondition.** The tools are already authenticated on the machine. **An authentication error (mention of credential/login/API key/401/403 in the output) completely aborts the orchestrator's task** — no retry, no fallback to another tool, no proceeding with the implementation. Report to the human and stop. An immediate failure with **no** auth signal (unknown flag, incorrect usage) is an **invocation error**, not a login one: check `--help`, fix the command and re-invoke.
 3. **Isolation by the orchestrator:** run the CLI inside a worktree/directory dedicated to the task, never in the main tree.
 4. **Scoped prompt:** a single objective, explicit files/areas, a verifiable completion criterion and a "don't touch X" boundary. One task = one session.
 5. **Timeout always:** wrap every invocation in `timeout <seconds> <command>` — headless CLIs can hang without exiting.
@@ -21,7 +21,7 @@ description: Delegates coding work to a headless coding agent CLI (Claude Code, 
 
 | If the task needs… | Use | Skill |
 |---|---|---|
-| Anthropic ecosystem: `.claude/agents/` subagents, CLAUDE.md, JSON Schema output, budget/turn caps | Claude Code | `run-claude-code` |
+| Anthropic ecosystem: `.claude/agents/` subagents, CLAUDE.md, JSON Schema output, budget cap (`--max-budget-usd`) | Claude Code | `run-claude-code` |
 | Cursor models (composer) or multi-model with a ready-made worktree flag | Cursor CLI | `run-cursor-agent` |
 | Multi-provider (`provider/model`), lightweight custom agents in markdown, inline config via env | opencode | `run-opencode` |
 | OpenAI ecosystem: ChatGPT plan/GPT-5.x-codex models, native AGENTS.md, JSON Schema-validated response | Codex CLI | `run-codex` |
@@ -40,6 +40,7 @@ Tiebreaker: use the **installed** tool (`command -v claude cursor-agent opencode
 ## Checklist before invoking
 
 - [ ] Tool installed and logged in (auth failure → **total abort**, rule 2)
+- [ ] Flags confirmed with `--help` on the first invocation on the machine (versions diverge)
 - [ ] The task's isolated worktree/directory as cwd
 - [ ] Prompt with a single objective, completion criterion and boundary
 - [ ] The tool's yolo flag + the OS `timeout`
