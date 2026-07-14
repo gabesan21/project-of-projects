@@ -125,7 +125,7 @@ def main():
                   f"exceptions).")
             return 1
 
-    dest_dir = project / "kanban" / args.stage
+    dest_dir = poplib.harness_root(project) / "kanban" / args.stage
     dest_dir.mkdir(parents=True, exist_ok=True)
     dest = dest_dir / args.task_id
     if dest.exists():

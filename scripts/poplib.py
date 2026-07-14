@@ -1,10 +1,12 @@
 """poplib — shared utilities for the PoP CLI scripts.
 
-Provides: vault root detection, project discovery (folders with
-`kanban/`: `categories/<category>/<project>/` and embedded repos of
-`full-multi-repo` projects in `project/<repo>/`), a simple YAML frontmatter
-parser (key: value, inline `[a, b]` lists and block `- item` lists) and
-task card helpers. Stdlib only (Python >= 3.9).
+Provides: vault root detection, project discovery, a simple YAML frontmatter
+parser (key: value, inline `[a, b]` lists and block `- item` lists) and task
+card helpers. Single anatomy: the harness lives in `pop/`
+(`categories/<c>/<p>/pop/kanban`, embedded repo in `<c>/<p>/<repo>/pop/kanban`);
+the vault root (meta-project) keeps its kanban at the root as a documented
+exception. `harness_root()` decides by scope. The legacy anatomy (harness at
+the folder root) is no longer supported. Stdlib only (Python >= 3.9).
 """
 
 from __future__ import annotations
@@ -32,10 +34,30 @@ DEFAULT_LEASE_HOURS = 2
 RELEASE_MARK = re.compile(r"^\s*[-*]\s*\[[xX]\]\s*Ready to plan")
 
 def vault_root(override: Optional[str] = None) -> Path:
-    """Vault root: `--vault` if given, otherwise the folder above `scripts/`."""
+    """Vault root: `--vault` if given, otherwise the folder above `scripts/`.
+
+    In an included clone the scripts live in `pop/scripts/`: if the folder
+    above is named `pop` and holds `.included-harness.json`, the root is the
+    folder above it (the repo root).
+    """
     if override:
         return Path(override).resolve()
-    return Path(__file__).resolve().parent.parent
+    base = Path(__file__).resolve().parent.parent
+    if base.name == "pop" and (base / ".included-harness.json").is_file():
+        return base.parent
+    return base
+
+
+def harness_root(project: Path) -> Path:
+    """Harness root of a scope: `pop/` in `categories/` projects; the scope
+    itself only at the vault root (meta-project, kanban at the root)."""
+    return project / "pop" if (project / "pop" / "kanban").is_dir() else project
+
+
+def templates_dir(root: Path) -> Path:
+    """Vault templates folder: `pop/_templates` if it exists, else `_templates`."""
+    new = root / "pop" / "_templates"
+    return new if new.is_dir() else root / "_templates"
 
 
 def today() -> str:
@@ -103,25 +125,86 @@ def parse_frontmatter(text: str) -> Tuple[dict, str]:
 
 
 def discover_projects(root: Path) -> list:
-    """Vault projects: folders with `kanban/` — `categories/<category>/<project>/`
-    and, in `full-multi-repo` projects, the embedded repos in `project/<repo>/`."""
-    projects = []
-    for pattern in ("categories/*/*/kanban", "categories/*/*/project/*/kanban"):
-        for kanban in sorted(root.glob(pattern)):
-            rel = kanban.parent.relative_to(root)
+    """Vault project scopes, all in the `pop/` anatomy: the root (meta-project
+    `pop` — kanban at the root, by documented exception — or an included clone,
+    with `pop/kanban`), projects in `categories/<c>/<p>/pop/kanban` and the
+    embedded repos of `full-multi-repo` projects in
+    `categories/<c>/<p>/<repo>/pop/kanban`. The legacy anatomy (harness at the
+    root) is no longer recognized — the validator reports it as a violation
+    (see `check_strict_anatomy`)."""
+    scopes = set()
+    if (root / "kanban").is_dir() or (root / "pop" / "kanban").is_dir():
+        scopes.add(root)
+    # (pattern, number of kanban levels up to the scope)
+    patterns = (
+        ("categories/*/*/pop/kanban", 2),      # project
+        ("categories/*/*/*/pop/kanban", 2),    # embedded repo (full-multi-repo)
+    )
+    for pattern, up in patterns:
+        for kanban in root.glob(pattern):
+            if not kanban.is_dir():
+                continue
+            scope = kanban.parents[up - 1]
+            rel = scope.relative_to(root)
             if any(part.startswith(".") for part in rel.parts):
                 continue
-            if kanban.is_dir():
-                projects.append(kanban.parent)
-    return projects
+            scopes.add(scope)
+    return sorted(scopes)
+
+
+# PoP harness folders inside a project scope: these are the ONLY ones the
+# size/wikilink checks reach. Positive whitelist — whatever belongs to the
+# project (code, repo docs, clones, `project/`, embedded repo, vendor) stays
+# out by construction, without depending on the type. The names are invariant
+# across types (see TYPES.md): only the location of the code changes, and
+# `discover_projects` already hands over the right scope, including each
+# embedded repo of a full-multi-repo.
+HARNESS_DIRS = ("roadmap", "specs", "researches", "skills", "notes",
+                "memory", "open_questions", "drafts", "kanban")
+HARNESS_ROOT_FILES = ("PROJECT.md", "ROADMAP.md")  # INDEX.md has its own budget (144/600)
+# Belt and suspenders: never descend into raw research sources or into code that
+# might be nested under a harness folder.
+_HARNESS_SKIP = {"raw", "worktrees", "_templates", "__pycache__",
+                 "node_modules", "vendor", ".git", ".obsidian"}
+
+
+def iter_harness_markdown(scope: Path) -> Iterator[Path]:
+    """Harness `.md` under a project scope (positive whitelist).
+
+    In the current anatomy the whole harness (including PROJECT.md/ROADMAP.md)
+    lives in `pop/` — `harness_root()` resolves it; the HARNESS_DIRS names
+    don't change.
+    """
+    hroot = harness_root(scope)
+    for name in HARNESS_ROOT_FILES:
+        if (hroot / name).is_file():
+            yield hroot / name
+    for name in HARNESS_DIRS:
+        base = hroot / name
+        if not base.is_dir():
+            continue
+        for path in sorted(base.rglob("*.md")):
+            if not (_HARNESS_SKIP & set(path.relative_to(hroot).parts)):
+                yield path
+
+
+def iter_all_harness_markdown(root: Path) -> Iterator[Path]:
+    """Harness `.md` of every discovered scope, without repetition."""
+    seen = set()
+    for scope in discover_projects(root):
+        for path in iter_harness_markdown(scope):
+            if path not in seen:
+                seen.add(path)
+                yield path
 
 
 def project_label(root: Path, project: Path) -> str:
     """Short `<category>/<project>` name of a project folder — or
-    `<category>/<project>/<repo>` for an embedded repo (`project/` segment omitted)."""
+    `<category>/<project>/<repo>` for an embedded repo of a full-multi-repo.
+    The vault root (meta-project) has the fixed label `pop`."""
+    if project == root:
+        return "pop"
     parts = project.relative_to(root / "categories").parts
-    if len(parts) == 4 and parts[2] == "project":
-        return "/".join((parts[0], parts[1], parts[3]))
     return "/".join(parts)
 
 
@@ -129,18 +212,20 @@ def project_dir(root: Path, label: str) -> Path:
     """Inverse of `project_label`: project folder from the label.
 
     `<cat>/<proj>` -> `categories/<cat>/<proj>`;
-    `<cat>/<proj>/<repo>` -> `categories/<cat>/<proj>/project/<repo>`.
+    `<cat>/<proj>/<repo>` -> `categories/<cat>/<proj>/<repo>` (embedded repo
+    of a full-multi-repo, `pop/` anatomy);
+    `pop` -> vault root (meta-project).
     """
+    if label == "pop":
+        return root
     parts = [p for p in label.split("/") if p]
-    if len(parts) == 3:
-        return root / "categories" / parts[0] / parts[1] / "project" / parts[2]
     return root.joinpath("categories", *parts)
 
 
 def iter_cards(project: Path) -> Iterator[Tuple[str, Path, Path]]:
     """Iterates (stage, task_folder, card.md) of a project."""
     for stage in STAGES:
-        stage_dir = project / "kanban" / stage
+        stage_dir = harness_root(project) / "kanban" / stage
         if not stage_dir.is_dir():
             continue
         for task_dir in sorted(p for p in stage_dir.iterdir() if p.is_dir()):
@@ -202,8 +287,9 @@ def find_task(root: Path, task_id: str):
     Returns (project, stage, task_folder) or None.
     """
     for project in discover_projects(root):
+        kanban = harness_root(project) / "kanban"
         for stage in STAGES:
-            task_dir = project / "kanban" / stage / task_id
+            task_dir = kanban / stage / task_id
             if task_dir.is_dir():
                 return project, stage, task_dir
     return None

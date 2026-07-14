@@ -1,0 +1,32 @@
+{
+  "_meta": {
+    "updated": "2026-07-14",
+    "usage": "model recommendation per effort tier (cheap | medium | strong) — role × size matrix in the WORKFLOW Orchestration; consumed via advance-task (session subagents) and delegate-coding/run-* (headless CLIs)",
+    "note": "values are revisable; check availability at execution time with the tool's listing command (one-off lookup allowed: `cursor-agent models`, `opencode models`)"
+  },
+  "session": {
+    "cheap": "haiku",
+    "medium": "sonnet",
+    "strong": "inherits the session model"
+  },
+  "claude-code": {
+    "cheap": "claude-haiku-4-5",
+    "medium": "claude-sonnet-5",
+    "strong": "claude-opus-4-8"
+  },
+  "cursor-agent": {
+    "cheap": "composer-2",
+    "medium": "claude-sonnet-4.6",
+    "strong": "gpt-5.4"
+  },
+  "opencode": {
+    "cheap": "anthropic/claude-haiku-4-5",
+    "medium": "anthropic/claude-sonnet-4-6",
+    "strong": "anthropic/claude-opus-4-8"
+  },
+  "codex": {
+    "cheap": "gpt-5.4-mini",
+    "medium": "gpt-5.3-codex",
+    "strong": "gpt-5.5"
+  }
+}

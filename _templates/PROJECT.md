@@ -4,7 +4,7 @@
 - **Status:** idea | planning | in progress | paused | completed | abandoned
 - **Priority:** high | medium | low
 - **Created on:** YYYY-MM-DD
-- **Roadmap:** [[categories/<category>/<project>/ROADMAP|Roadmap]]
+- **Roadmap:** [[categories/<category>/<project>/pop/ROADMAP|Roadmap]]
 
 ## Goal
 
@@ -16,7 +16,7 @@ What an agent needs to know before working on this: history, motivation, current
 
 ## Folder structure
 
-Standard anatomy (see the root AGENTS.md): project `AGENTS.md` + `.agents/skills/`, `ROADMAP.md` + `roadmap/` (epochs), `project/` (per the type — [[TYPES|TYPES]]), `researches/` (researches by topic), `skills/`, `specs/`, `notes/` (learnings/decisions/ideas/references), `memory/` (summaries of completed tasks), `worktrees/` (gitignored), `kanban/` (stages 001–006 of the [[WORKFLOW|WORKFLOW]]). List here only what deviates from the standard.
+Standard anatomy (see the root AGENTS.md): the project's `AGENTS.md` + `.agents/skills/` at the root; **all the harness in `pop/`** — `pop/PROJECT.md` + `pop/ROADMAP.md` + `pop/roadmap/` (epochs), `pop/researches/` (research by topic), `pop/skills/`, `pop/specs/`, `pop/notes/` (learnings/decisions/ideas/references), `pop/memory/` (summaries of completed tasks), `pop/worktrees/` (gitignored), `pop/kanban/` (stages 001–006 of the [[WORKFLOW|WORKFLOW]]); the **project content** (code, manuscript, clones — per the type, [[TYPES|TYPES]]) lives directly at the root. List here only what deviates from the standard.
 
 ## Agent harness
 
@@ -27,12 +27,12 @@ Project-specific rules for agents working on this project:
 - **Tools and restrictions:** what is allowed and what is not.
 - **Tone/style:** if applicable.
 - **Tasks critical by default?** yes | no — and what makes a task critical in this project (extra human gate in 005, see [[WORKFLOW|WORKFLOW]]).
-- **Skills:** list the skills in `skills/` with one line on when to use each.
+- **Skills:** list the skills in `pop/skills/` with one line on when to use each.
 
 ## Related projects
 
-- [[categories/<category>/<project>/PROJECT|<name>]] — why they relate.
+- [[categories/<category>/<project>/pop/PROJECT|<name>]] — why they relate.
 
 ## Decisions
 
-- **YYYY-MM-DD:** decision made and rationale. (If it grows, extract into its own note in `notes/`.)
+- **YYYY-MM-DD:** decision made and rationale. (If it grows, extract into its own note in `pop/notes/`.)

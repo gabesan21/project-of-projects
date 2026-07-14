@@ -9,7 +9,7 @@ Every task is a **folder** with the id `<epoch>.<phase>.<task>-<slug>` (e.g. `1.
 | Stage | Owner | Runs in | What happens |
 |---------|-------------|---------|----------------|
 | 001_initial_task | agent (**+ user** releases) | orchestrator | Task is born from the roadmap, minimal card; it only leaves 001 with the human's `- [x] Ready to plan`. |
-| 002_planning | agent | planner subagent | Wargame: parallel recon, plan with forks/aborts, change specs, red-team. |
+| 002_planning | agent | planner subagent | Wargame proportional to `size`: budgeted recon, plan with forks/aborts, change specs, red-team. |
 | 003_human_approval | **user** | orchestrator prepares | Human reads the `.approval.md` and checks `- [ ] Done`. |
 | 004_processing | agent | executor subagent | Executes `(agent)` subtasks; pauses on `(user)` ones. |
 | 005_verifying | agent (**+ user** if `critical: true`) | verifier subagent | Checks acceptance criteria with evidence, in the worktree. |
@@ -19,15 +19,25 @@ Each stage file declares its owner at the top. Agents **never** execute a `(user
 
 ## Orchestration
 
-The main agent is the **orchestrator**: it reads the card, resolves the gates and makes the transitions (frontmatter, Log, moving the folder). Each work stage runs in a **dedicated subagent**, equipped only with that stage's skill (the card's "Skills per stage" table) + the stage's minimal context:
+The main agent is the **orchestrator**: it reads the card, resolves the gates and makes the transitions (frontmatter, Log, moving the folder). Each work stage runs in a **dedicated subagent**, equipped only with that stage's skill (the card's "Skills per stage" table) + the stage's minimal context — the contract always with a response cap ("write the file, return path + summary ≤10 lines") and **no web** (see 002):
 
-- **002 — planner:** receives card + linked specs → returns the `.plan.md` (fires its own wargame recon wave, **3-5 per wave**; recon workers are leaves: they report "Gaps / Not found", never spawn subagents).
+- **002 — planner:** receives card + linked researches and specs → returns the `.plan.md` (fires its own **budgeted** recon wave — see 002; recon workers are leaves: they report "Gaps / Not found", never spawn subagents).
 - **004 — executor:** receives plan + the "Minimal executor context" section → works in the worktree, returns checked checkboxes + divergences.
 - **005 — verifier:** receives the plan's verification table → returns the `.verify.md` with evidence. Verifier ≠ executor **by design**: it judges without the bias of whoever did the work.
 - **001 and 006** stay with the orchestrator itself (they are cheap: creating the card, PR, memory).
-- **Fast path (trivial task):** a task of very few steps — the same yardstick that waives the red-team in 002 — waives the executor subagent: the orchestrator executes 004 itself and records the fast path in the Log. **005 remains a verifier subagent**: fresh eyes are not waived (verifier ≠ executor holds here too).
+- **Fast path (`size: S`):** the orchestrator runs **002** itself (a mini-plan — see 002) and **004**, recording the fast path in the Log. **005 remains a verifier subagent**: fresh eyes are not waived (verifier ≠ executor holds here too).
 
-This way the main agent's window grows by **results** (finished plan, filled-in verify), not by process.
+**Ceremony and model proportional to `size`** (`S | M | L`, suggested at creation and correctable by the human — see 001). Model tiers per role (`cheap | medium | strong`, resolved per tool in `scripts/models.json`); the executor never needs the strong tier **by design** — the wargame exists so the plan is executable blind:
+
+| Role | S | M | L |
+|-------|---|---|---|
+| 002 planner | (orchestrator) | strong | strong |
+| recon worker | — | cheap | cheap |
+| 004 executor | (orchestrator) | medium | medium |
+| 005 verifier | medium | medium | strong |
+| yolo critic | strong | strong | strong |
+
+This way the main agent's window grows by **results** (finished plan, filled-in verify), not by process — and the Log records the **contexts launched** per stage (see Cross-cutting rules).
 
 ## Contents of the task folder
 
@@ -51,31 +61,36 @@ Templates: [[_templates/TASK|TASK]] · [[_templates/TASK-PLAN|TASK-PLAN]] · [[_
 - **Release (user):** the card is born **unreleased** and, while it stays so, it is the human's territory — they edit at will, the agent only reads. The task only goes to 002 with `- [x] Ready to plan` checked (the card's "Release" section); `pop_move` refuses 001→002 without the mark. Only the human checks it — **exception:** an explicit command from the human in the conversation ("create it and advance") lets the agent check it, recording it in the Log (`released by human command`). Automation never checks it on its own.
 - **Declare the dependencies:** `depends_on:` in the frontmatter with the ids of the prerequisite tasks (and the card's "Dependencies" section). Empty = can run in parallel with the others — this is what drives parallelization.
 - **Size:** change too complex for a single plan (many fronts, plan would exceed 200 lines) → **propose splitting into more tasks** chained via `depends_on`, before planning.
+- **Effort (`size:`):** propose `S | M | L` in the frontmatter at creation, with a 1-line justification in the Log — the human corrects it at will while the card is theirs. `S` = fast path (see Orchestration); the 002 planner may contest it (reclassify with a Log line; in yolo, a plan incompatible with the size is sent back by the critic).
 - Add the `[[<task-id>]]` link to the task's line in the epoch file.
 
 ### 002_planning — wargame (agent)
 
-You do not execute the task here — you **wargame** the execution, so that a simpler executor can run the plan in 004 without asking anything. Template: [[_templates/TASK-PLAN|TASK-PLAN]].
+You do not execute the task here — you **wargame** the execution, so that a simpler executor can run the plan in 004 without asking anything. Template: [[_templates/TASK-PLAN|TASK-PLAN]]. Ceremony proportional to `size` (see Orchestration).
 
-- **Recon first, read-only:** read specs, affected material and references before planning — **always with parallel subagents** (one per investigation front), especially on research-heavy boards. Whatever recon does not resolve becomes **RECON NEEDED** in the plan, with the exact check that resolves it.
-- Write the `.plan.md` (≤200 lines): route, **forks with trigger** ("if you observe X, route B"), **abort conditions** and the table of **acceptance criteria with verification run and what a pass looks like**. Detailed moves go into the groups in `subtasks/`, each `(agent)` move with its expected observation and likely failure → counter-move.
+- **`size: S` — mini-plan (fast path):** the orchestrator writes a plan of **≤40 lines** itself — route, preflight and criteria with run+pass (the project's aggregate gate usually suffices) — with no recon wave, no red-team and no mandatory forks (record the waivers). Didn't fit in 40 lines → reclassify to M with a Log line.
+- **Recon first, read-only, budgeted:** read **before anything else** the researches and specs linked on the card. Then list the questions the plan needs and you cannot answer: only a question whose answer requires reading above rule 18's floor (~5K tokens) becomes a worker — **0 workers is a valid result** (empty repo, answer already in the linked researches). Whatever recon does not resolve becomes **RECON NEEDED** in the plan, with the exact check that resolves it.
+- **No web in the task flow:** planner and workers do not use web search/fetch. **Knowledge gap** (a technical decision with no research to ground it) → write the prompt in the project's `RESEARCHES.md` ([[_templates/RESEARCHES|template]]), mark `blocked: true` (`awaiting research <topic>`) and stop — the human runs and ingests it (`ingest-research`). A **one-off lookup** of a verifiable fact (e.g. `npm view next version`) is allowed via command, recorded in the plan: research produces decision knowledge; a lookup produces a value the plan has already decided to use.
+- **Environment preflight:** run a cheap battery of commands directly (runtime versions, tools the plan depends on) and record it in the plan — an unverified environment assumption is the classic cause of a 004→002 return.
+- Write the `.plan.md` (≤200 lines): route, **forks with trigger** ("if you observe X, route B"), **abort conditions** and the table of **acceptance criteria with run, what a pass looks like and the `re-run | evidence` marker** (see 005). Prefer the project's **aggregate gate** (e.g. `pnpm check`) over N separate runs — an individual run only for what it doesn't cover. Detailed moves go into the groups in `subtasks/`, each `(agent)` move with its expected observation and likely failure → counter-move.
 - **Assemble the change specs:** every affected spec linked and, for topics without a spec, a draft created via `write-spec` reflecting the planned change (`sync-specs`). A plan without its specs assembled is not ready.
-- **Red-team:** attack your own plan before 003 and record in the plan the attack that failed and the patch born from what got through. Mandatory — waivable only for a trivial task of very few steps (record the waiver).
+- **Red-team:** attack your own plan before 003 and record in the plan the attack that failed and the patch born from what got through. Mandatory in M/L; waived in S (record the waiver).
 - Fill in the **Skills per stage** table on the card (004/005). Plan that does not fit in 200 lines → go back to 001 and propose splitting the task.
-- **Readiness gate 002→003** — only advance when everything holds: moves with expected observation and failure→counter-move; forks with trigger; RECON NEEDED with check; aborts defined; verification with runs and pass; specs assembled; red-team recorded (or waived); executable blind.
+- **Readiness gate 002→003** — only advance when everything holds: moves with expected observation and failure→counter-move; forks with trigger; RECON NEEDED with check; aborts defined; verification with runs, pass and the `re-run | evidence` marker; preflight recorded; specs assembled; red-team recorded (or waived); executable blind. In `S`, the mini-plan's subset applies.
 - If it came back from 003 with change requests, adjust in response to the feedback. Plan ready → `003_human_approval`.
 
 ### 003_human_approval — human gate (user)
 
 - Create/update the `.approval.md` with a **new round**: plan summary, "Human response" and `- [ ] Done`.
 - **The agent only acts when `- [x] Done`** — otherwise, stop and report. Then: changes requested → `002_planning`; approved (or empty) → `004_processing`. Approval also covers the specs proposed in the plan: `draft` → `approved`.
-- **Dependency gate:** only move to 004 when **every** task in `depends_on` is complete — card in `006_done` **or** an existing `memory/<id>*.md` (006 may have been cleaned). Pending dependency → report and wait (the task can sit approved in 003).
+- **Dependency gate:** only move to 004 when **every** task in `depends_on` is complete — an existing `memory/<id>*.md` is the standard signal (the folder in `006_done` is deleted at the end of close-out, see step 7 of 006); a card still in `006_done` also counts, covering the short window between the merge and the deletion. Pending dependency → report and wait (the task can sit approved in 003).
 - **WIP limit:** before moving to 004, if the project already has **3** tasks there, warn the user and ask which one to prioritize.
 
 ### 004_processing — execution (agent)
 
-- **Create the task's worktree on entry:** `git worktree add worktrees/<task-id> -b task/<task-id>`, in the repository where the work lives (declared in the project's AGENTS.md — see [[TYPES|TYPES]]; a project without its own repo uses the PoP repository; `multi-repo`: one worktree per affected repo, under `worktrees/<id>/<repo>/`; `full-multi-repo`: single-repo task → worktree in the repo itself; cross task in the central kanban → as in `multi-repo`, one worktree per affected repo). Record `worktree:` in the frontmatter. **All of the task's work happens inside it** — this is what allows parallel tasks without conflict. Projects without a git repository may skip this (declared in the project sheet's harness).
+- **Create the task's worktree on entry:** `git worktree add pop/worktrees/<task-id> -b task/<task-id>` (the meta-project and not-yet-migrated projects: `worktrees/<task-id>`), in the repository where the work lives (declared in the project's AGENTS.md — see [[TYPES|TYPES]]; a project without its own repo uses the PoP repository; `multi-repo`: one worktree per affected repo, under `pop/worktrees/<id>/<repo>/`; `full-multi-repo`: single-repo task → worktree in the repo itself; cross task in the central kanban → as in `multi-repo`, one worktree per affected repo). Record `worktree:` in the frontmatter. **All of the task's work happens inside it** — this is what allows parallel tasks without conflict. Projects without a git repository may skip this (declared in the project sheet's harness).
 - Execute the groups respecting `Depends on:`/`(after ...)` — groups and items with no pending prerequisite can be parallelized; the rest, in order. On each move, check the **expected observation**; failed → apply the plan's counter-move; fork trigger observed → follow the pre-authorized route. Check the checkboxes. Use the skills listed on the card for this stage.
+- **Capture evidence:** record the relevant output of each gate/run executed in the group notes in `subtasks/` — this is what 005 audits on the `evidence` criteria.
 - **Applications follow the DOX process** in the project's AGENTS.md: walk the code's AGENTS.md tree down to each edit location before editing and update the affected contracts at close-out (they go into the same worktree/PR).
 - `(user)` item: stop, flag it on the card (`blocked: true` + `blocked_reason:` if the item blocks the rest) and report.
 - **Abort condition reached** (or a situation with no planned fork or counter-move) → stop, `blocked: true` + reason — do not improvise.
@@ -85,7 +100,7 @@ You do not execute the task here — you **wargame** the execution, so that a si
 
 ### 005_verifying — verification (agent, + user if critical)
 
-- Create the `.verify.md` from the plan's verification table and execute **each run** defined there, comparing against "Pass looks like" — **in the task's worktree**, not on the main branch.
+- Create the `.verify.md` from the plan's verification table — **in the task's worktree**, not on the main branch. `re-run` criterion: execute the run and compare against "Pass looks like". `evidence` criterion: audit the output captured by the executor (notes in `subtasks/`); missing or inconclusive evidence → treat it as `re-run`.
 - Any criterion failed → go back to `004_processing` with notes.
 - **`critical: true`:** fill in the human approval section and wait for `- [x] Done` before advancing.
 - Everything passed (and approved, if critical) → `006_done`.
@@ -93,11 +108,12 @@ You do not execute the task here — you **wargame** the execution, so that a si
 ### 006_done — PR, human merge and wrap-up (agent + user)
 
 1. **Open the PR:** branch `task/<id>` → the PR branch declared in the project's AGENTS.md. Record `pr:` and `awaiting_merge: true` in the frontmatter, create the **Merge** round in the `.approval.md` ([[_templates/TASK-APPROVAL|TASK-APPROVAL]]) and **stop** — the task shows up in the INBOX. Without a git repository: the merge round is the final approval of the deliverable, without a PR.
-2. **The human merges:** either directly in the repository, or by commanding it in the merge round (then the agent executes their command).
-3. **After the merge, finalize:** write `memory/<id>.md` ([[_templates/MEMORY|MEMORY]]) — summary ≤2000 chars, final merge commit, start and end dates; remove the worktree (`git worktree remove worktrees/<id>`); clear `awaiting_merge:` and `worktree:`. It is the durable record: `006_done` can be cleaned later, the memory stays. **Cross-repo task of a `full-multi-repo` project:** the memory goes into the `memory/` of **each affected repo** (there is no central memory) and the central card links each one.
+2. **The human merges:** either directly in the repository, or by commanding it in the merge round (then the agent executes their command). Merge conflict resolved (under the human's command or by the yolo rule) → re-verify **only the criteria touched by the conflict**, not the whole suite.
+3. **After the merge, finalize:** write `memory/<id>.md` ([[_templates/MEMORY|MEMORY]]) — summary ≤2000 chars, final merge commit, start and end dates; remove the worktree (`git worktree remove pop/worktrees/<id>`); clear `awaiting_merge:` and `worktree:`. It is the durable record that outlives the kanban folder (see step 7). **Cross-repo task of a `full-multi-repo` project:** the memory goes into the `memory/` of **each affected repo** (there is no central memory) and the central card links each one.
 4. **Sync the specs in the same finalization as the memory:** the change specs assembled in 002 are incorporated into the project's specs (`sync-specs`), reflecting what was **actually** done — resolve "Open" items, status → `implemented`. In `full-multi-repo`, always in the `specs/` of the affected repos (there is no central specs). **Not optional** — it is part of completion.
 5. **Derived status:** mark the task as complete in the epoch; if all of the phase's tasks are complete, the phase completes; if all phases, the epoch. Update the `INDEX.md` files if the project's status changed.
 6. **Extract learnings:** whatever is reusable becomes a skill (`skills/`) or note (`notes/learnings/`), linked on the card.
+7. **Delete the task folder:** only after steps 3-6 are done, delete the entire `kanban/006_done/<id>-<slug>/` (card, `.plan.md`, `.approval.md`, `.verify.md`, `subtasks/`). It is not periodic cleanup — it is the last mandatory step of closing 006; the folder exists only transiently while steps 3-6 run. The memory (step 3) is what stays as proof.
 
 ## Cross-cutting rules
 
@@ -106,10 +122,10 @@ You do not execute the task here — you **wargame** the execution, so that a si
   - **B (post-release):** 002 → prepares the `.approval.md` in 003 and **stops** (awaits approval).
   - **C (post-approval):** 004 → 005 → opens the PR in 006 and **stops** (awaits merge) — pausing earlier on a `(user)` item, `critical: true` in 005, an abort condition, a block or a return to 002.
   - **D (post-merge):** memory, sync-specs, derived status, wrap-up.
-- **No work outside a task:** changes to the real project (`project/` or external repository) only happen inside `004_processing`, with a plan approved in 003, **in the task's worktree**. No task, no change.
+- **No work outside a task:** changes to the project's content (everything outside `pop/`, `.agents/` and `AGENTS.md` — at the root of the project folder or in an external repository) only happen inside `004_processing`, with a plan approved in 003, **in the task's worktree**. No task, no change.
 - **Dependencies drive parallelism:** tasks (and subtask groups/items) with no pending prerequisite can run in parallel, each task in its own worktree — respecting the WIP limit of 3.
 - **The merge belongs to the human:** the agent never merges a task PR on its own — only when commanded in the merge round. Exception: a yolo task, whose PR targets `develop` and is merged by the critic; the final `develop` → PR-branch PR still belongs to the human (Yolo mode section).
-- **Transition log:** every stage change adds a line to the card's Log: `YYYY-MM-DD — 002→003 — short reason`.
+- **Transition log:** every stage change adds **one** line to the card's Log, with the **contexts launched** in the stage — the flow's cost measure: `YYYY-MM-DD — 002→003 — short reason — contexts: planner + 2 recon`. Use `pop_move --reason "reason — contexts: ..."`; do not write a manual line duplicating the script's.
 - **Frontmatter always up to date:** when moving, update `stage:` and `updated:`; when blocking/unblocking, `blocked:` and `blocked_reason:`.
 - **Task claim — one agent per task:** when taking a task the orchestrator records `claimed_by:`/`claimed_at:` on the card (`scripts/pop_claim.py <id>`) and **releases when stopping** at a gate (`--release`). An active claim by another agent = busy task — do not touch **any file in the folder** (card, `.plan.md`, `.verify.md`, `subtasks/`): reading ok, writing forbidden. `pop_move` also refuses to transition a task with another agent's active claim (`--by` identifies the caller). Lease of ~2h: a claim older than that is orphaned and may be taken over (the script decides).
 - **Task files are linked by name only** (`[[1.1.1-user-table-creation]]`) — never by path, since the folder moves.

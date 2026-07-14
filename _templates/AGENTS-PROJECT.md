@@ -7,13 +7,13 @@
 - **Type:** default | included | multi-repo | full-multi-repo — see [[TYPES|TYPES]].
 - **Project language:** <en> — specs, notes, researches, code comments and the entire kanban flow follow this language.
 - **Supported languages (i18n):** <list of languages the application must support — handled in the roadmap and specs. Applications only; remove if not applicable.>
-- **Profile:** [[categories/<category>/<project>/PROJECT|PROJECT]] · **Roadmap:** [[categories/<category>/<project>/ROADMAP|ROADMAP]]
+- **Profile:** [[categories/<category>/<project>/pop/PROJECT|PROJECT]] · **Roadmap:** [[categories/<category>/<project>/pop/ROADMAP|ROADMAP]]
 
 ## Repositories
 
 | Repo | URL | Clone at | PR branch |
 |------|-----|----------|-----------|
-| <name> | <url> | `project/<name>/` (default/multi-repo/full-multi-repo) \| project root (included) | <main> |
+| <name> | <url> | `<name>/` at the project root (default/multi-repo/full-multi-repo) \| the project root **is** the repo (included) | <main> |
 
 _No external repository: the work lives in the PoP repository and task PRs target its main branch._
 
@@ -21,14 +21,14 @@ _No external repository: the work lives in the PoP repository and task PRs targe
 
 ## Workflow
 
-Every change to the project goes through the kanban (`kanban/001_initial_task → … → 006_done`):
+Every change to the project goes through the kanban (`pop/kanban/001_initial_task → … → 006_done`):
 
 1. **001** — task is born (skill `new-task`), with `depends_on:` listing the prerequisite tasks.
 2. **002** — plan with acceptance criteria and linked specs (skills `advance-task`, `write-spec`, `sync-specs`).
 3. **003** — human gate: the agent only advances with `- [x] Done`.
-4. **004** — execution **in its own worktree** (`worktrees/<id>/`, branch `task/<id>`); it only enters once every `depends_on` has completed.
+4. **004** — execution **in its own worktree** (`pop/worktrees/<id>/`, branch `task/<id>`); it only enters once every `depends_on` has completed.
 5. **005** — verification of the criteria in the worktree (+ human approval if `critical: true`).
-6. **006** — PR to the PR branch above → **the human merges** → the agent writes `memory/<id>.md`, removes the worktree and finishes.
+6. **006** — PR to the PR branch above → **the human merges** → the agent writes `pop/memory/<id>.md`, removes the worktree and finishes.
 
 **One run = up to the next human gate:** the agent acts as an orchestrator — a dedicated subagent per stage — and chains stages until a gate: approval in 003, verification if `critical`, a `(user)` item, a block, or the merge round in 006. Full detail: [[WORKFLOW|WORKFLOW]] (at the PoP root; copied into this repository when the type is `included`).
 
@@ -43,7 +43,7 @@ Every change to the project goes through the kanban (`kanban/001_initial_task �
 ## Skills
 
 - **PoP workflow:** `.agents/skills/` — `new-task`, `advance-task`, `plan-roadmap`, `write-spec`, `sync-specs`.
-- **Project domain:** `skills/` — listed in the profile [[categories/<category>/<project>/PROJECT|PROJECT]].
+- **Project domain:** `pop/skills/` — listed in the profile [[categories/<category>/<project>/pop/PROJECT|PROJECT]].
 
 ### Clean code (code projects only)
 
@@ -73,4 +73,4 @@ Every change to the project goes through the kanban (`kanban/001_initial_task �
 - **Never** change the real project outside a task in `004_processing` whose plan was approved in 003.
 - **Never** check `- [ ] Done` or execute `(user)` items — those belong exclusively to the human.
 - **Never** merge a task PR — merging is the human's job (or commanded by them in the merge round).
-- Every completed task produces `memory/<id>.md` (≤2000 chars, final commit, dates) — the `kanban/006_done/` folder can be cleaned; the memory stays.
+- Every completed task produces `pop/memory/<id>.md` (≤2000 chars, final commit, dates) — the `pop/kanban/006_done/` folder can be cleaned; the memory stays.

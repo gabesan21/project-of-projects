@@ -38,4 +38,4 @@ _(merge it yourself, or write "go ahead and merge" + instructions)_
 
 ### Agent decision
 
-_(after the merge: final commit, `memory/<id>.md` generated, worktree removed, task closed)_
+_(after the merge: final commit, `pop/memory/<id>.md` generated, worktree removed, task closed)_

@@ -14,7 +14,7 @@ created: YYYY-MM-DD
 
 ## Fit into the vault
 
-> Types explained in [[TYPES|TYPES]]: AI specs can be committed to the repo → `included`; repo must stay clean of harness → `default` (clone in `project/`); one of several repos of the same project → `multi-repo`; several repos that must work standalone, each with a committed harness → `full-multi-repo`.
+> Types explained in [[TYPES|TYPES]]: AI specs can be committed to the repo → `included`; repo must stay clean of harness → `default` (clone at the project folder root); one of several repos of the same project → `multi-repo`; several repos that must work standalone, each with a committed harness → `full-multi-repo`.
 
 - **Category** (in `categories/`: `agents` | `applications` | `writing` | `work` — or a new one):
 - **Type:**
@@ -30,7 +30,7 @@ created: YYYY-MM-DD
 - **What the project does today**, in your view:
 - **Main flows, end to end** (input → processing → output, or the equivalent):
 - **What works well** vs. **what is broken/unfinished:**
-- **Historical decisions** that explain the current design (they become `notes/decisions/`):
+- **Historical decisions** that explain the current design (they become `pop/notes/decisions/`):
 - **How it is delivered/published today:**
 
 ## Future (optional)

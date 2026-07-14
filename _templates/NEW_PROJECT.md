@@ -18,7 +18,7 @@ created: YYYY-MM-DD
 
 ## Type and repositories
 
-> Types explained in [[TYPES|TYPES]]: `default` (work in `project/`) | `included` (harness at the repo root) | `multi-repo` (several repos in `project/`) | `full-multi-repo` (several repos, each with an embedded `included` harness; central kanban for cross-repo tasks only).
+> Types explained in [[TYPES|TYPES]]: `default` (content at the project folder root, harness in `pop/`) | `included` (the project root is the repo, `pop/` committed into it) | `multi-repo` (one clone per repo at the folder root, a single `pop/`) | `full-multi-repo` (several repos, each with an embedded `included`-style `pop/`; central kanban for cross-repo tasks only).
 
 - **Type:**
 - **Repository(ies)** — URL and name of each (**all of them**, if `multi-repo`):

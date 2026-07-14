@@ -1,10 +1,11 @@
 #!/usr/bin/env python3
 """pop_task — scaffolding for a new task in 001_initial_task.
 
-Creates `kanban/001_initial_task/<id>/<id>.md` in the given project from
-`_templates/TASK.md`, filling in id, project, epoch, phase, dates and title,
-and creates an empty `subtasks/` folder. Refuses if the task already exists
-in any project/stage (ids are unique across the vault).
+Creates `kanban/001_initial_task/<id>/<id>.md` in the indicated project's
+harness (`pop/kanban/...` in the new anatomy, `kanban/...` in the legacy one)
+from `_templates/TASK.md`, filling in id, project, epoch, phase, dates and
+title, and creates an empty `subtasks/` folder. Refuses if the task already
+exists in any project/stage (ids are unique across the vault).
 
 Usage:
     python3 scripts/pop_task.py <category>/<project> <task-id> [--title "..."]
@@ -66,21 +67,22 @@ def main():
 
     root = poplib.vault_root(args.vault)
     project_dir = poplib.project_dir(root, args.project)
-    if not (project_dir / "kanban").is_dir():
-        print(f"Project without kanban/: {project_dir} — check "
-              f"<category>/<project>[/<repo>].")
+    harness = poplib.harness_root(project_dir)  # pop/ in the new anatomy
+    if not (harness / "kanban").is_dir():
+        print(f"Project without kanban/ (nor pop/kanban/): {project_dir} — "
+              f"check <category>/<project>[/<repo>].")
         return 1
     existing = poplib.find_task(root, args.task_id)
     if existing:
         _, stage, task_dir = existing
         print(f"Task already exists in {stage}: {task_dir}")
         return 1
-    template_path = root / "_templates" / "TASK.md"
+    template_path = poplib.templates_dir(root) / "TASK.md"
     if not template_path.is_file():
         print(f"Template not found: {template_path}")
         return 1
 
-    task_dir = project_dir / "kanban" / "001_initial_task" / args.task_id
+    task_dir = harness / "kanban" / "001_initial_task" / args.task_id
     task_dir.mkdir(parents=True)
     (task_dir / "subtasks").mkdir()
     card = task_dir / f"{args.task_id}.md"

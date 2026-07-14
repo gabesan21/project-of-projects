@@ -43,35 +43,35 @@ New categories may be created inside `categories/` when no existing one fits —
 categories/<category>/<project>/
 ├── AGENTS.md            ← standalone instructions: type, repos, workflow (CLAUDE.md → symlink)
 ├── .agents/skills/      ← real copies of the PoP core workflow skills
-├── .gitignore           ← worktrees/ + clones of the project's repos
-├── PROJECT.md           ← the sheet: what it is, structure, agent harness
-├── ROADMAP.md           ← EPOCHS only: one line + status + link each
-├── roadmap/             ← 1 file per epoch: phases and tasks, short descriptions
-├── project/             ← the project itself: free structure
-├── researches/          ← research that feeds the roadmap: one folder per topic
-├── skills/              ← reusable procedures, one per file
-├── specs/               ← specifications, one per theme
-├── notes/               ← agent and user notes, by category
-│   └── learnings/ decisions/ ideas/ references/
-├── memory/              ← 1 summary ≤2000 chars per completed task (generated in 006)
-├── worktrees/           ← git worktrees of tasks in execution (never committed)
-└── kanban/              ← flow stages (see [[WORKFLOW|WORKFLOW]])
-    ├── 001_initial_task/
-    ├── 002_planning/
-    ├── 003_human_approval/
-    ├── 004_processing/
-    ├── 005_verifying/
-    └── 006_done/
+├── .gitignore           ← pop/worktrees/ + clones of the project's repos
+├── pop/                 ← ALL of the PoP harness, in a single folder
+│   ├── PROJECT.md       ← the sheet: what it is, structure, agent harness
+│   ├── ROADMAP.md       ← EPOCHS only: one line + status + link each
+│   ├── roadmap/         ← 1 file per epoch: phases and tasks, short descriptions
+│   ├── researches/      ← research that feeds the roadmap: one folder per topic
+│   ├── skills/          ← reusable procedures, one per file
+│   ├── specs/           ← specifications, one per theme
+│   ├── notes/           ← agent and user notes, by category
+│   │   └── learnings/ decisions/ ideas/ references/
+│   ├── memory/          ← 1 summary ≤2000 chars per completed task (generated in 006)
+│   ├── worktrees/       ← git worktrees of tasks in execution (never committed)
+│   └── kanban/          ← flow stages (see [[WORKFLOW|WORKFLOW]])
+│       ├── 001_initial_task/ 002_planning/ 003_human_approval/
+│       └── 004_processing/ 005_verifying/ 006_done/
+└── <project content>     ← code, manuscript etc., directly at the root: free structure
 ```
+
+The dev who opens the project sees only the content, `AGENTS.md`, `.agents/` and `pop/`. **Exception:** projects created **before 2026-07-14** use the legacy anatomy (harness at the folder's root, content in `project/`) until migration — the `pop_*` scripts support both.
 
 - **PROJECT.md** — the sheet: what it is, why it exists, harness. It holds no tasks and no schedule.
 - **ROADMAP.md + roadmap/** — the path, in three levels with descriptions that are always short (≤1 line):
   - **Epoch** (`1`): a big chapter of the project (e.g. "authentication", "payments"). One line in ROADMAP.md, detail in `roadmap/<n>-<slug>.md`.
   - **Phase** (`1.1`): a stage within the epoch (e.g. "user tables", "middleware"). Listed in the epoch's file.
   - **Task** (`1.1.1-<slug>`): the executable unit. It becomes a **folder in the kanban** and travels through the stages described in [[WORKFLOW|WORKFLOW]].
-- **project/** — the real work (code, manuscript etc.), fully free structure; if it lives in an external repository, it contains only a pointer (a note with a link). **researches/** — research that grounds the roadmap: one folder per topic, with the immutable raw source in `raw/` and the agent's synthesis alongside (skill `ingest-research`); deep-research prompts proposed by the agent for the **user** to run go in `RESEARCHES.md` (optional, next to the ROADMAP — [[_templates/RESEARCHES|template]]).
+  - **Epoch 0 (maintenance, reserved):** hotfixes and one-off tweaks to already-applied logic don't enter the narrative epoch in progress — they go to **Epoch 0**, created **on demand** (on the first task of this kind, by `new-task`) with Status **continuous** (never completes) and a single Phase `0.1`, with no chapter detail — just the running list of tasks.
+- **Content at the root** — the real work (code, manuscript, repo clones), a fully free structure; if it lives in an external repository, the root holds only the harness and the repo is declared in the project's AGENTS.md. The names `pop` and `project` are **reserved** (don't use them for a content folder or repo). **researches/** — research that grounds the roadmap: one folder per topic, with the immutable raw source in `raw/` and the agent's synthesis alongside (skill `ingest-research`); deep-research prompts proposed by the agent for the **user** to run go in `RESEARCHES.md` (optional, next to the ROADMAP — [[_templates/RESEARCHES|template]]). **Research is always prior:** the agent does not search the web during the task flow — a knowledge gap becomes a prompt in `RESEARCHES.md` (section 002 of [[WORKFLOW|WORKFLOW]]).
 - **AGENTS.md + .agents/skills/** — make the project **standalone**: type, repositories, PR branch and the essentials of the workflow, with **real copies** of the core skills — even someone who doesn't use the PoP can work on the project. **Application** projects embed the **DOX** process there ([[_templates/DOX|template]]): a tree of AGENTS.md files in the code as hierarchical contracts per subtree.
-- **memory/** — durable summary of each completed task (final commit + dates); allows cleaning `006_done` periodically. **worktrees/** — one git worktree per task in execution, always gitignored.
+- **memory/** — durable summary of each completed task (final commit + dates); it is the proof that survives after the task's folder in `006_done` is deleted on close (a mandatory step, not periodic cleanup — see [[WORKFLOW|WORKFLOW]]). **worktrees/** — one git worktree per task in execution, always gitignored.
 - **skills/** — reusable "how to do X". **specs/** — the detail of each theme.
 - **notes/** — notes from the agent **and** the user, with `author: agent | user` frontmatter, in the categories: `learnings/` (lessons from tasks), `decisions/` (decisions extracted from the sheet), `ideas/` (loose ideas) and `references/` (links and external material).
 
@@ -79,7 +79,7 @@ When creating a project, **copy the templates from `_templates/`** and create th
 
 ## Types and repositories
 
-The PoP is a **repository aggregator**: every project declares a **type** in its AGENTS.md — `default` (work in `project/`, optional repo declared only there), `included` (harness at the root of the project's repo), `multi-repo` (`project/` with several repos) or `full-multi-repo` (several repos, each with an embedded `included` harness; the PoP keeps the general ROADMAP and a kanban for cross-repo tasks only) — detail in [[TYPES|TYPES]]. Repos of `included`, `multi-repo` and `full-multi-repo` go in the **Aggregated repositories** section of the root [[INDEX|INDEX]]; clones are never committed to the PoP (`.gitignore`).
+The PoP is a **repository aggregator**: every project declares a **type** in its AGENTS.md — `default` (a folder in the vault, content at its root, optional repo declared only there), `included` (the project's root is the external repo, with `pop/` committed into it), `multi-repo` (one clone per repo at the folder's root, a single `pop/`) or `full-multi-repo` (several repos, each clone with its own embedded `pop/`; the mother's `pop/` holds the general ROADMAP and a kanban for cross-repo tasks only) — detail in [[TYPES|TYPES]]. Repos of `included`, `multi-repo` and `full-multi-repo` go in the **Aggregated repositories** section of the root [[INDEX|INDEX]]; clones are never committed to the PoP (`.gitignore`).
 
 ## IDs and link convention
 
@@ -100,7 +100,7 @@ The PoP is a **repository aggregator**: every project declares a **type** in its
 
 ## Core skills of the vault
 
-The central procedures are **skills** in the open Agent Skills format (`SKILL.md`), in `.agents/skills/` — the **only** skills folder in the vault, agent-agnostic. **Never create tool-specific folders** (`.claude/`, `.cursor/` etc.). Agents without native reading of `.agents/skills/` (Claude Code included): read and follow the corresponding `SKILL.md` before performing the operation.
+The central procedures are **skills** in the open Agent Skills format (`SKILL.md`), in `.agents/skills/` — the **only** skills folder in the vault, agent-agnostic. **Never create tool-specific folders** (`.claude/`, `.cursor/` etc.) as a *source* of skills. Agents without native reading of `.agents/skills/` (Claude Code included): read and follow the corresponding `SKILL.md` before performing the operation.
 
 | Skill | When to use |
 |-------|-------------|
@@ -123,7 +123,7 @@ The central procedures are **skills** in the open Agent Skills format (`SKILL.md
 | `clean-code-change` | Clean code practices for whoever writes code: contract before coding, readability, safe refactoring, debt triage — in 002 and 004 of code tasks. **Code projects only.** |
 | `clean-code-review` | Code review script with severity (blocking/suggestion/nit) and evidence — in 005 of code tasks and plan/PR gates. **Code projects only.** |
 
-When creating a new skill: create the folder at `.agents/skills/<name>/SKILL.md` and register it in the table above. When changing a core workflow skill, propagate the copy to the projects' `.agents/skills/` (the `weekly-review` audits the drift). Third-party skills are not edited locally — update them from upstream. The `clean-code-*` skills are copied **only to code projects** — their absence in a writing/work project is not drift.
+When creating a new skill: create the folder at `.agents/skills/<name>/SKILL.md` and register it in the table above. When changing a core workflow skill, propagate the copy to the projects' `.agents/skills/` (the `weekly-review` audits the drift; `excalidraw-diagram` is third-party — don't edit it, update it from upstream). The `clean-code-*` skills are copied **only to code projects** — their absence in a writing/work project is not drift.
 
 ## Rules for agents working in this vault
 
@@ -138,13 +138,13 @@ When creating a new skill: create the folder at `.agents/skills/<name>/SKILL.md`
 9. **Absolute dates:** always YYYY-MM-DD, never "next week" or "last month".
 10. **Decisions are recorded:** important decisions made in conversation go into the project folder (with date and rationale) before ending the session.
 11. **Lessons are extracted and integrated:** when completing a task, whatever was learned and is reusable becomes a skill (`skills/`) or a note (`notes/`) — updating an existing note on the same theme instead of duplicating, and flagging contradiction with a previous note/decision — linked in the task's card.
-12. **Planning and execution don't mix:** each project's real work lives exclusively in `project/` — or in the external repository indicated in the sheet's harness, with `project/` holding only the pointer. The other folders are for planning and knowledge.
-13. **Every change to the project goes through the kanban:** agents **never** touch `project/` (or the external repository) outside a task in `004_processing` with a plan approved in 003 — no "quick fix"; detail in [[WORKFLOW|WORKFLOW]].
+12. **Planning and execution don't mix:** the project's content lives at the **root** of the project folder (or in the external repository indicated in the sheet's harness); all planning and knowledge lives in `pop/`. Legacy projects (pre-2026-07-14): content in `project/` until migration.
+13. **Every change to the project goes through the kanban:** agents **never** touch the project content — nothing outside `pop/`, `.agents/` and `AGENTS.md` (in legacy: `project/` and the external repository) — outside a task in `004_processing` with a plan approved in 003 — no "quick fix"; detail in [[WORKFLOW|WORKFLOW]].
 14. **Self-validation before finishing:** the agent checks its own changes from the session — index limits (144/600 chars), ~150 lines per note, complete frontmatter on cards, links following the convention — and fixes anything out of bounds before the commit.
 15. **Commit per session:** this vault is a git repository. When ending a work session, commit the changes with a short message in the vault's language saying what changed.
 16. **One worktree per task, merge by the human:** 004 work happens in the task's worktree, PR in 006 and merge **by the human only**; 004 requires completed `depends_on` — detail in [[WORKFLOW|WORKFLOW]].
-17. **Durable memory:** every completed task generates `memory/<id>.md` (≤2000 chars) before finishing — `006_done` may be cleaned, the memory counts as proof; detail in [[WORKFLOW|WORKFLOW]].
-18. **Delegation by default, with a floor:** broad context reading (recon, audits, sweeps, DOX tree walks, skill diffs) never happens in the main agent's window — it goes to a subagent that receives (a) a specific question, (b) the relevant skill/section, (c) a response format with a cap (e.g. ≤30 lines), a source (file/line) per finding and "not found" instead of speculation, (d) an explicit completion criterion and (e) a "don't do X" boundary when there are parallel peers. **Floor:** work that fits in <~5K tokens is done directly — the fixed cost (~8-16K tokens/subagent) doesn't pay off; motto: **delegate work, not tasks**. **Waves of 3-5** parallel subagents; workers are leaves (they spawn no subagents) — the stage subagent may open its own wave (002 planner → wargame recon); a worker's gap comes back as "Gaps / Not found", never as further delegation. The main agent orchestrates and decides.
+17. **Durable memory:** every completed task generates `memory/<id>.md` (≤2000 chars) before deleting the kanban folder — deleting `kanban/006_done/<id>/` is the last mandatory step of 006 (after memory, specs and status), not periodic cleanup; the memory counts as proof; detail in [[WORKFLOW|WORKFLOW]].
+18. **Delegation by default, with a floor:** broad context reading (recon, audits, sweeps, DOX tree walks, skill diffs) never happens in the main agent's window — it goes to a subagent that receives (a) a specific question, (b) the relevant skill/section, (c) a response format with a cap (e.g. ≤30 lines), a source (file/line) per finding and "not found" instead of speculation, (d) an explicit completion criterion and (e) a "don't do X" boundary when there are parallel peers. **Floor:** work that fits in <~5K tokens is done directly — the fixed cost (~8-16K tokens/subagent) doesn't pay off; motto: **delegate work, not tasks**. **Waves of up to 3-5** parallel subagents — only questions above the floor become workers, **0 workers is a valid result**; workers are leaves (they spawn no subagents) — the stage subagent may open its own wave (002 planner → budgeted wargame recon); a worker's gap comes back as "Gaps / Not found", never as further delegation. The main agent orchestrates and decides.
 19. **Work on the vault itself goes to a worktree:** every change to the PoP itself — harness, indexes, project creation/ingestion, decisions, anything **outside** a project's kanban task — is done in its own **git worktree** under `./worktrees/`, with a dedicated branch, so parallel agents don't fight over the working tree, the git index or the branch. The root `worktrees/` folder exists versioned with its contents gitignored (`git worktree add worktrees/<slug>` creates one on demand); when done, integrate the branch into `main` and remove the worktree. Project-task work stays in the **task's** worktree (rule 16), not here.
 
 ## Harness decisions

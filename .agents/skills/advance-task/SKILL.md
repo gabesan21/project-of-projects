@@ -11,15 +11,15 @@ You are the **orchestrator**: identify the task's stage, resolve gates and trans
 
 ## Input
 
-- **task id** (e.g. `1.1.1-user-table-creation`). Locate the folder: `find <project>/kanban -maxdepth 2 -name "<id>*" -type d`.
+- **task id** (e.g. `1.1.1-user-table-creation`). Locate the folder: `find <project>/pop/kanban -maxdepth 2 -name "<id>*" -type d` (the vault-root meta-project and not-yet-migrated projects: harness at the root, no `pop/`).
 
 ## Orchestrator loop
 
 0. **Claim first:** `scripts/pop_claim.py <task-id>` — refused (active claim by another agent)? **Do not touch the task**, report and finish.
-1. Read the card: `stage`, `critical`, `yolo`, `blocked`, `depends_on`, the "Skills per stage" table. **Task in 001 without `- [x] Ready to plan`?** That's a human gate: release the claim, stop and report — the card still belongs to the human. Exceptions: the human explicitly commanded in this conversation to proceed right away → check the box on their behalf and record it in the Log (`released by human command`); `yolo: true` → the roadmap mark is the release — check it with Log `released by yolo (marked on the roadmap)`.
+1. Read the card: `stage`, `critical`, `yolo`, `size`, `blocked`, `depends_on`, the "Skills per stage" table. **Task in 001 without `- [x] Ready to plan`?** That's a human gate: release the claim, stop and report — the card still belongs to the human. Exceptions: the human explicitly commanded in this conversation to proceed right away → check the box on their behalf and record it in the Log (`released by human command`); `yolo: true` → the roadmap mark is the release — check it with Log `released by yolo (marked on the roadmap)`.
 2. While there is no pending human gate:
-   - Read the current stage's section in the [[WORKFLOW|WORKFLOW]] and execute it — **001 and 006** yourself (they are cheap); **002/004/005** via a dedicated subagent (below). **Fast path:** a trivial task of very few steps (the same yardstick as the red-team waiver) → execute **004** yourself and record the fast path in the Log; **005 remains a subagent** (fresh eyes are not waived).
-   - Transition: `scripts/pop_move.py <task-id> <stage>` moves the folder, updates `stage:`/`updated:` and appends the Log line — atomically (without the script, do all three by hand).
+   - Read the current stage's section in the [[WORKFLOW|WORKFLOW]] and execute it — **001 and 006** yourself (they are cheap); **002/004/005** via a dedicated subagent (below). **Fast path (`size: S`):** execute **002** yourself (mini-plan ≤40 lines — section 002 of the WORKFLOW) and **004**, recording the fast path in the Log; **005 remains a subagent** (fresh eyes are not waived).
+   - Transition: `scripts/pop_move.py <task-id> <stage> --reason "short reason — contexts: <subagents launched in the stage>"` moves the folder, updates `stage:`/`updated:` and appends the Log line — atomically. **Do not** write a manual line duplicating the script's (without the script, do all three by hand in a single line).
 3. Upon reaching a gate, **release the claim** (`scripts/pop_claim.py <task-id> --release`), **stop and report**: the current stage, what awaits the human and what the next call will do.
 
 **Human gates (the only stops):** release at `001` (`- [x] Ready to plan`); approval at `003`; human verification if `critical: true` at `005`; a subtask `(user)` item; `blocked: true`; the merge round at `006`.
@@ -28,10 +28,10 @@ You are the **orchestrator**: identify the task's stage, resolve gates and trans
 
 ## Subagents per stage
 
-Each subagent receives **only** its stage's skill (the card's "Skills per stage" table) + the minimal context — never the whole vault:
+Each subagent receives **only** its stage's skill (the card's "Skills per stage" table) + the minimal context — never the whole vault. Every stage subagent's contract includes: **no web** (a knowledge gap → prompt in `RESEARCHES.md` + `blocked`, section 002 of the WORKFLOW), a **response cap** ("write the file, return the path + a summary ≤10 lines") and the **model by tier** from the role × size matrix of the Orchestration (`scripts/models.json`):
 
-- **002 — planner:** receives the card + linked specs → returns the `.plan.md` (spawns its own wargame recon wave, **3-5 per wave**; recon workers are leaves — they report "Gaps / Not found", never spawn subagents).
-- **004 — executor:** receives the plan + the "Minimal executor context" section → works in the task's worktree, returns checked checkboxes + divergences.
+- **002 — planner:** receives the card + linked research and specs → returns the `.plan.md` (spawns its own **budgeted** recon wave — only questions above rule 18's floor become workers, **0 is valid**, waves of up to 3-5; workers are leaves — they report "Gaps / Not found", never spawn subagents).
+- **004 — executor:** receives the plan + the "Minimal executor context" section → works in the task's worktree (`pop/worktrees/<id>`), returns checked checkboxes + divergences.
 - **005 — verifier:** receives the plan's verification table → returns the `.verify.md` with evidence. **Never the same agent that executed** — it judges without the bias of whoever did the work.
 - **003/006 yolo — critic:** receives the card + `.plan.md` + `.approval.md` (006: + `.verify.md` and the PR) → signs the round or sends it back with reasons (skill [[.agents/skills/yolo-critic/SKILL|yolo-critic]]; cap of 2 send-backs). Distinct from planner/executor/verifier.
 

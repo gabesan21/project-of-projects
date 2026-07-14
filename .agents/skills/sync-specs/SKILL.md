@@ -20,7 +20,7 @@ description: Mandatory spec-update flow as tasks advance through the kanban - sp
 
 ## Audit (on demand or in the weekly-review)
 
-Delegate it to a **subagent** (answer ≤30 lines): list the tasks in `006_done` and read the specs their plans link, flagging **(a)** specs still `draft`/`approved` that don't reflect what the task delivered → pending; **(b)** `obsolete` specs without a link to a replacement, or with no task/phase reference → candidates for archiving/rewriting. The main agent only decides what to do with the list.
+Delegate it to a **subagent** (answer ≤30 lines): list the tasks in `pop/kanban/006_done` and read the specs (`pop/specs/`) their plans link (the vault-root meta-project and not-yet-migrated projects: harness at the root, no `pop/`), flagging **(a)** specs still `draft`/`approved` that don't reflect what the task delivered → pending; **(b)** `obsolete` specs without a link to a replacement, or with no task/phase reference → candidates for archiving/rewriting. The main agent only decides what to do with the list.
 
 ## Cautions
 

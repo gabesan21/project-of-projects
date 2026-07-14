@@ -6,6 +6,7 @@ phase: "<n>.<m>"
 stage: 001_initial_task
 critical: false
 yolo: false
+size: S | M | L
 blocked: false
 blocked_reason:
 depends_on: []
@@ -20,9 +21,9 @@ updated: YYYY-MM-DD
 
 # <id>-<slug> — <short title>
 
-> Blockquotes in this template are fill-in instructions — **delete them when filling it in**.
+> Blockquotes in this template are fill-in instructions — **delete them when filling it in**. Harness paths carry the `pop/` prefix — on claim (004), `worktree:` receives `pop/worktrees/<id>-<slug>` (in the vault-root meta-project: without the `pop/` prefix).
 
-- **Phase:** [[categories/<category>/<project>/roadmap/<n>-<epoch-slug>|Phase <n>.<m>]]
+- **Phase:** [[categories/<category>/<project>/pop/roadmap/<n>-<epoch-slug>|Phase <n>.<m>]]
 - **Plan:** [[<id>-<slug>.plan]] · **Approval:** [[<id>-<slug>.approval]] · **Verification:** [[<id>-<slug>.verify]]
 
 ## What
@@ -45,13 +46,13 @@ One sentence: why now, and what it unblocks.
 
 | Stage | Project skills | Owner |
 |-------|----------------|-------|
-| 002_planning | [[categories/<category>/<project>/skills/<skill>\|<skill>]] | agent |
-| 004_processing | [[categories/<category>/<project>/skills/<skill>\|<skill>]] | agent |
-| 005_verifying | [[categories/<category>/<project>/skills/<skill>\|<skill>]] | agent |
+| 002_planning | [[categories/<category>/<project>/pop/skills/<skill>\|<skill>]] | agent |
+| 004_processing | [[categories/<category>/<project>/pop/skills/<skill>\|<skill>]] | agent |
+| 005_verifying | [[categories/<category>/<project>/pop/skills/<skill>\|<skill>]] | agent |
 
 ## Dependencies
 
-> Mirrors `depends_on:` in the frontmatter. The task only enters `004_processing` once every dependency is completed (card in `006_done` or `memory/<id>*.md` exists). Empty = can run in parallel with the others.
+> Mirrors `depends_on:` in the frontmatter. The task only enters `004_processing` once every dependency is completed — an existing `pop/memory/<id>*.md` is the standard signal (the folder in `006_done` is deleted on close); a card still in `006_done` also counts, for the short window before deletion. Empty = can run in parallel with the others.
 
 - [[<id-of-prerequisite-task>]] — what it delivers that this task needs.
 
@@ -59,7 +60,7 @@ One sentence: why now, and what it unblocks.
 
 > Every link carries a 1-line trigger — *when* it is worth following. A link without a trigger is rightly ignored.
 
-- **Specs:** [[categories/<category>/<project>/specs/<spec>|<spec>]] — *follow if <condition>*.
+- **Specs:** [[categories/<category>/<project>/pop/specs/<spec>|<spec>]] — *follow if <condition>*.
 - **Related tasks:** [[<id-of-another-task>]] — *follow if <condition>*.
 
 ## Log

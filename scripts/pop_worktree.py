@@ -1,15 +1,17 @@
 #!/usr/bin/env python3
 """pop_worktree — creates/removes a task's git worktree.
 
-`add` creates `worktrees/<task-id>` in the task's project folder, with the
-branch `task/<task-id>`. Target repository: `--repo`, or the project's own
-folder when it is a git repo (an `included` clone / embedded repo of a
-`full-multi-repo`), otherwise the vault root. A `--repo <name>` that matches
-the project's `project/<name>/` uses that clone and nests the worktree in
-`worktrees/<task-id>/<name>/` (cross task of `multi-repo`/`full-multi-repo` —
-repeat the command for each affected repo). `remove` undoes the worktree and
-deletes the branch if it is already merged (`--delete-branch` forces the
-deletion).
+`add` creates the worktree in the harness of the task's project
+(`pop/worktrees/<task-id>` in the new anatomy, `worktrees/<task-id>` in the
+legacy one), with the branch `task/<task-id>`. Target repository: `--repo`,
+or the project's own folder when it is a git repo (an `included` clone /
+embedded repo of a `full-multi-repo`), otherwise the vault root. A
+`--repo <name>` that matches a clone of the project — `<name>/` in the new
+anatomy, `project/<name>/` in the legacy one — uses that clone and nests the
+worktree in `.../worktrees/<task-id>/<name>/` (cross task of
+`multi-repo`/`full-multi-repo` — repeat the command for each affected repo).
+`remove` undoes the worktree and deletes the branch if it is already merged
+(`--delete-branch` forces the deletion).
 
 Usage:
     python3 scripts/pop_worktree.py add    <task-id> [--repo DIR|NAME] [--base BRANCH]
@@ -87,7 +89,8 @@ def main():
     parser.add_argument("task_id", help="task id (folder name in the kanban)")
     parser.add_argument("--repo", metavar="DIR|NAME",
                         help="target git repository: a path, or the name of a "
-                             "clone in the task's project project/<name>/ "
+                             "clone of the task's project — <name>/ in the new "
+                             "anatomy, project/<name>/ in the legacy one "
                              "(worktree nested in worktrees/<id>/<name>/); "
                              "default: the project folder if it is a git "
                              "repo, otherwise the vault root")
@@ -108,11 +111,14 @@ def main():
     print(f"Task {args.task_id} in {poplib.project_label(root, project)} "
           f"({stage}).")
 
-    worktree = project / "worktrees" / args.task_id
+    worktree = poplib.harness_root(project) / "worktrees" / args.task_id
     if args.repo:
-        embedded = project / "project" / args.repo
+        # project clone: `<name>/` in the new anatomy, `project/<name>/` in the legacy one
+        embedded = project / args.repo
+        if not embedded.is_dir():
+            embedded = project / "project" / args.repo
         if "/" not in args.repo and embedded.is_dir():
-            # clone name of the project: nested worktree, one per affected repo
+            # name of a project clone: nested worktree, one per affected repo
             repo = embedded
             worktree = worktree / args.repo
         else:
