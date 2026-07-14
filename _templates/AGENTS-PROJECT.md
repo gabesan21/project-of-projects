@@ -45,6 +45,24 @@ Every change to the project goes through the kanban (`kanban/001_initial_task �
 - **PoP workflow:** `.agents/skills/` — `new-task`, `advance-task`, `plan-roadmap`, `write-spec`, `sync-specs`.
 - **Project domain:** `skills/` — listed in the profile [[categories/<category>/<project>/PROJECT|PROJECT]].
 
+### Clean code (code projects only)
+
+> **Remove this section if the project is not a code project.**
+
+- `clean-code-change` (`.agents/skills/`) — follow when **planning (002) and executing (004)** any task that creates or changes code.
+- `clean-code-review` (`.agents/skills/`) — follow when **verifying (005)** a code task and as a reading criterion in plan or PR gates.
+- **Mandatory:** in 002, every task that creates/changes code enters `clean-code-change` on the **004** row and `clean-code-review` on the **005** row of the card's **Skills per stage** table.
+
+#### Project verification
+
+> Exact commands the clean code skills run — keep faithful to the project's real tooling.
+
+| Check | Command |
+|-------|---------|
+| Formatter | `<command>` |
+| Linter | `<command>` |
+| Tests | `<command>` |
+
 ## DOX process (applications only)
 
 > **Application** projects paste here the full section from [[_templates/DOX|_templates/DOX.md]] — a tree of AGENTS.md files in the code as hierarchical contracts. This AGENTS.md may exceed the ~150 lines to hold it. **Remove this section in all other project types.**

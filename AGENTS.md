@@ -120,8 +120,10 @@ The central procedures are **skills** in the open Agent Skills format (`SKILL.md
 | `run-cursor-agent` | Invoke the headless Cursor CLI (`cursor-agent -p --force`) as the executor of a delegated coding task. |
 | `run-opencode` | Invoke headless opencode (`opencode run`) as the executor of a delegated coding task. |
 | `run-codex` | Invoke the headless Codex CLI (`codex exec`) as the executor of a delegated coding task. |
+| `clean-code-change` | Clean code practices for whoever writes code: contract before coding, readability, safe refactoring, debt triage — in 002 and 004 of code tasks. **Code projects only.** |
+| `clean-code-review` | Code review script with severity (blocking/suggestion/nit) and evidence — in 005 of code tasks and plan/PR gates. **Code projects only.** |
 
-When creating a new skill: create the folder at `.agents/skills/<name>/SKILL.md` and register it in the table above. When changing a core workflow skill, propagate the copy to the projects' `.agents/skills/` (the `weekly-review` audits the drift). Third-party skills are not edited locally — update them from upstream.
+When creating a new skill: create the folder at `.agents/skills/<name>/SKILL.md` and register it in the table above. When changing a core workflow skill, propagate the copy to the projects' `.agents/skills/` (the `weekly-review` audits the drift). Third-party skills are not edited locally — update them from upstream. The `clean-code-*` skills are copied **only to code projects** — their absence in a writing/work project is not drift.
 
 ## Rules for agents working in this vault
 
