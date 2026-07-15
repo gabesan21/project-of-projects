@@ -116,6 +116,22 @@ class StrictAnatomyTest(unittest.TestCase):
         result = self.run_script("pop_validate.py")
         self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
 
+    def test_pop_validate_nao_avisa_link_estagio_irmao(self):
+        # a card in 001 links `.plan/.approval/.verify` (from the template)
+        # that are only born as the task advances — expected navigation link,
+        # must not become a warning.
+        self.assertEqual(
+            self.run_script("pop_task.py", "a/novo", "4.1.1-links-estagio")
+            .returncode, 0)
+        release_card(self.root / "categories/a/novo/pop/kanban"
+                     / "001_initial_task" / "4.1.1-links-estagio"
+                     / "4.1.1-links-estagio.md")
+        result = self.run_script("pop_validate.py")
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        self.assertNotIn("4.1.1-links-estagio.plan", result.stdout)
+        self.assertNotIn("4.1.1-links-estagio.approval", result.stdout)
+        self.assertNotIn("4.1.1-links-estagio.verify", result.stdout)
+
     def test_pop_validate_rejeita_anatomia_legada(self):
         # harness at the folder root (legacy kanban/) => violation, exit 1
         make_kanban(self.root / "categories/a/legado/kanban")

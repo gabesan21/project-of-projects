@@ -1,0 +1,8 @@
+{
+  "useMarkdownLinks": true,
+  "showUnsupportedFiles": false,
+  "userIgnoreFilters": [
+    "/node_modules\\//",
+    "/worktrees\\//"
+  ]
+}

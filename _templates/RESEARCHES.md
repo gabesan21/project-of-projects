@@ -8,7 +8,7 @@ Profile: [[categories/<category>/<project>/pop/PROJECT|<Project name>]] · Roadm
 
 ## <topic-in-kebab-case>
 
-- **Status:** pending | delivered → [[categories/<category>/<project>/pop/researches/<topic>/<topic>|synthesis]]
+- **Status:** pending (delivered → the section leaves the file; the synthesis is the record)
 - **Feeds:** epoch <n> | spec [[categories/<category>/<project>/pop/specs/<spec>|<spec>]] | RECON NEEDED <which>
 - **Suggested prompt:**
 
@@ -18,4 +18,4 @@ Profile: [[categories/<category>/<project>/pop/PROJECT|<Project name>]] · Roadm
 
 1. The agent proposes researches here (`new-project`, `plan-roadmap`, `import-project`) — one section per topic.
 2. The user runs the prompt wherever they want and delivers the raw result in `pop/researches/<topic>/raw/` (tip: the Obsidian Web Clipper converts web articles to markdown).
-3. Result delivered → the agent runs the `ingest-research` skill: synthesis in `pop/researches/<topic>/<topic>.md`, status `delivered` with a link to the synthesis and a proposal of roadmap/spec updates (contradiction with a spec/note is flagged, never silent).
+3. Result delivered → the agent runs the `ingest-research` skill: synthesis in `pop/researches/<topic>/<topic>.md`, **removal of the section from here** (the file keeps no history — the synthesis is the record) and a proposal of roadmap/spec updates (contradiction with a spec/note is flagged, never silent).

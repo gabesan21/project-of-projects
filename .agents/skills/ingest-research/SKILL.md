@@ -19,7 +19,7 @@ description: Ingests a deep-research result (or external source) delivered by th
 1. **Position the raw source:** save/move the delivered material to `researches/<topic>/raw/` (topic in kebab-case; create the folder if the research is new).
 2. **Synthesis subagent** receives: (a) the path to the raw source; (b) the corresponding section of RESEARCHES.md (especially the "Feeds:"); (c) the list of specs/decisions/notes related to the topic. It returns ≤60 lines: central findings, actionable recommendations and — mandatory — the answer to "does any finding **contradict** an existing spec, decision or note? which one, and why".
 3. **Write the synthesis** in `researches/<topic>/<topic>.md` from the answer. A contradiction becomes a `> Contradicts: [[target]] — <why, in 1 line>` line in the synthesis **and** an item in the "Open" section of the affected spec (same mechanism as `sync-specs` in 004).
-4. **Update the index:** in the project's RESEARCHES.md, if it exists, status → `delivered` with a link to the **synthesis** (not to the raw source).
+4. **Update the index:** in the project's RESEARCHES.md, if it exists, **remove the section** of the delivered research — the file lists only pending ones, it keeps no history (the synthesis is the record).
 5. **Propose, don't apply:** list to the user the concrete updates the finding suggests — the roadmap changes via `plan-roadmap`, a spec via `write-spec`. Ingestion prepares the decision; it changes neither roadmap nor spec.
 
 ## Cautions

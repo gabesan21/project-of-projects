@@ -9,8 +9,9 @@
 # `included` projects with a repo: categories/<category>/<project>/
 # Example: categories/applications/my-app/
 
-# Obsidian local state (remove this if you prefer to version your workspace)
-.obsidian/
+# Obsidian per-user session state (the rest of .obsidian/ is versioned so the
+# vault works out of the box: Dataview-powered INBOX, Excalidraw, git, theme)
+.obsidian/workspace.json
 
 # Python bytecode from scripts/
 __pycache__/

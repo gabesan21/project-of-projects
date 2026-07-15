@@ -41,6 +41,10 @@ POP_HASH = re.compile(r"<!--\s*pop-hash:\s*(\S+)\s+sha256=([0-9a-fA-F]+)\s*-->")
 INLINE_CODE = re.compile(r"`[^`]*`")
 LINK_SKIP_PARTS = {"external-repository", ".obsidian", ".git", "worktrees",
                    "__pycache__", "node_modules", "vendor"}
+# Suffixes of the task's own stage artifacts (created only as the task advances
+# through the kanban): a card in 001-005 links `.plan/.approval/.verify` files
+# not yet born — expected navigation link, not a real break (see [[WORKFLOW]]).
+STAGE_ARTIFACT_SUFFIXES = (".plan", ".approval", ".verify")
 EXTERNAL_PROJECT_LINK = re.compile(r"\[\[categories/[^/]+/[^/]+/")
 
 
@@ -238,6 +242,15 @@ def check_wikilinks(root, warnings):
                 low = target.lower()
                 name = low.rsplit("/", 1)[-1]
                 if {low, f"{low}.md", name} & targets:
+                    continue
+                # Task link to a sibling stage artifact not yet created
+                # (`<id>.plan|approval|verify`): expected navigation.
+                src_stem = path.stem.lower()
+                for suf in STAGE_ARTIFACT_SUFFIXES:
+                    if src_stem.endswith(suf):
+                        src_stem = src_stem[: -len(suf)]
+                        break
+                if name in {f"{src_stem}{suf}" for suf in STAGE_ARTIFACT_SUFFIXES}:
                     continue
                 warnings.append(f"{path}:{n}: broken wikilink [[{target}]]")
 

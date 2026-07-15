@@ -103,6 +103,8 @@ project-of-projects/
 | `sync-specs` | Keeps specs faithful to reality as tasks progress. |
 | `weekly-review` | Vault-wide review: what waits on you, what stalled, proposals. |
 
+These are the workflow highlights — the full table in `AGENTS.md` covers all skills, including the `clean-code-change`/`clean-code-review` pair (code projects), the `ui-change`/`ui-review` pair (frontend projects) and a vendored batch of 16 frontend/UI/UX skills (design direction, React/Next.js practices, shadcn/ui, color, design tokens, and UX/accessibility audits), each credited with upstream and license.
+
 ## Scripts
 
 Stdlib-only Python (≥ 3.9) CLIs in `scripts/` turn agent sweeps into one command — agents (and you) use them instead of walking the tree. All accept `--vault DIR` and `--help`:
@@ -122,7 +124,7 @@ python3 scripts/pop_worktree.py add 1.1.1-user-table   # create/remove the task'
    git clone https://github.com/gabesan21/project-of-projects.git my-vault
    cd my-vault
    ```
-2. **Open it in Obsidian** — open the folder as a vault and install the community plugins below (only **Dataview** is required).
+2. **Open it in Obsidian** — open the folder as a vault. It comes **pre-configured**: `.obsidian/` is versioned (plugins below plus the [Obsidianite](https://github.com/bennyxguo/Obsidian-Obsidianite) theme, MIT), so the Dataview-powered `INBOX.md` works out of the box; only your per-session `workspace.json` stays gitignored.
 3. **Point your agent at it** — open the folder with your AI coding agent. It reads `AGENTS.md` (Claude Code reads it via the `CLAUDE.md` symlink) and learns the whole system from there.
    - **Claude Code — native skill discovery** *(optional but recommended)*: skills live in `.agents/skills/` to stay agent-agnostic, and Claude Code looks for them in `.claude/skills/`. Symlink one into the other — the same trick as `CLAUDE.md → AGENTS.md` — so Claude Code discovers all skills natively (and picks up new ones automatically):
      ```sh
@@ -134,7 +136,7 @@ python3 scripts/pop_worktree.py add 1.1.1-user-table   # create/remove the task'
 
 ## Obsidian plugins
 
-All plugins serve the **human** side — agents never depend on them (`INBOX.md` documents grep equivalents, and `scripts/` covers the sweeps).
+All plugins serve the **human** side — agents never depend on them (`INBOX.md` documents grep equivalents, and `scripts/` covers the sweeps). They ship **pre-installed** in the versioned `.obsidian/` — each is the property of its authors, redistributed under its own license (Dataview, Obsidian Git, Templater, QuickAdd and Excalidraw are MIT), with settings clean of anything personal.
 
 | Plugin | Why |
 |--------|-----|
@@ -143,7 +145,6 @@ All plugins serve the **human** side — agents never depend on them (`INBOX.md`
 | **Templater** | Point its template folder at `_templates/` to create cards and notes by hand already in the standard format. |
 | **QuickAdd** | Quick-capture ideas into a project's `notes/ideas/` without navigating the vault. |
 | **Excalidraw** | Visual diagrams in specs, plans and notes — pairs with the optional [excalidraw-diagram skill](https://github.com/coleam00/excalidraw-diagram-skill); `.excalidraw.md` files are exempt from the note line limit. |
-| **Omnisearch** | Better full-text search once the vault grows. |
 
 ## Make it yours
 
