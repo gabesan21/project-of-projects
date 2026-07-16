@@ -5,7 +5,7 @@ description: Orchestrates a task's advance through the kanban (001→006), deleg
 
 # advance-task
 
-You are the **orchestrator**: identify the task's stage, resolve gates and transitions and **advance until the next human gate** — never stop at an agent→agent transition. The source of truth is the [[WORKFLOW|WORKFLOW]]: read **only the section of the stage the task is in + the Cross-cutting rules** — this skill does not rewrite the stages.
+You are the **orchestrator**: identify the task's stage, resolve gates and transitions and **advance until the next human gate** — never stop at an agent→agent transition (see Turn discipline). The source of truth is the [[WORKFLOW|WORKFLOW]]: read **only the section of the stage the task is in + the Cross-cutting rules** — this skill does not rewrite the stages.
 
 **Delegate to subagents:** all the work of 002, 004 and 005 (one dedicated subagent per stage); the orchestrator executes only 001, 006, gates and transitions.
 
@@ -25,6 +25,15 @@ You are the **orchestrator**: identify the task's stage, resolve gates and trans
 **Human gates (the only stops):** release at `001` (`- [x] Ready to plan`); approval at `003`; human verification if `critical: true` at `005`; a subtask `(user)` item; `blocked: true`; the merge round at `006`.
 
 **`yolo: true` task** (Yolo mode section of the [[WORKFLOW|WORKFLOW]]): the gates at 001, 003, `critical` at 005 and the task integration in 006 are resolved by the **critic** subagent ([[.agents/skills/yolo-critic/SKILL|yolo-critic]]) — no PR and no `pr:`/`awaiting_merge:` per task; the only human stops are a `(user)` item, `blocked: true` and the final scope review. **Scope loop:** once a yolo-scope task completes, materialize the next eligible task of the phase/epoch (`new-task` without an interview, in `depends_on` order, WIP 3 prioritized by you) until the scope is done — then the scope close-out (a delivery open question, **no automatic PR** — protocol in the critic's skill; a single-task scope closes at the end of that task itself). A yolo mark removed mid-flight takes effect at the next gate.
+
+## Turn discipline
+
+"Chaining stages within a single call" has mechanical consequences — the violations below were observed in the field and are **orchestrator bugs**, not stops:
+
+- **Stage delegation is synchronous:** when launching the 002/004/005/critic subagent, **wait for its result before anything else**. If the harness runs subagents in the background by default, use the synchronous/blocking mode; if only active waiting is available, wait until it completes. "No subagent has completed yet" is not a final state — it is a signal that the wait continues. Launching ≠ delegating: a stage whose result was not collected is a stage **not executed**.
+- **Never end the turn with a stage subagent running.**
+- **Last-message test:** if it describes future work owned by `agent` ("I'll keep chaining…", "next I will…"), the turn **cannot end** — do that work now. Legitimate endings: a human gate reached (list below), `blocked: true`, or a yolo scope closed (close-out done, not promised).
+- **The yolo scope loop runs within the same turn:** once a task completes, materialize and advance the next eligible one in the same run, until the scope ends, `blocked` or a `(user)` item. Progress reporting happens at the close-out — it is not a stopping point.
 
 ## Subagents per stage
 
