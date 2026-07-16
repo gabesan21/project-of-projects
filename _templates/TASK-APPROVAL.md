@@ -25,7 +25,7 @@ _(filled in after the Done: "approved → 004" or "changes requested → 002: <s
 
 ## Merge round — 006 — YYYY-MM-DD
 
-> Final round, created when the task reaches `006_done` with an open PR. The merge is **always the human's** — done directly in the repository, or commanded here for the agent to execute. **Yolo task:** the PR targets `develop` and the critic merges it (`### Critic response (yolo)` subsection); the scope's final PR (`develop` → PR branch) is **always the human's**, via an open question — see [[WORKFLOW|WORKFLOW]].
+> Final round, created when the task reaches `006_done` with an open PR. The merge is **always the human's** — done directly in the repository, or commanded here for the agent to execute. **Yolo task:** no PR — the critic integrates `task/<id>` into `develop` via a local merge and signs here (`### Critic response (yolo)` subsection); the scope's final delivery reaches the human via an open question, where they decide whether to open the `develop` → PR-branch PR — see [[WORKFLOW|WORKFLOW]].
 
 - **PR:** <link> — branch `task/<id>-<slug>` → `<PR branch from the project's AGENTS.md>`
 - _No git repository: this round is the final approval of the deliverable, without a PR._

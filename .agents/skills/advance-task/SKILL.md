@@ -24,7 +24,7 @@ You are the **orchestrator**: identify the task's stage, resolve gates and trans
 
 **Human gates (the only stops):** release at `001` (`- [x] Ready to plan`); approval at `003`; human verification if `critical: true` at `005`; a subtask `(user)` item; `blocked: true`; the merge round at `006`.
 
-**`yolo: true` task** (Yolo mode section of the [[WORKFLOW|WORKFLOW]]): the gates at 001, 003 and the task merge in 006 are resolved by the **critic** subagent ([[.agents/skills/yolo-critic/SKILL|yolo-critic]]) — the remaining stops stay human. **Scope loop:** once a yolo-scope task completes, materialize the next eligible task of the phase/epoch (`new-task` without an interview, in `depends_on` order, WIP 3) until the scope is done — then open the scope close-out (`develop` → PR-branch PR + open question, protocol in the critic's skill). A yolo mark removed mid-flight takes effect at the next gate.
+**`yolo: true` task** (Yolo mode section of the [[WORKFLOW|WORKFLOW]]): the gates at 001, 003, `critical` at 005 and the task integration in 006 are resolved by the **critic** subagent ([[.agents/skills/yolo-critic/SKILL|yolo-critic]]) — no PR and no `pr:`/`awaiting_merge:` per task; the only human stops are a `(user)` item, `blocked: true` and the final scope review. **Scope loop:** once a yolo-scope task completes, materialize the next eligible task of the phase/epoch (`new-task` without an interview, in `depends_on` order, WIP 3 prioritized by you) until the scope is done — then the scope close-out (a delivery open question, **no automatic PR** — protocol in the critic's skill; a single-task scope closes at the end of that task itself). A yolo mark removed mid-flight takes effect at the next gate.
 
 ## Subagents per stage
 
@@ -33,7 +33,7 @@ Each subagent receives **only** its stage's skill (the card's "Skills per stage"
 - **002 — planner:** receives the card + linked research and specs → returns the `.plan.md` (spawns its own **budgeted** recon wave — only questions above rule 18's floor become workers, **0 is valid**, waves of up to 3-5; workers are leaves — they report "Gaps / Not found", never spawn subagents).
 - **004 — executor:** receives the plan + the "Minimal executor context" section → works in the task's worktree (`pop/worktrees/<id>`), returns checked checkboxes + divergences.
 - **005 — verifier:** receives the plan's verification table → returns the `.verify.md` with evidence. **Never the same agent that executed** — it judges without the bias of whoever did the work.
-- **003/006 yolo — critic:** receives the card + `.plan.md` + `.approval.md` (006: + `.verify.md` and the PR) → signs the round or sends it back with reasons (skill [[.agents/skills/yolo-critic/SKILL|yolo-critic]]; cap of 2 send-backs). Distinct from planner/executor/verifier.
+- **003/critical-005/006 yolo — critic:** receives the card + `.plan.md` + `.approval.md` (critical 005: + `.verify.md` and the worktree; 006: + `.verify.md` and the `task/<id>` branch) → signs the round/verification or sends it back with reasons (skill [[.agents/skills/yolo-critic/SKILL|yolo-critic]]; cap of 2 send-backs in 003; 006 = local merge into `develop`, no PR). Distinct from planner/executor/verifier.
 
 ## Cautions (of this skill; the flow's are in the Cross-cutting rules)
 

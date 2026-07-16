@@ -109,7 +109,7 @@ The central procedures are **skills** in the open Agent Skills format (`SKILL.md
 | `plan-roadmap` | Build/evolve the roadmap by interview (epochs → phases → candidate tasks). |
 | `new-task` | Quick interview that materializes a task in `kanban/001_initial_task`. |
 | `advance-task` | Move a task through the 001→006 flow, respecting the human gates. |
-| `yolo-critic` | Critic agent for the delegated gates of a yolo task: approves/sends back the plan in 003 and merges the task PR into `develop` — Yolo mode section of [[WORKFLOW\|WORKFLOW]]. |
+| `yolo-critic` | Critic agent for the delegated gates of a yolo task: approves/sends back the plan in 003, verifies critical in 005 and integrates the task into `develop` — Yolo mode section of [[WORKFLOW\|WORKFLOW]]. |
 | `write-spec` | Create/rewrite a standardized spec, with questions per project type. |
 | `sync-specs` | Mandatory flow: keep specs faithful to reality as tasks advance. |
 | `ingest-research` | Ingests a delivered research result: immutable raw source in `raw/`, synthesis with triggered links and a contradiction check against specs/notes. |

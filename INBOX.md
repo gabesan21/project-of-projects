@@ -24,7 +24,7 @@ SORT updated ASC
 
 ```dataview
 TABLE WITHOUT ID file.link AS Task, project AS Project, updated AS "Since"
-WHERE stage = "005_verifying" AND critical = true
+WHERE stage = "005_verifying" AND critical = true AND yolo != true
 SORT updated ASC
 ```
 
@@ -32,7 +32,7 @@ SORT updated ASC
 
 ```dataview
 TABLE WITHOUT ID file.link AS Task, project AS Project, pr AS PR
-WHERE awaiting_merge = true
+WHERE awaiting_merge = true AND yolo != true
 SORT updated ASC
 ```
 
@@ -57,7 +57,7 @@ SORT created ASC
 
 ## Yolo in progress
 
-Informational (no decision needed): tasks with gates delegated to the critic agent — see the Yolo mode section of [[WORKFLOW|WORKFLOW]]. Blocks show up under **Blocked**; the scope's final PR arrives as an open question.
+Informational (no decision needed): tasks with gates delegated to the critic agent — see the Yolo mode section of [[WORKFLOW|WORKFLOW]]. Blocks show up under **Blocked**; the scope's delivery arrives as an open question (you test `develop` and decide whether to open the PR).
 
 ```dataview
 TABLE WITHOUT ID file.link AS Task, project AS Project, stage AS Stage, updated AS "Since"
