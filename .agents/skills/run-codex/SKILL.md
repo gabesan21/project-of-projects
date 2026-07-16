@@ -96,4 +96,4 @@ timeout 600 codex exec resume --last --dangerously-bypass-approvals-and-sandbox 
 
 ## See also
 
-- Contract and choice: `delegate-coding` · Same operation in another tool: `run-claude-code`, `run-cursor-agent`, `run-opencode`.
+- Contract and choice: `delegate-coding` · Same operation in another tool: `run-cursor-agent`, `run-opencode`.

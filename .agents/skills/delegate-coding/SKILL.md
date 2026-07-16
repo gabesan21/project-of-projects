@@ -1,13 +1,15 @@
 ---
 name: delegate-coding
-description: Delegates coding work to a headless coding agent CLI (Claude Code, Cursor CLI, opencode or Codex CLI) - invocation contract, tool choice and yolo/auth rules. Use when executing a coding task through another agentic tool instead of doing it directly.
+description: Delegates coding work to a headless coding agent CLI (Cursor CLI, opencode or Codex CLI) - invocation contract, tool choice and yolo/auth rules. Use when executing a coding task through another agentic tool instead of doing it directly.
 ---
 
 # delegate-coding
 
 **Principle: the orchestrator is in control, not the CLI.** The delegated agent runs with full auto-approval; the scope, the isolation and the limits come from the invoker. This hub defines the common contract — each tool's operational detail lives in its own skill.
 
-## Invocation contract (applies to all 4 tools)
+> **Claude Code is deliberately out of this family** (decision of 2026-07-16): headless use of the CLI implies additional costs, against the purpose of these skills — do not add `run-claude-code` back without a human decision.
+
+## Invocation contract (applies to all 3 tools)
 
 1. **Yolo mode always.** The delegated CLI runs with full auto-approval (flags in the table below). Never configure fine-grained permissioning in the CLI — planning and permissions are the orchestrator's responsibility.
 2. **Login is a precondition.** The tools are already authenticated on the machine. **An authentication error (mention of credential/login/API key/401/403 in the output) completely aborts the orchestrator's task** — no retry, no fallback to another tool, no proceeding with the implementation. Report to the human and stop. An immediate failure with **no** auth signal (unknown flag, incorrect usage) is an **invocation error**, not a login one: check `--help`, fix the command and re-invoke.
@@ -21,18 +23,16 @@ description: Delegates coding work to a headless coding agent CLI (Claude Code, 
 
 | If the task needs… | Use | Skill |
 |---|---|---|
-| Anthropic ecosystem: `.claude/agents/` subagents, CLAUDE.md, JSON Schema output, budget cap (`--max-budget-usd`) | Claude Code | `run-claude-code` |
 | Cursor models (composer) or multi-model with a ready-made worktree flag | Cursor CLI | `run-cursor-agent` |
 | Multi-provider (`provider/model`), lightweight custom agents in markdown, inline config via env | opencode | `run-opencode` |
 | OpenAI ecosystem: ChatGPT plan/GPT-5.x-codex models, native AGENTS.md, JSON Schema-validated response | Codex CLI | `run-codex` |
 
-Tiebreaker: use the **installed** tool (`command -v claude cursor-agent opencode codex`); among installed ones, the one that already has context in the repo (CLAUDE.md → claude; `.cursor/rules/` → cursor; `.opencode/` → opencode; AGENTS.md without CLAUDE.md → codex).
+Tiebreaker: use the **installed** tool (`command -v cursor-agent opencode codex`); among installed ones, the one that already has context in the repo (`.cursor/rules/` → cursor; `.opencode/` → opencode; AGENTS.md → codex).
 
 ## Yolo flags per tool
 
 | Tool | Yolo | Note |
 |---|---|---|
-| Claude Code | `--dangerously-skip-permissions` | `-p` alone still asks for permission — the flag is mandatory |
 | Cursor CLI | `--force` | without it the agent is read-only; with MCP add `--trust --approve-mcps` |
 | opencode | `--auto` | flag of the local installation; the source documents `--dangerously-skip-permissions` — confirm with `--help`; an explicit `deny` in `opencode.json` still wins |
 | Codex CLI | `--dangerously-bypass-approvals-and-sandbox` | alias `--yolo`; bypasses approvals **and** the sandbox; no local cost cap — the breaker is the `timeout` |
@@ -49,7 +49,6 @@ Tiebreaker: use the **installed** tool (`command -v claude cursor-agent opencode
 
 ## Skills in this family
 
-- `run-claude-code` — follow it to invoke Claude Code headless.
 - `run-cursor-agent` — follow it to invoke the Cursor CLI headless.
 - `run-opencode` — follow it to invoke opencode headless.
 - `run-codex` — follow it to invoke the Codex CLI headless.

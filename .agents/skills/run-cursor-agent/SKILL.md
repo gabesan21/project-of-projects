@@ -94,4 +94,4 @@ timeout 900 cursor-agent -p --force --trust --approve-mcps "Run the E2E tests wi
 
 ## See also
 
-- Contract and choice: `delegate-coding` · Same operation in another tool: `run-claude-code`, `run-opencode`, `run-codex`.
+- Contract and choice: `delegate-coding` · Same operation in another tool: `run-opencode`, `run-codex`.
