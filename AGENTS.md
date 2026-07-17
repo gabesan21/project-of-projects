@@ -119,6 +119,7 @@ The central procedures are **skills** in the open Agent Skills format (`SKILL.md
 | `run-cursor-agent` | Invoke the headless Cursor CLI (`cursor-agent -p --force`) as the executor of a delegated coding task. |
 | `run-opencode` | Invoke headless opencode (`opencode run`) as the executor of a delegated coding task. |
 | `run-codex` | Invoke the headless Codex CLI (`codex exec`) as the executor of a delegated coding task. |
+| `run-droid` | Invoke Factory's headless droid CLI (`droid exec`) as the executor of a delegated coding task. |
 | `clean-code-change` | Clean code practices for whoever writes code: contract before coding, readability, safe refactoring, debt triage — in 002 and 004 of code tasks. **Code projects only.** |
 | `clean-code-review` | Code review script with severity (blocking/suggestion/nit) and evidence — in 005 of code tasks and plan/PR gates. **Code projects only.** |
 | `frontend-design` | Distinctive visual direction when creating/reshaping UI — typography, aesthetics, escaping the generic AI look. External skill by [anthropics](https://github.com/anthropics/skills), vendored unchanged. Apache 2.0 license. |

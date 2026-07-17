@@ -1,6 +1,6 @@
 {
   "_meta": {
-    "updated": "2026-07-14",
+    "updated": "2026-07-16",
     "usage": "model recommendation per effort tier (cheap | medium | strong) — role × size matrix in the WORKFLOW Orchestration; consumed via advance-task (session subagents) and delegate-coding/run-* (headless CLIs)",
     "note": "values are revisable; check availability at execution time with the tool's listing command (one-off lookup allowed: `cursor-agent models`, `opencode models`)"
   },
@@ -28,5 +28,10 @@
     "cheap": "gpt-5.4-mini",
     "medium": "gpt-5.3-codex",
     "strong": "gpt-5.5"
+  },
+  "droid": {
+    "cheap": "claude-haiku-4-5-20251001",
+    "medium": "claude-sonnet-4-6",
+    "strong": "claude-opus-4-8"
   }
 }
