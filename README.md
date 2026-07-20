@@ -31,7 +31,7 @@ This repository does **not** hold your projects' code. It holds their **planning
 Working with AI agents across many projects tends to scatter context everywhere. PoP centralizes it:
 
 - 🗂️ **One vault, all projects** — each with a standard anatomy an agent can navigate blind.
-- 🚦 **Humans decide, agents execute** — every task passes a human approval gate before an agent touches real code, and every change ships as a PR that only you merge.
+- 🚦 **Humans decide, agents execute** — outside yolo, every task passes human approval before real changes and ships as a PR only you merge; yolo keeps its judgment and scope-closeout policy explicit.
 - 🧭 **Concise execution briefs** — a separate planner records objective, strategy, ownership fronts, dependencies, risks and criteria without duplicating implementation work.
 - 🪶 **Frugal context by design** — execution adapts from one executor to sequential specialists or isolated parallel waves, while stdlib-only Python CLIs replace token-hungry sweeps and validate ownership.
 - 🧠 **Durable memory** — every finished task leaves a ≤2000-char memory record, so history survives cleanup.
@@ -62,8 +62,8 @@ flowchart LR
 - **001 ends with your release:** the card is yours to edit until you check `- [x] Ready to plan` — agents (and automation) can't move an unfinished task into planning.
 - **003 is yours:** nothing touches a repository until you check `- [x] Done`.
 - **004 integrates in a task worktree** (`worktrees/<id>`, branch `task/<id>`); parallel fronts use isolated branches/worktrees and the orchestrator validates each diff before integration.
-- **006 opens a PR** — you merge it, the agent writes the memory record and syncs specs.
-- **Yolo mode (opt-in):** an independent reviewer takes over brief and implementation judgment in fresh sessions; the orchestrator performs mechanical integration into `develop`, and you review the scope at close-out.
+- **Outside yolo, 006 opens a task PR** — you merge it, then the agent writes memory and syncs specs.
+- **Yolo mode (opt-in):** an independent reviewer handles brief and implementation judgment in fresh sessions; the orchestrator mechanically integrates task branches into `develop`. Scope close-out asks for your review, and a scope PR is opened only under your explicit command.
 
 Everything waiting on you shows up in **`INBOX.md`**, generated automatically via Dataview — the one file to open every day.
 
