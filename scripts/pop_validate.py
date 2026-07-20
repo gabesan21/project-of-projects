@@ -2,7 +2,7 @@
 """pop_validate — validates the PoP vault's limits and invariants.
 
 Checks: root INDEX.md descriptions (<=144 chars) and category INDEX.md
-descriptions (<=600 chars); harness notes with <=150 lines (plans <=200;
+descriptions (<=600 chars); harness notes with <=150 lines;
 positive whitelist — only the harness folders, never the product code);
 mandatory `pop/` anatomy in `categories/` projects (harness at the folder
 root — `kanban/` or `.included-harness.json` outside `pop/` — is a
@@ -29,7 +29,6 @@ import poplib
 MAX_ROOT_DESC = 144
 MAX_CAT_DESC = 600
 MAX_NOTE_LINES = 150
-MAX_PLAN_LINES = 200
 EXEMPT_NAMES = {"AGENTS.md", "WORKFLOW.md", "README.md"}
 CARD_REQUIRED = ("id", "project", "stage", "created", "updated")
 SIZE_VALUES = {"S", "M", "L"}
@@ -102,13 +101,11 @@ def note_limit(path):
         return None
     if path.name.endswith(".excalidraw.md"):
         return None  # Excalidraw diagram: embedded JSON, not a note
-    if path.name.endswith(".plan.md"):
-        return MAX_PLAN_LINES
     return MAX_NOTE_LINES
 
 
 def check_note_sizes(root, projects, violations):
-    """(c) harness .md files <=150 lines (plans <=200).
+    """(c) harness .md files <=150 lines.
 
     Positive whitelist (`poplib.iter_harness_markdown`): the yardstick reaches
     only the harness folders of each discovered scope — never project files

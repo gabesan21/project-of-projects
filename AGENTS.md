@@ -18,10 +18,11 @@ ProjectOfProjects/
 ├── INBOX.md             ← the human's inbox: everything awaiting a decision
 ├── WORKFLOW.md          ← kanban state machine (task flow)
 ├── TYPES.md             ← project types: default | included | multi-repo | full-multi-repo
+├── specs/               ← durable contracts for this harness
 ├── _templates/          ← templates for every standard file
 ├── notes/               ← vault notes: decisions/ holds the harness decisions
 ├── researches/          ← the PoP's own deep researches (raw source in raw/, synthesis alongside)
-├── scripts/             ← Python CLI (pop_status, pop_move, pop_validate, pop_task, pop_worktree) — saves scanning tokens
+├── scripts/             ← Python CLI (`pop_*`): status, transitions, validation, worktrees and front ownership
 ├── open_questions/      ← the agent's questions to the human, outside any task ([[_templates/OPEN-QUESTION|template]])
 ├── drafts/              ← project drafts filled in by the human
 │   ├── new/             ← filled-in copies of [[_templates/NEW_PROJECT|NEW_PROJECT]]
@@ -109,7 +110,7 @@ The central procedures are **skills** in the open Agent Skills format (`SKILL.md
 | `plan-roadmap` | Build/evolve the roadmap by interview (epochs → phases → candidate tasks). |
 | `new-task` | Quick interview that materializes a task in `kanban/001_initial_task`. |
 | `advance-task` | Move a task through the 001→006 flow, respecting the human gates. |
-| `yolo-critic` | Critic agent for the delegated gates of a yolo task: approves/sends back the plan in 003, verifies critical in 005 and integrates the task into `develop` — Yolo mode section of [[WORKFLOW\|WORKFLOW]]. |
+| `yolo-critic` | Independent yolo reviewer: judges the brief in 003 and implementation+quality in 005, always in fresh context — Yolo section of [[WORKFLOW\|WORKFLOW]]. |
 | `write-spec` | Create/rewrite a standardized spec, with questions per project type. |
 | `sync-specs` | Mandatory flow: keep specs faithful to reality as tasks advance. |
 | `ingest-research` | Ingests a delivered research result: immutable raw source in `raw/`, synthesis with triggered links and a contradiction check against specs/notes. |
@@ -149,7 +150,7 @@ When creating a new skill: create the folder at `.agents/skills/<name>/SKILL.md`
 2. **It is an Obsidian vault:** use wikilinks `[[...]]` for every internal reference, following the link convention above.
 3. **Cross-reference within the project:** when mentioning a spec, skill, task or note **from the same project** — or shared vault material (core skills, `_templates/`, [[WORKFLOW|WORKFLOW]], [[TYPES|TYPES]], indexes) — link it following the link convention. Do **not** reference material from **another project** — see rule 4.
 4. **Projects are independent islands:** each project is, at first sight, **unrelated** to its neighbors. Never mix material from different projects, and a project **never** references, depends on or integrates another vault project (no "integration epoch", "consumer project" or "sibling project" in the harness). Genuinely cross-project work is exactly what the `multi-repo`/`full-multi-repo` types exist to cover (see [[TYPES|TYPES]]); outside them, only cite another project if the **human explicitly asks**. Every project folder follows the standard anatomy.
-5. **Modularization — no file too large:** a note must not exceed **~150 lines** (exceptions: a task's `.plan.md`, up to **200** — see [[WORKFLOW|WORKFLOW]] — and the AGENTS.md of an **application** project, which embeds the DOX process). When approaching the limit, extract sections into their own files and leave a wikilink with a one-line summary. A file answers **one** question; if it answers two, it is two files. Roadmap descriptions are always one line — detail goes to a spec or a task.
+5. **Modularization — no file too large:** a note must not exceed **~150 lines** (exception: the AGENTS.md of an **application** project, which embeds the DOX process). A plan is a brief, not an exception: if it grows, split the task or move durable contracts into specs. A file answers **one** question; roadmap descriptions stay one line.
 6. **One run = up to the next human gate:** the agent advances the task and only stops where a human decision is awaited — gates and orchestration in [[WORKFLOW|WORKFLOW]].
 7. **Explicit owner:** every stage, subtask and skill has a declared owner (`agent` or `user`) and the agent never executes a `(user)` item — table and rules in [[WORKFLOW|WORKFLOW]].
 8. **Indexes always in sync:** when creating, completing or changing a project's status, update the category `INDEX.md` **and** the root one. Respect the limits: 144 chars (root), 600 chars (category).
@@ -160,15 +161,15 @@ When creating a new skill: create the folder at `.agents/skills/<name>/SKILL.md`
 13. **Every change to the project goes through the kanban:** agents **never** touch the project content — nothing outside `pop/`, `.agents/` and `AGENTS.md` (in legacy: `project/` and the external repository) — outside a task in `004_processing` with a plan approved in 003 — no "quick fix"; detail in [[WORKFLOW|WORKFLOW]].
 14. **Self-validation before finishing:** the agent checks its own changes from the session — index limits (144/600 chars), ~150 lines per note, complete frontmatter on cards, links following the convention — and fixes anything out of bounds before the commit.
 15. **Commit per session:** this vault is a git repository. When ending a work session, commit the changes with a short message in the vault's language saying what changed.
-16. **One worktree per task, merge by the human:** 004 work happens in the task's worktree, PR in 006 and merge **by the human only**; 004 requires completed `depends_on` — detail in [[WORKFLOW|WORKFLOW]].
+16. **Worktrees and ownership:** 004 has one integration worktree per task; parallel fronts use isolated branches/worktrees and only the orchestrator integrates after validating the diff against `owns`. PR in 006 and merge **by the human only** outside yolo; completed `depends_on` are prerequisites — detail in [[WORKFLOW|WORKFLOW]].
 17. **Durable memory:** every completed task generates `memory/<id>.md` (≤2000 chars) before deleting the kanban folder — deleting `kanban/006_done/<id>/` is the last mandatory step of 006 (after memory, specs and status), not periodic cleanup; the memory counts as proof; detail in [[WORKFLOW|WORKFLOW]].
-18. **Delegation by default, with a floor:** broad context reading (recon, audits, sweeps, DOX tree walks, skill diffs) never happens in the main agent's window — it goes to a subagent that receives (a) a specific question, (b) the relevant skill/section, (c) a response format with a cap (e.g. ≤30 lines), a source (file/line) per finding and "not found" instead of speculation, (d) an explicit completion criterion and (e) a "don't do X" boundary when there are parallel peers. **Floor:** work that fits in <~5K tokens is done directly — the fixed cost (~8-16K tokens/subagent) doesn't pay off; motto: **delegate work, not tasks**. **Waves of up to 3-5** parallel subagents — only questions above the floor become workers, **0 workers is a valid result**; workers are leaves (they spawn no subagents) — the stage subagent may open its own wave (002 planner → budgeted wargame recon); a worker's gap comes back as "Gaps / Not found", never as further delegation. The main agent orchestrates and decides.
+18. **Delegation with a floor and ownership:** broad reading leaves the main window and receives a specific question, context/skill, capped sourced output, completion criterion and a “do not do X” boundary. Work below ~5K tokens stays direct except mandatory role separation. Recon arises only from a concrete gap above the floor; **0 workers is normal**. Multi-agent execution uses waves of 3–5 leaf workers and ephemeral contracts with `owns`, `may_read`, `must_not_edit`, `depends_on` and expected input. Parallelism requires logical and write independence; a missing dependency is reported, never implemented opportunistically. The orchestrator validates and integrates.
 19. **Work on the vault itself goes to a worktree:** every change to the PoP itself — harness, indexes, project creation/ingestion, decisions, anything **outside** a project's kanban task — is done in its own **git worktree** under `./worktrees/`, with a dedicated branch, so parallel agents don't fight over the working tree, the git index or the branch. The root `worktrees/` folder exists versioned with its contents gitignored (`git worktree add worktrees/<slug>` creates one on demand); when done, integrate the branch into `main` and remove the worktree. Project-task work stays in the **task's** worktree (rule 16), not here.
 20. **An explicit human command is sovereign:** the flow's gates and pauses exist to stop the agent from acting in the human's place, not to restrict the human. A direct instruction from them in the conversation overrides any default of the flow — the agent obeys, doesn't reinterpret the request to fit it into the kanban, and records the deviation; facing genuine ambiguity or an irreversible action, it asks **one** question and then executes. Details in [[WORKFLOW|WORKFLOW]].
 
 ## Harness decisions
 
-The vault's architecture decisions live in `notes/decisions/`, one note per decision day (`YYYY-MM-DD-harness-decisions.md`) — consult them before proposing harness changes, and link each new note here as it is created.
+The vault's architecture decisions live in `notes/decisions/`, one note per decision day (`YYYY-MM-DD-harness-decisions.md`) — consult them before proposing harness changes: [[notes/decisions/2026-07-20-harness-decisions|2026-07-20]].
 
 ## Open decisions (to discuss)
 

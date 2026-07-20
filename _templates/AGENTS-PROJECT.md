@@ -24,17 +24,17 @@ _No external repository: the work lives in the PoP repository and task PRs targe
 Every change to the project goes through the kanban (`pop/kanban/001_initial_task → … → 006_done`):
 
 1. **001** — task is born (skill `new-task`), with `depends_on:` listing the prerequisite tasks.
-2. **002** — plan with acceptance criteria and linked specs (skills `advance-task`, `write-spec`, `sync-specs`).
+2. **002** — separate planner writes a concise brief with objective, strategy, fronts, ownership and criteria.
 3. **003** — human gate: the agent only advances with `- [x] Done`.
-4. **004** — execution **in its own worktree** (`pop/worktrees/<id>/`, branch `task/<id>`); it only enters once every `depends_on` has completed.
-5. **005** — verification of the criteria in the worktree (+ human approval if `critical: true`).
+4. **004** — execution orchestrator chooses one executor, sequential specialists or isolated parallel waves; only it integrates ownership-validated diffs.
+5. **005** — one independent reviewer checks behavior and code quality (+ human approval if `critical: true`).
 6. **006** — PR to the PR branch above → **the human merges** → the agent writes `pop/memory/<id>.md`, removes the worktree and finishes.
 
-**One run = up to the next human gate:** the agent acts as an orchestrator — a dedicated subagent per stage — and chains stages until a gate: approval in 003, verification if `critical`, a `(user)` item, a block, or the merge round in 006. Full detail: [[WORKFLOW|WORKFLOW]] (at the PoP root; copied into this repository when the type is `included`).
+**One run = up to the next human gate:** planner, execution and review stay in distinct contexts. The orchestrator chains stages until approval, critical review, `(user)`, block or merge. Full detail: [[WORKFLOW|WORKFLOW]].
 
 ## Context protocol
 
-1. Start from the card and the plan: read **only** what they list.
+1. Start from the card/brief and read **only** the specs, skills and contracts they trigger.
 2. Missing context → a subagent with a specific question, never "read the folder to get familiar".
 3. Stop searching once you can answer *what changes and where* — anything beyond that is overthinking.
 4. A doubt the search did not resolve = **RECON NEEDED** in the plan or `blocked:` on the card — never an assumption.
@@ -73,4 +73,4 @@ Every change to the project goes through the kanban (`pop/kanban/001_initial_tas
 - **Never** change the real project outside a task in `004_processing` whose plan was approved in 003.
 - **Never** check `- [ ] Done` or execute `(user)` items — those belong exclusively to the human.
 - **Never** merge a task PR — merging is the human's job (or commanded by them in the merge round).
-- Every completed task produces `pop/memory/<id>.md` (≤2000 chars, final commit, dates) — the `pop/kanban/006_done/` folder can be cleaned; the memory stays.
+- Every completed task produces `pop/memory/<id>.md` (ledger ≤2000 chars, final commit, dates); its folder in `006_done` is deleted during close-out.

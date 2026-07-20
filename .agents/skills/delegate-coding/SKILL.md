@@ -49,6 +49,10 @@ Tiebreaker: use the **installed** tool (`command -v cursor-agent opencode codex 
 - [ ] JSON format and session id capture
 - [ ] Plan to verify the result (diff, tests)
 
+## Model by effort
+
+Choose the model by task tier, not habit: consult `scripts/models.json` (`cheap | medium | strong`) with the role × size matrix in [[WORKFLOW|WORKFLOW]]. The executor receives objective, context, specs, skill, ownership and criteria sufficient for autonomy; it does not need persisted reasoning or planner micro-instructions.
+
 ## Skills in this family
 
 - `run-cursor-agent` — follow it to invoke the Cursor CLI headless.

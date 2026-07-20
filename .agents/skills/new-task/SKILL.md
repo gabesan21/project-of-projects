@@ -17,9 +17,9 @@ Materializes a roadmap task as a folder in the kanban, at stage `001_initial_tas
 2. **What and why:** what does the task deliver, in one line? Why now — what does it unblock?
 3. **Dependencies:** which tasks must be completed before this one (`depends_on`)? Look at the epoch's tasks and propose; empty = can run in parallel with the others. (Gate: it only enters 004 with all of them completed — see WORKFLOW.)
 4. **Criticality:** does this task also require human approval at verification (`critical: true`)? Consider the project's default in the sheet (PROJECT.md).
-5. **Specs and research:** which specs does it affect? Topic without a spec → offer to create a draft with the `write-spec` skill (mandatory before the plan goes to 003 — see `sync-specs`). A **technical-decision task without research** in `pop/researches/` grounding it → **suggest the prompt in `RESEARCHES.md`** before releasing it to 002 (the planner does no web research — section 002 of the WORKFLOW).
-6. **Size:** does the change fit in **one** wargame plan (≤200 lines — see WORKFLOW)? If it has too many fronts, **propose splitting into more than one task**, chained via `depends_on` — better N lean boards than one bloated plan.
-7. **Effort (`size`):** **propose** `S | M | L` by complexity (S = fast path: mini-plan and execution by the orchestrator; M/L = the WORKFLOW's Orchestration ceremony), justifying in 1 line — the user confirms or corrects, and can adjust it later on the card in 001.
+5. **Specs and research:** which durable contracts does it affect? Link an existing spec; create a draft through `write-spec` only if it introduces durable behavior, interface or invariant. A technical decision without prior research gets a `RESEARCHES.md` prompt before 002.
+6. **Size:** does the change fit in **one cohesive brief** (≤~150 lines, preferably much less)? Independent objectives or too many fronts for a readable DAG → propose tasks chained by `depends_on`.
+7. **Effort (`size`):** propose `S | M | L` by delivery volume, with one-line rationale. Size alone does not choose topology: risk, skills, dependencies and write sets determine one executor or fronts/waves; planner and reviewer remain separate.
 8. Propose the **id and slug** (`<n>.<m>.<t>-<slug>`: `t` is the next free number in the phase; kebab-case slug, unique in the vault) and confirm.
 
 ## Procedure
@@ -33,7 +33,7 @@ Materializes a roadmap task as a folder in the kanban, at stage `001_initial_tas
    - The **Release** section stays with `- [ ] Ready to plan` **unchecked** — the card is born unreleased. **Exception:** a `yolo: true` task is born **checked**, with Log `released by yolo (marked on the roadmap)`.
 3. In the epoch table, turn the task id into the wikilink `[[<id>-<slug>]]` and update the status to `001_initial_task`.
 4. If it is the project's first active task, check whether the project status in the INDEX files (category + root) should change to "in progress".
-5. Close by pointing at the **release gate**: the card stays in 001 waiting for the human to edit it and check `- [x] Ready to plan` (Release section) — the advance to 002 (`advance-task`) only happens after that. **Exceptions:** the user explicitly commanded in the conversation to proceed right away ("create it and advance") → check the box on their behalf, record it in the Log (`released by human command`) and chain into `advance-task` up to the `.approval.md` in 003; a `yolo: true` task → chain straight into `advance-task` (the 003 gate belongs to the critic).
+5. Close by pointing at the **release gate**. Explicit “create and advance” may check it with a Log entry and chain to 003; `yolo: true` chains and delegates 003 to the independent reviewer.
 
 ## Cautions
 

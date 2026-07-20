@@ -3,10 +3,10 @@
 
 Shows, per project, the task count per kanban stage and the lists that
 require human attention: awaiting release (001), awaiting approval (003),
-critical verification (005 + critical), awaiting merge, blocked, and a
+critical review (005 + critical), awaiting merge, blocked, and a
 WIP > 3 alert in 004. Tasks with `yolo: true` are left out of the
-approval/critical/merge lists — those gates are delegated to the critic
-agent (Yolo mode section of the WORKFLOW).
+approval/review/merge lists — those judgments are delegated to the independent
+reviewer (Yolo mode section of the WORKFLOW).
 
 Usage:
     python3 scripts/pop_status.py [--project <category>/<project>] [--vault DIR]

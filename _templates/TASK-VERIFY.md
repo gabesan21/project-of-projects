@@ -1,20 +1,40 @@
-# Verification — [[<id>-<slug>]]
+# Verification and critique — [[<id>-<slug>]]
 
-> Blockquotes in this template are fill-in instructions — **delete them when filling it in**.
+> Blockquotes are filling instructions — **delete them when filling**.
 
-- **Stage:** 005_verifying · **Owner:** agent (+ user if `critical: true`)
+- **Stage:** 005_verifying · **Owner:** independent reviewer
 
-> Copy the "Acceptance criteria and verification" table from the [[<id>-<slug>.plan|plan]] and execute **each run in the task's worktree**, comparing what was observed with the "Pass looks like" defined there. A criterion failed → the task goes back to `004_processing` — see [[WORKFLOW|WORKFLOW]].
+> One fresh-context agent verifies behavior and quality. Read objective, specs, DOX contracts and diff; do not depend on the execution narrative. `critical: true` raises depth/model, not reviewer count.
 
 ## Round 1 — YYYY-MM-DD
 
-| # | Criterion | Run executed | Result | Evidence |
-|---|-----------|--------------|--------|-----------|
-| 1 | <criterion from the plan> | `<run from the plan>` | ✅ passed / ❌ failed | What was observed vs. the "Pass looks like", in one line. |
+### Objective and spec conformance
 
-**Verdict:** approved → 006_done | rejected → 004_processing (<what is missing>)
+| # | Criterion | Mode | Verification run | Result | Evidence |
+|---|---|---|---|---|---|
+| 1 | <plan criterion> | re-run \| evidence | `<run>` or <audited artifact> | passed \| failed | <observed versus expected> |
 
-## Human approval (only if `critical: true`)
+### Implementation quality
+
+| Severity | Finding | Evidence | Required correction |
+|---|---|---|---|
+| blocking \| suggestion \| nit | <problem> | `<file:line>` or run | <objective action> |
+
+### Scope and integration
+
+- [ ] Changes respect every front's `Owns` and `Must not edit`.
+- [ ] Consumers did not opportunistically implement dependencies.
+- [ ] Aggregate gate passed after integration.
+- [ ] Affected specs, docs and DOX contracts are coherent.
+
+## Verdict
+
+- **Decision:** approved → 006_done | rejected → 004_processing.
+- **Blocking findings:** none | <short list>.
+- **Suggestions/nits:** <non-blocking; record only when useful>.
+- **Summary:** <brief comparison of initial objective and implemented result>.
+
+## Human approval (only `critical: true` outside yolo)
 
 ### Human response
 

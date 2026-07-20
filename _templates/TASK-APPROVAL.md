@@ -1,17 +1,21 @@
 # Approval — [[<id>-<slug>]]
 
-> Blockquotes in this template are fill-in instructions — **delete them when filling it in**.
+> Blockquotes are filling instructions — **delete them when filling**.
 
-- **Stage:** 003_human_approval · **Owner:** user
+- **Stage:** 003_human_approval · **Owner:** user | independent reviewer in yolo
 
-> One round per trip to `003_human_approval`. The agent only acts when `- [x] Done` — see [[WORKFLOW|WORKFLOW]]. Old rounds are never deleted.
-> **Yolo task:** the round uses `### Critic response (yolo)` instead of "Human response" — same `- [ ] Done`, signed `approved by critic agent (yolo) — YYYY-MM-DD` ([[.agents/skills/yolo-critic/SKILL|yolo-critic]]). Never reuse the human subsection: who signed each round must stay auditable. Cap of **2 send-backs** by the critic; the 3rd trip to 003 becomes `blocked: true`. If the human intervenes, they write in their own "Human response" subsection — it prevails and resets the cap.
+> One round per visit to 003. The gate approves the brief, not reasoning or implementation details. Never delete old rounds. In `yolo: true`, replace the human subsection with `### Reviewer response (yolo)`, preserve the checkbox and use an auditable signature.
 
 ## Round 1 — YYYY-MM-DD
 
-### Plan summary
+### Decision brief
 
-3–5 lines: what will be done, main acceptance criteria, risks. Full plan: [[<id>-<slug>.plan]].
+- **Delivery:** <one line>.
+- **Strategy:** <one or two lines>.
+- **Topology:** <single executor or fronts/waves>.
+- **Main risk:** <material risk or none>.
+- **Main criteria:** <IDs or short summary>.
+- **Plan:** [[<id>-<slug>.plan]] — *follow to review the complete brief*.
 
 ### Human response
 
@@ -21,21 +25,21 @@ _(write here: approved, or what to change)_
 
 ### Agent decision
 
-_(filled in after the Done: "approved → 004" or "changes requested → 002: <summary of the request>")_
+_(after Done: `approved → 004` or `changes requested → 002: <summary>`)_
 
-## Merge round — 006 — YYYY-MM-DD
+## Merge — 006 — YYYY-MM-DD
 
-> Final round, created when the task reaches `006_done` with an open PR. The merge is **always the human's** — done directly in the repository, or commanded here for the agent to execute. **Yolo task:** no PR — the critic integrates `task/<id>` into `develop` via a local merge and signs here (`### Critic response (yolo)` subsection); the scope's final delivery reaches the human via an open question, where they decide whether to open the `develop` → PR-branch PR — see [[WORKFLOW|WORKFLOW]].
+> Created when the applicable flow requires human merge. In yolo, follow [[WORKFLOW|WORKFLOW]] integration policy; do not invent another quality gate here.
 
-- **PR:** <link> — branch `task/<id>-<slug>` → `<PR branch from the project's AGENTS.md>`
-- _No git repository: this round is the final approval of the deliverable, without a PR._
+- **PR:** <link> — `task/<id>-<slug>` → `<PR branch>`.
+- _Without git: record the applicable final approval._
 
 ### Human response
 
-_(merge it yourself, or write "go ahead and merge" + instructions)_
+_(merge, or explicitly authorize the agent)_
 
 - [ ] Done
 
 ### Agent decision
 
-_(after the merge: final commit, `pop/memory/<id>.md` generated, worktree removed, task closed)_
+_(final commit, generated memory, removed worktree and closed task)_

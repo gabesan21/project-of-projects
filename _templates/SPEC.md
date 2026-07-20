@@ -1,35 +1,53 @@
-# Spec — <feature/topic name>
+# Spec — <contract/theme name>
 
-> Blockquotes in this template are fill-in instructions — **delete them when filling it in**.
+> Blockquotes are filling instructions — **delete them when filling**.
 
 - **Project:** [[categories/<category>/<project>/pop/PROJECT|<Project name>]]
 - **Epoch/Phase:** [[categories/<category>/<project>/pop/roadmap/<n>-<slug>|Phase <n>.<m>]]
 - **Status:** draft | approved | implemented | obsolete
-- **Created on:** YYYY-MM-DD
+- **Created:** YYYY-MM-DD
+- **Updated:** YYYY-MM-DD
 
-## What it is
+## Contract
 
-Objective description of what this spec covers. A spec answers **one** question; if it starts answering two, split it into two specs.
+Objective description of durable behavior or theme. One spec answers one question; split it if it answers two.
 
-## Requirements
+## Expected behavior
 
-- What must be true when this is done.
+- Given <state/input>, when <event>, then <observable result>.
+
+## Invariants
+
+- <rule that remains true under any implementation>.
+
+## Interfaces
+
+> Record only interfaces promised to consumers: payloads, schemas, commands, events, states or public signatures. Code only when it is itself the contract.
+
+- **Input:** <format, constraints and minimal example if needed>.
+- **Output:** <format and guarantees>.
+- **Compatibility:** <affected versions or consumers>.
+
+## Errors and limits
+
+- **<condition>:** <observable error/state and expected behavior>.
+- **Limit:** <relevant constraint>.
+
+## Conformance criteria
+
+- [ ] <objectively verifiable behavior or invariant>.
 
 ## Out of scope
 
-- What is explicitly NOT part of it (and where it is covered, if linkable).
+- <what does not belong here and where it is covered>.
 
-## Details
+## Open questions
 
-Design, flows, examples. If it exceeds ~150 lines in total, extract parts into auxiliary specs and link them.
+- <unanswered question; remove when empty>.
 
-## Open
-
-- Questions still unanswered.
-
-## Related specs
-
-> Optional. Each link with a 1-line trigger — *when* to follow it. In an application project, include the topic's DOX contracts (relative markdown path in the repo).
+## Related references
 
 - [[categories/<category>/<project>/pop/specs/<other-spec>|<other-spec>]] — *follow if <condition>*.
-- [`<subtree>/AGENTS.md`](../<path-in-repo>/AGENTS.md) — *follow if <condition>*.
+- [`<subtree>/AGENTS.md`](../<path-in-repo>/AGENTS.md) — *follow before changing <area>*.
+
+> Do not record internal solutions, edit sequences, reasoning or pseudocode. Change strategy belongs in the plan; reusable procedures belong in a skill.

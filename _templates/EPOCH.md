@@ -10,7 +10,7 @@
 
 > One phase per section; under each phase, its tasks — **always one-line descriptions**. Detail goes to the spec or to the task's folder in the kanban. A started task gets a `[[<id>]]` link to the card (see [[WORKFLOW|WORKFLOW]]).
 > **Yolo inherits:** a yolo epoch → phases and tasks inherit; a yolo phase → tasks inherit. Per-task opt-out/opt-in: append ` · yolo: no` (or ` · yolo: yes`) to the end of the Description cell — no new column. `new-task` resolves the inheritance and stamps the card (Yolo mode section of [[WORKFLOW|WORKFLOW]]).
-> **Size:** the agent **suggests** the task's effort by appending ` · size: S|M|L` to the Description cell (same convention as yolo); `new-task` stamps `size:` on the card and the human corrects it freely in 001 — ceremony per size in the Orchestration of [[WORKFLOW|WORKFLOW]].
+> **Size:** the agent suggests `S|M|L` in the Description; `new-task` stamps it on the card and the human corrects it in 001. Size guides tier/effort; risk, skills, dependencies and write sets determine topology in [[WORKFLOW|WORKFLOW]].
 
 ## Recon and forks
 

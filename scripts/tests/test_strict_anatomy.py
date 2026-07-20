@@ -149,6 +149,18 @@ class StrictAnatomyTest(unittest.TestCase):
         result = self.run_script("pop_validate.py")
         self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
 
+    def test_pop_validate_applies_150_line_limit_to_plan(self):
+        plans = self.root / "specs"
+        plans.mkdir()
+        plan = plans / "limit.plan.md"
+        plan.write_text("line\n" * 150, encoding="utf-8")
+        self.assertEqual(self.run_script("pop_validate.py").returncode, 0)
+
+        plan.write_text("line\n" * 151, encoding="utf-8")
+        result = self.run_script("pop_validate.py")
+        self.assertEqual(result.returncode, 1, result.stdout + result.stderr)
+        self.assertIn("151 lines (max. 150)", result.stdout)
+
 
 class IncludedInstallV2Test(unittest.TestCase):
     """Included v2 installation (harness_root=pop) in a temporary repo."""

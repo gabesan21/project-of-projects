@@ -32,8 +32,8 @@ Working with AI agents across many projects tends to scatter context everywhere.
 
 - 🗂️ **One vault, all projects** — each with a standard anatomy an agent can navigate blind.
 - 🚦 **Humans decide, agents execute** — every task passes a human approval gate before an agent touches real code, and every change ships as a PR that only you merge.
-- ♟️ **Plans built like wargames** — recon with parallel subagents, moves with expected observations, forks with triggers, abort conditions, red-teaming. Written so a cheaper executor can run them without asking a single question.
-- 🪶 **Frugal context by design** — the main agent orchestrates while dedicated subagents do the reading and the work (delegation by default), every agent-facing link carries a trigger saying *when* to follow it, and stdlib-only Python CLIs replace token-hungry vault sweeps.
+- 🧭 **Concise execution briefs** — a separate planner records objective, strategy, ownership fronts, dependencies, risks and criteria without duplicating implementation work.
+- 🪶 **Frugal context by design** — execution adapts from one executor to sequential specialists or isolated parallel waves, while stdlib-only Python CLIs replace token-hungry sweeps and validate ownership.
 - 🧠 **Durable memory** — every finished task leaves a ≤2000-char memory record, so history survives cleanup.
 - 🔌 **Agent-agnostic** — skills live in `.agents/skills/` as plain `SKILL.md` files (the open Agent Skills format). No tool-specific folders; works with Claude Code, Cursor, Codex, opencode and anything that reads `AGENTS.md`.
 
@@ -57,13 +57,13 @@ flowchart LR
 <p align="center"><sub>🟧 orange = a human gate — each agent run flows until the next one &nbsp;·&nbsp; ⬛ dark = an agent executes</sub></p>
 
 - **One run = up to the next human gate:** an agent invocation chains the agent-owned stages and only stops where a decision is yours — the release in 001, plan approval in 003, critical verification in 005, a `(user)` item, a block, the merge round in 006. No gate is ever skipped; you stay in the loop.
-- **An orchestrator with dedicated subagents:** the main agent handles the card, gates and transitions; a **planner** subagent writes the plan (002), an **executor** runs it (004) and a separate **verifier** judges it with evidence (005) — verifier ≠ executor by design.
-- **002 is a wargame:** the planner recons with parallel subagents, then writes a plan a blind executor can follow — route, forks with triggers, abort conditions, acceptance criteria with verification runs, change specs, red-team pass — plus a "Minimal executor context" section, so the executor reads only what it needs (the vault's context protocol).
+- **Separated roles:** the main agent handles cards, gates and transitions; a separate **planner** writes a brief (002), an **execution orchestrator** chooses one executor or specialist fronts (004), and one independent **reviewer** judges behavior and code quality (005).
+- **Parallelism with ownership:** fronts run concurrently only when logically independent and writing to independent sets. Each declares `owns`, `must_not_edit` and dependencies; missing inputs are reported, never implemented opportunistically.
 - **001 ends with your release:** the card is yours to edit until you check `- [x] Ready to plan` — agents (and automation) can't move an unfinished task into planning.
 - **003 is yours:** nothing touches a repository until you check `- [x] Done`.
-- **004 runs in a git worktree** per task (`worktrees/<id>`, branch `task/<id>`), enabling safe parallel tasks.
+- **004 integrates in a task worktree** (`worktrees/<id>`, branch `task/<id>`); parallel fronts use isolated branches/worktrees and the orchestrator validates each diff before integration.
 - **006 opens a PR** — you merge it, the agent writes the memory record and syncs specs.
-- **Yolo mode (opt-in):** mark an epoch, phase or task as yolo on the roadmap and a **critic** agent takes over the judgment gates — tasks are planned, executed and merged into a `develop` branch autonomously, and you review **one** final PR per scope. `critical: true` and real-world `(user)` items still stop for you.
+- **Yolo mode (opt-in):** an independent reviewer takes over brief and implementation judgment in fresh sessions; the orchestrator performs mechanical integration into `develop`, and you review the scope at close-out.
 
 Everything waiting on you shows up in **`INBOX.md`**, generated automatically via Dataview — the one file to open every day.
 
@@ -77,6 +77,7 @@ project-of-projects/
 ├── INBOX.md             ← everything waiting for a human decision (Dataview)
 ├── WORKFLOW.md          ← the kanban state machine
 ├── TYPES.md             ← project types: default | included | multi-repo
+├── specs/               ← durable contracts for the harness itself
 ├── _templates/          ← templates for every standard file
 ├── notes/               ← vault notes: the harness decision log
 ├── scripts/             ← stdlib-only Python CLI: status, validation, kanban moves
@@ -98,7 +99,7 @@ project-of-projects/
 | `plan-roadmap` | Builds/evolves a roadmap by interview (epochs → phases → candidate tasks). |
 | `new-task` | Quick interview that materializes a task into the kanban. |
 | `advance-task` | Moves a task through the flow 001→006, respecting human gates. |
-| `yolo-critic` | Critic agent for yolo tasks: adversarial plan approval in 003, task merges into `develop`. |
+| `yolo-critic` | Independent yolo reviewer for the brief in 003 and implementation+quality in 005. |
 | `write-spec` | Creates/rewrites a standardized spec. |
 | `sync-specs` | Keeps specs faithful to reality as tasks progress. |
 | `weekly-review` | Vault-wide review: what waits on you, what stalled, proposals. |
@@ -115,6 +116,7 @@ python3 scripts/pop_validate.py                        # limits & invariants: 14
 python3 scripts/pop_task.py agents/my-project 1.1.1-user-table --title "User table"   # scaffold a task in 001
 python3 scripts/pop_move.py 1.1.1-user-table 002_planning --reason "plan started"     # validated stage transition
 python3 scripts/pop_worktree.py add 1.1.1-user-table   # create/remove the task's worktree + branch
+python3 scripts/pop_check_scope.py --base HEAD~1 --allow 'src/**' --deny 'src/generated/**'  # validate front ownership
 ```
 
 ## Getting started

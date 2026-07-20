@@ -13,10 +13,10 @@ description: Mandatory spec-update flow as tasks advance through the kanban - sp
 
 | Stage | Spec obligation |
 |-------|-----------------|
-| 002_planning | The plan **assembles the change specs**: every affected spec linked in the "Change specs" section and, for a topic without a spec, a draft created (`write-spec` skill) already reflecting what the plan intends to change. A plan without its specs assembled is not ready for 003. |
-| 003_human_approval | The `- [x] Done` also approves the spec changes proposed in the plan → affected specs move from `draft` to `approved`. |
+| 002_planning | Link affected durable contracts. Create a draft through `write-spec` only when the task introduces or changes durable behavior, interface or invariant; a fix restoring an existing contract only references it. |
+| 003_human_approval | `- [x] Done` also approves any spec changes proposed in the brief: affected drafts move to `approved`. |
 | 004_processing | Reality diverged from the spec → record the divergence in the spec's "Open" section and in the card's notes. **Never rewrite the spec silently** — a relevant change goes back to 002. |
-| 006_done | **In the same close-out in which the memory is written:** update each affected spec to reflect **what was actually done** — resolve the pertinent "Open" items, adjust requirements and details, status → `implemented` (or keep `approved` if the task covered only part). A superseded spec → `obsolete`, with a link to the replacement. |
+| 006_done | **In the same close-out as memory:** update each truly affected spec to reflect delivery. If no durable promise changed, record that in the ledger and invent no edit. Superseded specs become `obsolete` with a replacement link. |
 
 ## Audit (on demand or in the weekly-review)
 
@@ -24,6 +24,7 @@ Delegate it to a **subagent** (answer ≤30 lines): list the tasks in `pop/kanba
 
 ## Cautions
 
-- Updating specs in 006 **is not optional** — it is part of the task's completion criterion.
+- Checking spec impact in 006 **is not optional**; editing a spec without a contract change is noise.
+- A spec stores durable behavior, invariants, interfaces, errors and criteria — never reasoning, edit sequences or contingent internal solutions.
 - A divergence discovered in 004 is valuable information: record it before it gets lost, even if the decision is deferred.
 - When changing a spec's status, also update its links (phase, tasks) if they changed.

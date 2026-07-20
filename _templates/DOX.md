@@ -28,7 +28,7 @@ Code without a DOX tree → recursive sweep and tree construction: root AGENTS.m
 
 ## In the PoP flow
 
-- **002 (wargame):** the recon includes the AGENTS.md files applicable to the paths the task touches; the plan lists the contracts that will need updating.
-- **004:** edit only after walking the tree; the changed AGENTS.md files go into the same worktree/PR as the task.
-- **005:** verification checks that the affected contracts were updated — an implicit acceptance criterion of every application task.
+- **002 (brief):** the planner identifies contracts applicable to likely areas and links them; broad walking happens only when a decision depends on it.
+- **004:** each front walks the tree to its edit location before its first change. Reuse an extract if base/hash is unchanged; changed contracts join the delivery.
+- **005:** the reviewer checks whether changes to purpose, structure, flows or rules updated contracts; no-impact changes require no rewrite.
 - **Type `default` with an external repo that must stay clean of AI files:** decide with the user in the interview — commit the DOX tree to the repo (PoP default) or keep only the root contract in the project's AGENTS.md, inside PoP.

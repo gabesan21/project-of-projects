@@ -11,7 +11,7 @@ Generates a vault overview and proposes actions. Changes nothing beyond the repo
 
 ## Procedure
 
-1. **Scripts first:** run `scripts/pop_status.py` (kanban overview: tasks per stage/project, blocked ones, pending gates — 003, critical in 005, `awaiting_merge`, stalled for >14 days) and `scripts/pop_validate.py` (limit violations: 144/600 chars, ~150 lines, frontmatter, `stage` vs folder; warnings: orphan worktrees, broken wikilinks). INBOX.md is Dataview, not a source.
+1. **Scripts first:** run `scripts/pop_status.py` (kanban overview, blocked tasks, pending gates — 003, review/human in 005, `awaiting_merge`, >14 days) and `scripts/pop_validate.py` (limits, frontmatter and warnings). INBOX.md is Dataview, not a source.
 2. **What the scripts don't cover → parallel subagents**, one per front, in **waves of 3-5** (7 fronts → 2 waves), each with a specific question and an answer ≤30 lines with a **source per finding** and a "Gaps / Not found" section (workers spawn no subagents):
    - **Drift in copied skills:** `diff` between each project's `.agents/skills/` — including the embedded repos of `full-multi-repo` projects (`<project>/<repo>/.agents/skills/`) — and the root core skills — divergence becomes a sync proposal.
    - **Indexes vs. reality:** status in the category INDEXes vs. actual activity in the kanban; **Aggregated repositories** (root INDEX) vs. actual clones/`.gitignore`.

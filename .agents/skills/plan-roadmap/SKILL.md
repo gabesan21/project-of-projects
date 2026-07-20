@@ -29,7 +29,7 @@ Builds the roadmap **together with the user**, by interview — never invent the
 ## Cautions
 
 - Descriptions are **always one line** — detail goes to a spec.
-- The full wargame (moves, counter-moves) belongs to the task plan (002) — the roadmap only holds recon, RECON NEEDED, forks and the abandon condition.
+- The execution brief (strategy, fronts, ownership, risks and criteria) belongs to task planning in 002 — the roadmap keeps only description, dependencies and context that changes prioritization.
 - Applications: the **supported languages (i18n)** declared in the project's AGENTS.md enter the planning — no UI or content epoch/phase ignores i18n.
 - Don't detail future epochs "to get ahead": the roadmap is elaborated progressively; revisit this skill at each completed epoch.
 - IDs follow the hierarchy (`1`, `1.1`, `1.1.1-<slug>`); links to fixed files use full path + alias.
