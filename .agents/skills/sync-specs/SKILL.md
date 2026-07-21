@@ -1,30 +1,19 @@
 ---
 name: sync-specs
-description: Mandatory spec-update flow as tasks advance through the kanban - specs can never diverge from the project's reality. Use when planning (002), executing (004) and completing (006) tasks, and to audit outdated specs.
+description: Mandatory spec synchronization as tasks advance; use in 002, 004, 006, and spec-drift audits.
 ---
 
 # sync-specs
 
-**Principle: a spec describes the project's current agreed state. A lying spec is a bug.** This flow is mandatory and tracks the [[WORKFLOW|WORKFLOW]] stages.
+**A spec describes the agreed current state. A lying spec is a bug.**
 
-**Delegate to subagents:** the audit (listing 006_done + reading the linked specs); the kanban touchpoints run inside the stage's subagent (`advance-task`).
+| Stage | Obligation |
+|---|---|
+| 002 | Identify affected durable contracts. Link existing specs; create canonical `draft/planned` only for a new promise. |
+| 003 | Approval activates proposed drafts; implementation remains evidence-based. |
+| 004 | Record implementation/spec divergence in Open and the card; material contract change returns to 002. |
+| 006 | With memory creation, reflect delivered reality, resolve relevant questions, and set implementation to partial/implemented/not_applicable. |
 
-## Kanban touchpoints
+Canonical format is [[_templates/SPEC|SPEC]]. `id`, `project`, `domain`, `kind`, `status`, `implementation`, `origin`, dates, `supersedes`, and `superseded_by` are required. A collection opts in atomically with `specs/INDEX.md`; every draft/active spec is reachable directly or through one indexed domain overview. The tree stops at `specs/<domain>/` and supersession links are reciprocal.
 
-| Stage | Spec obligation |
-|-------|-----------------|
-| 002_planning | Link affected durable contracts. Create a draft through `write-spec` only when the task introduces or changes durable behavior, interface or invariant; a fix restoring an existing contract only references it. |
-| 003_human_approval | `- [x] Done` also approves any spec changes proposed in the brief: affected drafts move to `approved`. |
-| 004_processing | Reality diverged from the spec → record the divergence in the spec's "Open" section and in the card's notes. **Never rewrite the spec silently** — a relevant change goes back to 002. |
-| 006_done | **In the same close-out as memory:** update each truly affected spec to reflect delivery. If no durable promise changed, record that in the ledger and invent no edit. Superseded specs become `obsolete` with a replacement link. |
-
-## Audit (on demand or in the weekly-review)
-
-Delegate it to a **subagent** (answer ≤30 lines): list the tasks in `pop/kanban/006_done` and read the specs (`pop/specs/`) their plans link (the vault-root meta-project and not-yet-migrated projects: harness at the root, no `pop/`), flagging **(a)** specs still `draft`/`approved` that don't reflect what the task delivered → pending; **(b)** `obsolete` specs without a link to a replacement, or with no task/phase reference → candidates for archiving/rewriting. The main agent only decides what to do with the list.
-
-## Cautions
-
-- Checking spec impact in 006 **is not optional**; editing a spec without a contract change is noise.
-- A spec stores durable behavior, invariants, interfaces, errors and criteria — never reasoning, edit sequences or contingent internal solutions.
-- A divergence discovered in 004 is valuable information: record it before it gets lost, even if the decision is deferred.
-- When changing a spec's status, also update its links (phase, tasks) if they changed.
+Audit 006 cards and linked specs for implementation drift, broken reciprocal supersession, and unreachable current specs. A spec stores durable behavior, invariants, interfaces, errors, and criteria—never reasoning, edit sequence, changelog, or completed-task history.

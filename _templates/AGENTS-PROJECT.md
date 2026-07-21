@@ -25,10 +25,12 @@ Every change to the project goes through the kanban (`pop/kanban/001_initial_tas
 
 1. **001** — task is born (skill `new-task`), with `depends_on:` listing the prerequisite tasks.
 2. **002** — separate planner writes a concise brief with objective, strategy, fronts, ownership and criteria.
-3. **003** — human gate: the agent only advances with `- [x] Done`.
+3. **003** — human gate, or a strong independent critic in yolo; two returns are allowed before the circuit breaker requires human diagnosis.
 4. **004** — execution orchestrator chooses one executor, sequential specialists or isolated parallel waves; only it integrates ownership-validated diffs.
-5. **005** — one independent reviewer checks behavior and code quality (+ human approval if `critical: true`).
-6. **006** — PR to the PR branch above → **the human merges** → the agent writes `pop/memory/<id>.md`, removes the worktree and finishes.
+5. **005** — a fresh independent reviewer checks behavior and quality, using differential verification unless risk requires full verification; yolo has the same two-return circuit breaker.
+6. **006** — the agent writes `pop/memory/<id>.md`, syncs specs/status, removes the completed task from the epoch roadmap, deletes the task folder and worktree, then follows the delivery route below.
+
+External yolo scopes integrate into `develop` and automatically open a final `develop` → `main` PR for human merge. Non-yolo work opens its configured task PR. The local meta PoP is the sole exception and delivers directly on `main` without task branches or PRs.
 
 **One run = up to the next human gate:** planner, execution and review stay in distinct contexts. The orchestrator chains stages until approval, critical review, `(user)`, block or merge. Full detail: [[WORKFLOW|WORKFLOW]].
 
@@ -42,7 +44,7 @@ Every change to the project goes through the kanban (`pop/kanban/001_initial_tas
 
 ## Skills
 
-- **PoP workflow:** `.agents/skills/` — `new-task`, `advance-task`, `plan-roadmap`, `write-spec`, `sync-specs`.
+- **PoP workflow:** `.agents/skills/` — `new-task`, `advance-task`, `yolo-critic`, `plan-roadmap`, `write-spec`, `sync-specs`, `optimize-memory`.
 - **Project domain:** `pop/skills/` — listed in the profile [[categories/<category>/<project>/pop/PROJECT|PROJECT]].
 
 ### Clean code (code projects only)
@@ -73,4 +75,5 @@ Every change to the project goes through the kanban (`pop/kanban/001_initial_tas
 - **Never** change the real project outside a task in `004_processing` whose plan was approved in 003.
 - **Never** check `- [ ] Done` or execute `(user)` items — those belong exclusively to the human.
 - **Never** merge a task PR — merging is the human's job (or commanded by them in the merge round).
-- Every completed task produces `pop/memory/<id>.md` (ledger ≤2000 chars, final commit, dates); its folder in `006_done` is deleted during close-out.
+- Every completed task produces `pop/memory/<id>.md` (ledger ≤2000 chars, final commit/PR and dates). Preserve critical decisions and chronology; summarize routine execution, using `optimize-memory` when needed.
+- Roadmaps contain epochs, phases and open task rows only. After memory/spec/status validation in 006, remove the completed task row and delete its `006_done` folder.

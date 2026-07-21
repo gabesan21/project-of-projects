@@ -62,8 +62,10 @@ flowchart LR
 - **001 ends with your release:** the card is yours to edit until you check `- [x] Ready to plan` — agents (and automation) can't move an unfinished task into planning.
 - **003 is yours:** nothing touches a repository until you check `- [x] Done`.
 - **004 integrates in a task worktree** (`worktrees/<id>`, branch `task/<id>`); parallel fronts use isolated branches/worktrees and the orchestrator validates each diff before integration.
-- **Outside yolo, 006 opens a task PR** — you merge it, then the agent writes memory and syncs specs.
-- **Yolo mode (opt-in):** an independent reviewer handles brief and implementation judgment in fresh sessions; the orchestrator mechanically integrates task branches into `develop`. Scope close-out asks for your review, and a scope PR is opened only under your explicit command.
+- **Outside yolo, 006 opens a task PR** for human merge. External yolo tasks integrate into `develop` and the final scope opens `develop` → `main`; a root-local PoP works directly on `main`.
+- **Roadmaps remain lean** — completed task rows leave the epoch file in 006 only after canonical memory/spec/status validation.
+- **Yolo is bounded autonomy** — strong fresh critics own 003/005, two returns per gate are allowed, and failure three opens a human-reset circuit breaker. Independent tasks run in waves of at most three.
+- **Yolo delivery:** each external scope lands on `develop` and automatically opens the final `develop` → `main` PR for human merge; only the local meta PoP delivers directly on `main`.
 
 Everything waiting on you shows up in **`INBOX.md`**, generated automatically via Dataview — the one file to open every day.
 
@@ -103,6 +105,7 @@ project-of-projects/
 | `write-spec` | Creates/rewrites a standardized spec. |
 | `sync-specs` | Keeps specs faithful to reality as tasks progress. |
 | `weekly-review` | Vault-wide review: what waits on you, what stalled, proposals. |
+| `optimize-memory` | Compacts memories without losing identity, chronology, commits/PRs or critical decisions. |
 
 These are the workflow highlights — the full table in `AGENTS.md` covers all skills, including the `clean-code-change`/`clean-code-review` pair (code projects), the `ui-change`/`ui-review` pair (frontend projects) and a vendored batch of 16 frontend/UI/UX skills (design direction, React/Next.js practices, shadcn/ui, color, design tokens, and UX/accessibility audits), each credited with upstream and license.
 

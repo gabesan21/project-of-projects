@@ -3,22 +3,23 @@ task: <id>-<slug>
 project: <category>/<project>
 started: YYYY-MM-DD
 finished: YYYY-MM-DD
-commit: <final commit hash>
-pr: <PR link, if any>
+commit: <final-commit-hash>
+pr: <PR-link-or-explicitly-empty>
 ---
 
 # <id>-<slug> — <short title>
 
-> Durable ledger written before deleting `kanban/006_done/<id>/`. Total limit: **2000 characters**. Record facts and pointers, not the plan/execution narrative.
+> Durable ledger written and validated before removing the task from the roadmap and deleting `kanban/006_done/<id>/`. Total ≤2000 characters. Use [[.agents/skills/optimize-memory/SKILL|optimize-memory]] if it grows.
 
-- **Delivery:** <what now exists or changed>.
+- **Delivery:** <observable result>.
 - **Changed areas:** `<subtree/file>` — <one line>.
 - **Verification:** <aggregate gate and result>.
+- **Final telemetry:** <stage contexts; 003/005 returns; differential|full; final tests—no reasoning>.
 - **Durable decisions:** none | <decision and short rationale>.
-- **Relevant divergences:** none | <authorized difference from brief>.
+- **Relevant deviations:** none | <authorized difference from brief>.
 
 ## Links
 
-- **Affected spec:** [[categories/<category>/<project>/pop/specs/<spec>|<spec>]] — *follow to understand <changed contract>*.
-- **Learning:** [[categories/<category>/<project>/pop/notes/learnings/<note>|<note>]] — *follow if <reusable situation>*.
-- **PR/commit:** <link or hash> — *follow to inspect the final diff*.
+- **Affected spec:** [[categories/<category>/<project>/pop/specs/<spec>|<spec>]] — *follow for the changed contract*.
+- **Learning:** [[categories/<category>/<project>/pop/notes/learnings/<note>|<note>]] — *follow when reusable*.
+- **PR/commit:** <link/hash> — *follow to inspect the final diff*.

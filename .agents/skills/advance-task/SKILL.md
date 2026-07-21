@@ -1,46 +1,42 @@
 ---
 name: advance-task
-description: Orchestrates a task through the kanban (001→006), delegating each work stage to a dedicated subagent and chaining stages to the next human gate. Use when asked to advance, plan, execute, verify or complete a task.
+description: Orchestrates a task through kanban 001→006, delegating each stage to the proper fresh context and continuing until a legitimate human gate.
 ---
 
 # advance-task
 
-You are the **orchestrator**: identify the task stage, resolve gates/transitions and advance to the next human gate. [[WORKFLOW|WORKFLOW]] is authoritative; read only the current stage and Cross-cutting rules.
+You are the **orchestrator**. Find the current stage, resolve gates and transitions, and continue until the next legitimate human gate. [[WORKFLOW|WORKFLOW]] is authoritative: read the current stage and transversal rules, not the whole vault.
 
-**Delegate all 002, 004 and 005 work** with fresh context per stage. The kanban orchestrator performs 001, 006, gates and transitions; in 004 it delegates to an **execution orchestrator**, which chooses topology and integrates fronts.
+**Delegate:** 002 and 005 always use fresh contexts. A cohesive 004 front goes directly to one executor; only a DAG, several skills, or disjoint write sets justify a sub-orchestrator. The main agent owns 001, 006, gates, and transitions.
 
-## Input and loop
+## Loop
 
-0. Claim first with `scripts/pop_claim.py <task-id>`; an active foreign claim forbids writes.
-1. Read `stage`, `critical`, `yolo`, `size`, `blocked`, `depends_on` and skills. An unreleased 001 is a human gate unless explicit command or yolo release applies.
-2. Until a human gate: perform 001/006 directly and 002/004/005 through dedicated subagents. `size: S` reduces brief, executor count and review depth but **never joins planner, executor and reviewer context**.
-3. Transition with `scripts/pop_move.py ... --reason "short reason — contexts: <actually launched>"`.
-4. At a gate release the claim, stop and report current state, human need and next action.
+1. Claim first with `scripts/pop_claim.py <task-id>`. A live claim by another agent means read-only: report and stop.
+2. Read `stage`, `critical`, `yolo`, `size`, `blocked`, `depends_on`, and stage skills. In 001, release and stop without `- [x] Ready to plan`, unless an explicit human command or a yolo roadmap mark authorizes it; record that source.
+3. While no legitimate stop exists, run the current [[WORKFLOW|WORKFLOW]] stage. Use `scripts/pop_move.py <task-id> <stage> --reason "..." --context <id>` for transitions; never duplicate its log manually.
+4. Release the claim only at a legitimate stop. Normal yolo returns at 003/005 automatically re-enter the loop.
 
-Human gates: 001 release; 003 approval; human approval for critical 005; `(user)` item; `blocked`; merge round in 006.
+Outside yolo, human gates are 001 release, 003 approval, critical 005, `(user)` work, a block, and merge. In yolo, a fresh **strong** critic owns 003 and 005; only a technical block, `(user)` item, circuit breaker, or final merge stops early.
 
-For `yolo: true`, delegate 003 and 005 judgment to the **independent reviewer** via [[.agents/skills/yolo-critic/SKILL|yolo-critic]] in separate fresh sessions. The orchestrator performs mechanical 006 integration. Human stops are `(user)`, `blocked` and final scope review. Continue the yolo scope in dependency order with WIP 3 until a stop or close-out.
+## Yolo execution
+
+- Each 003 and 005 gate allows two automatic returns; the third failure activates `circuit_breaker` and requires human intervention.
+- Use `scripts/pop_yolo.py wave` to schedule at most three tasks with satisfied dependencies and isolated repositories/write sets. Collisions serialize.
+- A cohesive implementation uses one direct executor with `owns`, denies, and a criterion. Use a sub-orchestrator only for genuine topology.
+- The 005 critic records `differential|full`, reason, surface, and tests. `full` is mandatory for critical tasks and after any return.
+- 006 is mechanical/idempotent: local root PoP stays on `main`; external yolo tasks integrate into `develop`, then the scope opens `develop` → `main` without agent merge.
 
 ## Turn discipline
 
-- Stage delegation is synchronous: collect the 002/004/005 result before proceeding.
-- Never end while a stage subagent is running or promise future agent-owned work.
-- The yolo scope loop runs in the same turn until human stop, block or completed close-out.
+- Independent tasks in a wave may run concurrently, but no task transitions before its stage result is collected.
+- Never end the turn with a stage agent running or with agent-owned future work merely promised.
+- After collecting a wave, persist transitions and launch the next eligible wave until a legitimate stop.
 
-## Stage subagents
+## Stage contexts
 
-Give each only its stage skill and minimal context, no web, an output cap and the model tier from `scripts/models.json`. Heavy reasoning, operational prompts and discarded attempts stay ephemeral.
+- **002 planner:** card + linked research/specs → concise objective, strategy, fronts, dependencies, risks, and criteria; no implementation or chain-of-thought.
+- **004 executor:** direct for one cohesive front; complex topology gets explicit `owns`, `may_read`, `must_not_edit`, dependencies, expected input, and criteria. Validate scope and the aggregate gate.
+- **005 reviewer:** fresh and independent; in yolo always strong. Compare objective/specs to behavior and classify evidence-backed findings.
+- **003 yolo critic:** strong, fresh, objective approval/return. Returns 1–2 loop; failure 3 opens the circuit.
 
-- **002 — separate planner:** card + linked research/specs → concise `.plan.md` with objective, areas, strategy, fronts, dependencies, real risks and criteria; no code, pseudocode or micro-edits. Budgeted recon only for a concrete gap above rule 18's floor; zero workers is valid.
-- **004 — execution orchestrator:** plan + minimal context → single executor, sequential specialists or parallel waves. Every ephemeral front declares `owns`, `may_read`, `must_not_edit`, `depends_on`, `expected_input`, skill and criterion. Launch only after dependencies are integrated; missing/incompatible input is `BLOCKED`, never opportunistic implementation. Parallel fronts use isolated worktrees/branches and require logical/write independence. Validate with `python3 scripts/pop_check_scope.py --base <front-base> --allow <owns> --deny <must_not_edit>`, integrate centrally and run the aggregate gate.
-- **005 — independent reviewer:** objective/card + specs + integrated diff + criteria → `.verify.md` with evidence and findings. In fresh context and never as executor, compare implementation to objective, rerun gates and review code quality; severity `blocking | suggestion | nit`. `critical` changes tier/depth, not reviewer count. In yolo, start a fresh session even if the role judged 003.
-- **003 yolo — brief reviewer:** card + plan + approval → sign or return with objective reasons; maximum two returns. It neither executes nor integrates.
-
-## Cautions
-
-- Never skip stages/gates. Normal returns: 003→002, 004→002, 005→004.
-- A foreign claim covers the entire task folder.
-- Abort, `(user)` or plan-changing discovery is reported; do not improvise in the main context.
-- A front with missing dependency, out-of-owns path or incompatible contract returns to the execution orchestrator; never let it complete another front.
-- Clear `blocked`/`blocked_reason` when unblocking.
-- In 006, update an existing learning on the same theme rather than duplicating; make contradictions explicit.
+Record minimal telemetry per stage: contexts, return count, verification strategy/tests, duration, and result. Never persist prompts, reasoning, or discarded attempts. Missing dependencies, scope violations, or changed contracts return/block; never fill another front opportunistically.

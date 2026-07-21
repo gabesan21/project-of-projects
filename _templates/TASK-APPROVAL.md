@@ -4,7 +4,7 @@
 
 - **Stage:** 003_human_approval · **Owner:** user | independent reviewer in yolo
 
-> One round per visit to 003. The gate approves the brief, not reasoning or implementation details. Never delete old rounds. In `yolo: true`, replace the human subsection with `### Reviewer response (yolo)`, preserve the checkbox and use an auditable signature.
+> One round per visit to 003. In yolo, a **strong** critic signs; returns 1–2 automatically go to 002 and failure 3 activates the circuit breaker. Never delete old rounds.
 
 ## Round 1 — YYYY-MM-DD
 
@@ -26,6 +26,13 @@ _(write here: approved, or what to change)_
 ### Agent decision
 
 _(after Done: `approved → 004` or `changes requested → 002: <summary>`)_
+
+### Critic response (yolo)
+
+- **Context:** independent strong.
+- **Return:** 0 | 1 | 2 of 2.
+- **Decision:** approved → 004 | returned → 002 | circuit breaker.
+- **Reason/evidence:** <objective, no reasoning>.
 
 ## Merge — 006 — YYYY-MM-DD
 

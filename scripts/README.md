@@ -1,23 +1,19 @@
-# scripts — vault CLI
+# PoP scripts
 
-Scripts in **Python 3 (≥3.9), stdlib only** — agent-agnostic and cross-platform (`pathlib`). They replace manual agent sweeps with 1 command. All accept `--vault DIR` (default: folder above `scripts/`) and `--help`.
+Python 3.9+, standard library only.
 
-| Script | Does |
-|--------|-----|
-| `pop_status.py` | Overview: tasks per stage/project, pending gates (release in 001, 003, 005 critical, merge), blocked, stale >14 days, active claims, WIP > 3 alert. `--project <cat>/<proj>` filters. |
-| `pop_claim.py <task>` | Task claim (lease) — one agent per task: writes `claimed_by:`/`claimed_at:` to the card; active claim by another agent → refusal (exit 1); a 2h lease expires an orphan claim. `--release` releases, `--status` queries, `--by` identifies the agent. |
-| `pop_validate.py` | Validates limits: 144/600 chars in the indexes, ≤150 lines per note (research `raw/` exempt), card frontmatter, consistent `stage:`, `pop-hash` code-citation annotations (fail-closed — DOX rule 9, [[_templates/DOX]]); warnings: orphan worktrees and broken wikilinks. Exit 1 on violation. |
-| `pop_move.py <task> <stage>` | Moves the task folder, validates the transition (returns: 003→002, 004→002, 005→004; `--force` for exceptions), updates `stage:`/`updated:` and the `## Log` (`--reason`). Refuses a task with another agent's active claim (`--by`) and 001→002 without `- [x] Ready to plan`. |
-| `pop_task.py <cat>/<proj> <id>` | Scaffolding: card in `001_initial_task` from `_templates/TASK.md` + empty `subtasks/`. `--title "..."` sets the title. Embedded repo of a `full-multi-repo`: `<cat>/<proj>/<repo>`. |
-| `pop_worktree.py add\|remove <task>` | Creates/removes `worktrees/<id>` + branch `task/<id>` via git. Target repo: `--repo` (a path, or a **clone name** in `project/<name>/` → nested worktree `worktrees/<id>/<name>/`, for a cross task of `multi-repo`/`full-multi-repo`); default: the project folder if it is a git repo (included/embedded repo), otherwise the vault root. `--base`, `--delete-branch`. |
-| `pop_check_scope.py --base REF --allow PATH [--deny PATH]` | Checks committed, local and untracked changes; `--allow` defines ownership and `--deny` creates forbidden exceptions (repeatable; `**` is recursive). |
+| Script | Purpose |
+|---|---|
+| `pop_status.py` | Kanban overview, pending gates, claims, circuit breakers, stale work, and merge waits. |
+| `pop_claim.py` | Per-task lease preventing duplicate orchestrators. |
+| `pop_validate.py` | Validates limits, cards, canonical specs, telemetry, standalone anatomy, links, hashes, and completed-task roadmap residue. |
+| `pop_move.py` | Moves a task, updates card/log/telemetry, counts yolo returns, and opens the circuit on failure three. |
+| `pop_task.py` | Creates a task card from the template. |
+| `pop_worktree.py` | Resolves route and manages task worktrees; root PoP refuses them, external yolo starts from `develop`. |
+| `pop_roadmap.py` | `close` removes exactly one completed task row after canonical memory; `check/prune` audit/migrate residue. |
+| `pop_yolo.py` | Safe waves up to three, verification mode, minimal telemetry, and human circuit reset. |
+| `pop_delivery.py` | Idempotent external-yolo integration into `develop` and final `develop` → `main` PR creation/reuse. |
+| `pop_check_scope.py` | Validates committed/local/untracked diff against ownership and deny globs. |
+| `pop_install_included.py` | Installs/updates the manifest-defined standalone included package; audits manifest closure. |
 
-`poplib.py` is the shared module: vault root, project discovery (globs `categories/*/*/kanban/` and `categories/*/*/project/*/kanban/` — embedded repos of `full-multi-repo`; labels `<cat>/<proj>` or `<cat>/<proj>/<repo>`, always relative to `categories/` and without the `project/` segment) and its own frontmatter parser (no PyYAML).
-
-Example:
-
-```
-python3 scripts/pop_task.py agents/my-project 1.1.1-user-table-creation --title "User table"
-python3 scripts/pop_move.py 1.1.1-user-table-creation 002_planning --reason "plan started"
-python3 scripts/pop_status.py
-```
+Run `python3 -m unittest discover -s scripts/tests -v`, `python3 scripts/pop_install_included.py --audit-manifest`, and `python3 scripts/pop_validate.py` before delivery.

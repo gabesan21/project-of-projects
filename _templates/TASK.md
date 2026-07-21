@@ -15,6 +15,9 @@ claimed_at:
 worktree:
 pr:
 awaiting_merge: false
+yolo_003_returns: 0
+yolo_005_returns: 0
+circuit_breaker: false
 created: YYYY-MM-DD
 updated: YYYY-MM-DD
 ---
@@ -66,3 +69,11 @@ One sentence: why now, and what it unblocks.
 ## Log
 
 - YYYY-MM-DD — created in 001_initial_task — <reason/origin>
+
+## Minimal telemetry
+
+> One row per completed/returned stage. Record observable cost, never reasoning, prompts, or discarded attempts.
+
+| Stage | Contexts | Returns | Tests/strategy | Result |
+|-------|----------|---------|----------------|--------|
+| 002 | planner: 1 | 0 | n/a | plan created |

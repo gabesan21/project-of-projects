@@ -1,18 +1,9 @@
-"""poplib — shared utilities for the PoP CLI scripts.
-
-Provides: vault root detection, project discovery, a simple YAML frontmatter
-parser (key: value, inline `[a, b]` lists and block `- item` lists) and task
-card helpers. Single anatomy: the harness lives in `pop/`
-(`categories/<c>/<p>/pop/kanban`, embedded repo in `<c>/<p>/<repo>/pop/kanban`);
-the vault root (meta-project) keeps its kanban at the root as a documented
-exception. `harness_root()` decides by scope. The legacy anatomy (harness at
-the folder root) is no longer supported. Stdlib only (Python >= 3.9).
-"""
 
 from __future__ import annotations
 
 import datetime
 import getpass
+import json
 import re
 import socket
 from pathlib import Path
@@ -27,19 +18,12 @@ STAGES = [
     "006_done",
 ]
 
-# Default lease for the task claim (see pop_claim.py).
 DEFAULT_LEASE_HOURS = 2
+YOLO_RETURN_LIMIT = 2
 
-# Human release checkbox on the card (gate for leaving 001).
 RELEASE_MARK = re.compile(r"^\s*[-*]\s*\[[xX]\]\s*Ready to plan")
 
 def vault_root(override: Optional[str] = None) -> Path:
-    """Vault root: `--vault` if given, otherwise the folder above `scripts/`.
-
-    In an included clone the scripts live in `pop/scripts/`: if the folder
-    above is named `pop` and holds `.included-harness.json`, the root is the
-    folder above it (the repo root).
-    """
     if override:
         return Path(override).resolve()
     base = Path(__file__).resolve().parent.parent
@@ -49,24 +33,19 @@ def vault_root(override: Optional[str] = None) -> Path:
 
 
 def harness_root(project: Path) -> Path:
-    """Harness root of a scope: `pop/` in `categories/` projects; the scope
-    itself only at the vault root (meta-project, kanban at the root)."""
     return project / "pop" if (project / "pop" / "kanban").is_dir() else project
 
 
 def templates_dir(root: Path) -> Path:
-    """Vault templates folder: `pop/_templates` if it exists, else `_templates`."""
     new = root / "pop" / "_templates"
     return new if new.is_dir() else root / "_templates"
 
 
 def today() -> str:
-    """Today's date in YYYY-MM-DD."""
     return datetime.date.today().isoformat()
 
 
 def _coerce(raw: str):
-    """Converts a frontmatter scalar: quotes, booleans, empty."""
     raw = raw.strip()
     if len(raw) >= 2 and raw[0] == raw[-1] and raw[0] in ("'", '"'):
         return raw[1:-1]
@@ -80,7 +59,6 @@ def _coerce(raw: str):
 
 
 def _parse_value(raw: str):
-    """Value of a key: scalar or inline list `[a, b]`."""
     raw = raw.strip()
     if raw.startswith("[") and raw.endswith("]"):
         inner = raw[1:-1].strip()
@@ -91,11 +69,6 @@ def _parse_value(raw: str):
 
 
 def parse_frontmatter(text: str) -> Tuple[dict, str]:
-    """Splits frontmatter and body. No frontmatter -> ({}, text).
-
-    Supports `key: value`, inline lists `[a, b]` and block lists
-    (`key:` followed by `- item` lines).
-    """
     lines = text.splitlines()
     if not lines or lines[0].strip() != "---":
         return {}, text
@@ -119,26 +92,18 @@ def parse_frontmatter(text: str) -> Tuple[dict, str]:
             key, _, raw = line.partition(":")
             current = key.strip()
             meta[current] = _parse_value(raw)
-    if end is None:  # frontmatter without closing delimiter
+    if end is None:  # Unclosed frontmatter.
         return {}, text
     return meta, "\n".join(lines[end + 1:])
 
 
 def discover_projects(root: Path) -> list:
-    """Vault project scopes, all in the `pop/` anatomy: the root (meta-project
-    `pop` — kanban at the root, by documented exception — or an included clone,
-    with `pop/kanban`), projects in `categories/<c>/<p>/pop/kanban` and the
-    embedded repos of `full-multi-repo` projects in
-    `categories/<c>/<p>/<repo>/pop/kanban`. The legacy anatomy (harness at the
-    root) is no longer recognized — the validator reports it as a violation
-    (see `check_strict_anatomy`)."""
     scopes = set()
     if (root / "kanban").is_dir() or (root / "pop" / "kanban").is_dir():
         scopes.add(root)
-    # (pattern, number of kanban levels up to the scope)
     patterns = (
-        ("categories/*/*/pop/kanban", 2),      # project
-        ("categories/*/*/*/pop/kanban", 2),    # embedded repo (full-multi-repo)
+        ("categories/*/*/pop/kanban", 2),      # Project.
+        ("categories/*/*/*/pop/kanban", 2),    # Embedded full-multi-repo repository.
     )
     for pattern, up in patterns:
         for kanban in root.glob(pattern):
@@ -152,29 +117,16 @@ def discover_projects(root: Path) -> list:
     return sorted(scopes)
 
 
-# PoP harness folders inside a project scope: these are the ONLY ones the
-# size/wikilink checks reach. Positive whitelist — whatever belongs to the
-# project (code, repo docs, clones, `project/`, embedded repo, vendor) stays
-# out by construction, without depending on the type. The names are invariant
-# across types (see TYPES.md): only the location of the code changes, and
-# `discover_projects` already hands over the right scope, including each
-# embedded repo of a full-multi-repo.
+# Harness traversal includes each embedded full-multi-repo repository.
 HARNESS_DIRS = ("roadmap", "specs", "researches", "skills", "notes",
                 "memory", "open_questions", "drafts", "kanban")
-HARNESS_ROOT_FILES = ("PROJECT.md", "ROADMAP.md")  # INDEX.md has its own budget (144/600)
-# Belt and suspenders: never descend into raw research sources or into code that
-# might be nested under a harness folder.
+HARNESS_ROOT_FILES = ("PROJECT.md", "ROADMAP.md")  # INDEX.md has its own 144/600 limit.
+# Skip generated, vendored, and nested non-harness content.
 _HARNESS_SKIP = {"raw", "worktrees", "_templates", "__pycache__",
                  "node_modules", "vendor", ".git", ".obsidian"}
 
 
 def iter_harness_markdown(scope: Path) -> Iterator[Path]:
-    """Harness `.md` under a project scope (positive whitelist).
-
-    In the current anatomy the whole harness (including PROJECT.md/ROADMAP.md)
-    lives in `pop/` — `harness_root()` resolves it; the HARNESS_DIRS names
-    don't change.
-    """
     hroot = harness_root(scope)
     for name in HARNESS_ROOT_FILES:
         if (hroot / name).is_file():
@@ -189,7 +141,6 @@ def iter_harness_markdown(scope: Path) -> Iterator[Path]:
 
 
 def iter_all_harness_markdown(root: Path) -> Iterator[Path]:
-    """Harness `.md` of every discovered scope, without repetition."""
     seen = set()
     for scope in discover_projects(root):
         for path in iter_harness_markdown(scope):
@@ -199,9 +150,6 @@ def iter_all_harness_markdown(root: Path) -> Iterator[Path]:
 
 
 def project_label(root: Path, project: Path) -> str:
-    """Short `<category>/<project>` name of a project folder — or
-    `<category>/<project>/<repo>` for an embedded repo of a full-multi-repo.
-    The vault root (meta-project) has the fixed label `pop`."""
     if project == root:
         return "pop"
     parts = project.relative_to(root / "categories").parts
@@ -209,21 +157,27 @@ def project_label(root: Path, project: Path) -> str:
 
 
 def project_dir(root: Path, label: str) -> Path:
-    """Inverse of `project_label`: project folder from the label.
-
-    `<cat>/<proj>` -> `categories/<cat>/<proj>`;
-    `<cat>/<proj>/<repo>` -> `categories/<cat>/<proj>/<repo>` (embedded repo
-    of a full-multi-repo, `pop/` anatomy);
-    `pop` -> vault root (meta-project).
-    """
     if label == "pop":
         return root
     parts = [p for p in label.split("/") if p]
     return root.joinpath("categories", *parts)
 
 
+def delivery_route(root: Path, project: Path, *, yolo: bool) -> dict:
+    if project.resolve() == root.resolve() and (root / "kanban").is_dir():
+        return {"task_branch": "main", "scope_pr": False,
+                "target_branch": "main", "worktree": False,
+                "merge_owner": "none"}
+    if yolo:
+        return {"task_branch": "develop", "scope_pr": True,
+                "target_branch": "main", "worktree": True,
+                "merge_owner": "user"}
+    return {"task_branch": "task", "scope_pr": False,
+            "target_branch": None, "worktree": True,
+            "merge_owner": "user"}
+
+
 def iter_cards(project: Path) -> Iterator[Tuple[str, Path, Path]]:
-    """Iterates (stage, task_folder, card.md) of a project."""
     for stage in STAGES:
         stage_dir = harness_root(project) / "kanban" / stage
         if not stage_dir.is_dir():
@@ -235,13 +189,11 @@ def iter_cards(project: Path) -> Iterator[Tuple[str, Path, Path]]:
 
 
 def read_card(card: Path) -> dict:
-    """Frontmatter of a card, as a dict (empty if absent)."""
     meta, _ = parse_frontmatter(card.read_text(encoding="utf-8"))
     return meta
 
 
 def task_released(card: Path) -> bool:
-    """True if the card has `- [x] Ready to plan` outside code fences."""
     in_fence = False
     for line in card.read_text(encoding="utf-8").splitlines():
         if line.lstrip().startswith("```"):
@@ -253,7 +205,6 @@ def task_released(card: Path) -> bool:
 
 
 def default_agent() -> str:
-    """Default agent identifier: user@host."""
     return f"{getpass.getuser()}@{socket.gethostname()}"
 
 
@@ -261,8 +212,57 @@ def now() -> datetime.datetime:
     return datetime.datetime.now().astimezone()
 
 
+def telemetry_path(task_dir: Path) -> Path:
+    return task_dir / f"{task_dir.name}.telemetry.json"
+
+
+def read_telemetry(task_dir: Path) -> dict:
+    path = telemetry_path(task_dir)
+    if not path.is_file():
+        return {"version": 1, "events": []}
+    try:
+        data = json.loads(path.read_text(encoding="utf-8"))
+    except (json.JSONDecodeError, OSError):
+        return {"version": 1, "events": []}
+    if not isinstance(data, dict) or not isinstance(data.get("events"), list):
+        return {"version": 1, "events": []}
+    return data
+
+
+def record_telemetry(task_dir: Path, event: dict) -> None:
+    data = read_telemetry(task_dir)
+    payload = {"at": now().isoformat(timespec="seconds"), **event}
+    data["events"].append(payload)
+    path = telemetry_path(task_dir)
+    path.write_text(json.dumps(data, ensure_ascii=False, indent=2) + "\n",
+                    encoding="utf-8")
+
+
+def telemetry_summary(task_dir: Path) -> dict:
+    events = read_telemetry(task_dir)["events"]
+    contexts = sum(len(e.get("contexts") or []) for e in events)
+    returns = {"003": 0, "005": 0}
+    test_seconds = 0.0
+    for event in events:
+        if event.get("from") == "003_human_approval" and event.get("to") == "002_planning":
+            returns["003"] += 1
+        if event.get("from") == "005_verifying" and event.get("to") == "004_processing":
+            returns["005"] += 1
+        test_seconds += float(event.get("test_seconds") or 0)
+    duration = None
+    if len(events) >= 2:
+        try:
+            start = datetime.datetime.fromisoformat(events[0]["at"])
+            end = datetime.datetime.fromisoformat(events[-1]["at"])
+            duration = int((end - start).total_seconds())
+        except (KeyError, TypeError, ValueError):
+            pass
+    return {"duration_seconds": duration, "contexts": contexts,
+            "returns_003": returns["003"], "returns_005": returns["005"],
+            "test_seconds": test_seconds, "events": len(events)}
+
+
 def parse_claim(meta: dict) -> Tuple[Optional[str], Optional[datetime.datetime]]:
-    """Returns (claimed_by, claimed_at | None) from a card's frontmatter."""
     by = meta.get("claimed_by") or None
     raw = str(meta.get("claimed_at") or "")
     try:
@@ -277,15 +277,11 @@ def parse_claim(meta: dict) -> Tuple[Optional[str], Optional[datetime.datetime]]
 def claim_expired(at: Optional[datetime.datetime],
                   lease_hours: float = DEFAULT_LEASE_HOURS) -> bool:
     if at is None:
-        return True  # a claim without a valid timestamp holds no lease
+        return True  # A claim without a valid timestamp cannot hold a lease.
     return now() - at > datetime.timedelta(hours=lease_hours)
 
 
 def find_task(root: Path, task_id: str):
-    """Locates the task by folder name in any project/stage.
-
-    Returns (project, stage, task_folder) or None.
-    """
     for project in discover_projects(root):
         kanban = harness_root(project) / "kanban"
         for stage in STAGES:

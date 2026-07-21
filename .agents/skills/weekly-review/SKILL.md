@@ -19,8 +19,9 @@ Generates a vault overview and proposes actions. Changes nothing beyond the repo
    - **Outdated specs:** the `sync-specs` skill's audit (tasks in done whose specs weren't updated).
    - **DOX audit:** in application projects with a DOX tree ([[_templates/DOX|template]]), obsolete contracts (purpose/structure/flow changed without an update), dead links (laterals, skills, specs and indexes pointing to a nonexistent path) and blown caps (~60 lines, ~3 laterals, <7 references per contract).
    - **Note health:** orphan notes (no inbound wikilinks in the vault) and contradictions between notes/decisions and specs — reply ≤15 lines: candidates to link, merge or mark with `> Contradicts:`.
+   - **Memory and roadmap health:** completed-task residue reported by `pop_validate`; memories over 2000 characters or repetitive/narrative candidates for [[.agents/skills/optimize-memory/SKILL|optimize-memory]]. Report only—never compact or delete during review.
    - **Stalled epochs:** "Abandon/pause if" conditions met in the epoch files; imported projects with Epoch 1 (Organization) open — since when and what is missing to release the gate. Epoch 0 (`status: continuous`, maintenance — see [[AGENTS|AGENTS]]) never completes by design: it is excluded from this stagnation check.
-   - **Orphaned yolo:** `develop` branches whose yolo scope stalled (tasks blocked, or completed without the final `develop` → PR-branch PR / without an open question — Yolo mode section of the [[WORKFLOW|WORKFLOW]]).
+   - **Orphaned yolo:** external `develop` scopes stalled without their final automatic `develop` → `main` PR. Root-local PoP is exempt because it delivers directly to `main`.
 3. **Consolidate:** the main agent only assembles the report from the scripts and the subagents' answers. Write it in the target's `notes/` (project: `pop/notes/`), or — if it covers the whole vault — in `REVIEW-YYYY-MM-DD.md` at the root, with:
    - **Waiting on you**: pending human gates and `open` questions in `open_questions/`, with link and since when.
    - **Stalled**: tasks/projects without movement, with a suggestion (resume, pause, abandon) and a one-line justification.

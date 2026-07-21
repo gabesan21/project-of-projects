@@ -8,7 +8,7 @@
 - **Yolo:** yes | no — **optional** bullet (absent = no); only the human marks it.
 - **Abort/pause if:** objective condition, if any (audited by the `weekly-review`).
 
-> One phase per section; under each phase, its tasks — **always one-line descriptions**. Detail goes to the spec or to the task's folder in the kanban. A started task gets a `[[<id>]]` link to the card (see [[WORKFLOW|WORKFLOW]]).
+> One phase per section; under each phase, only still-open tasks — **always one-line descriptions**. In 006, remove a task row only after its canonical memory is valid; preserve the epoch, phase, and other open tasks.
 > **Yolo inherits:** a yolo epoch → phases and tasks inherit; a yolo phase → tasks inherit. Per-task opt-out/opt-in: append ` · yolo: no` (or ` · yolo: yes`) to the end of the Description cell — no new column. `new-task` resolves the inheritance and stamps the card (Yolo mode section of [[WORKFLOW|WORKFLOW]]).
 > **Size:** the agent suggests `S|M|L` in the Description; `new-task` stamps it on the card and the human corrects it in 001. Size guides tier/effort; risk, skills, dependencies and write sets determine topology in [[WORKFLOW|WORKFLOW]].
 

@@ -1,16 +1,24 @@
-# Spec — <contract/theme name>
+---
+id: <unique-kebab-case-id>
+project: <project-label>
+domain: <kebab-case-domain>
+kind: contract
+status: draft
+implementation: planned
+origin: "<origin-phase>"
+created: YYYY-MM-DD
+updated: YYYY-MM-DD
+supersedes: []
+superseded_by:
+---
 
-> Blockquotes are filling instructions — **delete them when filling**.
+# Spec — <contract/topic>
 
-- **Project:** [[categories/<category>/<project>/pop/PROJECT|<Project name>]]
-- **Epoch/Phase:** [[categories/<category>/<project>/pop/roadmap/<n>-<slug>|Phase <n>.<m>]]
-- **Status:** draft | approved | implemented | obsolete
-- **Created:** YYYY-MM-DD
-- **Updated:** YYYY-MM-DD
+> Delete template instructions when filling. Enums: `kind: contract|overview`; `status: draft|active|superseded`; `implementation: planned|partial|implemented|not_applicable`.
 
 ## Contract
 
-Objective description of durable behavior or theme. One spec answers one question; split it if it answers two.
+Objective durable behavior. One spec answers one question.
 
 ## Expected behavior
 
@@ -18,36 +26,32 @@ Objective description of durable behavior or theme. One spec answers one questio
 
 ## Invariants
 
-- <rule that remains true under any implementation>.
+- <rule true under every implementation>.
 
 ## Interfaces
 
-> Record only interfaces promised to consumers: payloads, schemas, commands, events, states or public signatures. Code only when it is itself the contract.
-
-- **Input:** <format, constraints and minimal example if needed>.
+- **Input:** <format and constraints>.
 - **Output:** <format and guarantees>.
-- **Compatibility:** <affected versions or consumers>.
+- **Compatibility:** <versions/consumers>.
 
 ## Errors and limits
 
-- **<condition>:** <observable error/state and expected behavior>.
-- **Limit:** <relevant constraint>.
+- **<condition>:** <observable error/state>.
 
 ## Conformance criteria
 
-- [ ] <objectively verifiable behavior or invariant>.
+- [ ] <objectively verifiable behavior/invariant>.
 
 ## Out of scope
 
-- <what does not belong here and where it is covered>.
+- <excluded area and its contract, if linkable>.
 
 ## Open questions
 
-- <unanswered question; remove when empty>.
+- <unanswered question; remove section when empty>.
 
 ## Related references
 
-- [[categories/<category>/<project>/pop/specs/<other-spec>|<other-spec>]] — *follow if <condition>*.
-- [`<subtree>/AGENTS.md`](../<path-in-repo>/AGENTS.md) — *follow before changing <area>*.
+- [[categories/<category>/<project>/pop/specs/<spec>|<spec>]] — *follow when <condition>*.
 
-> Do not record internal solutions, edit sequences, reasoning or pseudocode. Change strategy belongs in the plan; reusable procedures belong in a skill.
+> Never store reasoning, edit sequence, implementation history, or completed-task lists. Strategy belongs in plans; events/commits/dates in memory; reusable procedures in skills.

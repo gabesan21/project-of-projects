@@ -4,9 +4,13 @@
 
 - **Stage:** 005_verifying · **Owner:** independent reviewer
 
-> One fresh-context agent verifies behavior and quality. Read objective, specs, DOX contracts and diff; do not depend on the execution narrative. `critical: true` raises depth/model, not reviewer count.
+> One fresh-context agent verifies behavior and quality. In yolo it is always **strong** and selects `differential|full`; full is mandatory for critical tasks or after a return.
 
 ## Round 1 — YYYY-MM-DD
+
+- **Strategy:** differential | full — <reason>.
+- **Surface:** <covered diff/risks>.
+- **Yolo return:** 0 | 1 | 2 of 2 — failure 3 activates the circuit breaker.
 
 ### Objective and spec conformance
 
@@ -29,7 +33,7 @@
 
 ## Verdict
 
-- **Decision:** approved → 006_done | rejected → 004_processing.
+- **Decision:** approved → 006_done | rejected → 004_processing | circuit breaker.
 - **Blocking findings:** none | <short list>.
 - **Suggestions/nits:** <non-blocking; record only when useful>.
 - **Summary:** <brief comparison of initial objective and implemented result>.
