@@ -13,9 +13,16 @@ RETURNS = {
 }
 
 
-def transition_allowed(src, dst):
+def transition_allowed(src, dst, *, yolo_single_gate=False):
+    """True when dst is src's next stage or a permitted return.
+
+    `yolo_single_gate` (non-critical yolo task) allows the 002→004 jump:
+    yolo's single quality gate is 005 (see the WORKFLOW's Yolo mode section).
+    """
     stages = poplib.STAGES
     if stages.index(dst) == stages.index(src) + 1:
+        return True
+    if yolo_single_gate and (src, dst) == ("002_planning", "004_processing"):
         return True
     return (src, dst) in RETURNS
 
@@ -91,14 +98,19 @@ def main():
     if src == args.stage:
         print(f"Task {args.task_id} is already in {src} ({label}).")
         return 1
-    if not transition_allowed(src, args.stage) and not args.force:
-        print(f"Transition not allowed: {src} → {args.stage}. "
-              f"Fluxo: 001→002→003→004→005→006; retornos: 003→002, "
-              f"004→002, 005→004. Use --force for exceptions.")
-        return 1
-
     card_src = task_dir / f"{args.task_id}.md"
     meta = poplib.read_card(card_src) if card_src.is_file() else {}
+    yolo_single_gate = (meta.get("yolo") is True
+                        and meta.get("critical") is not True)
+    if (not transition_allowed(src, args.stage,
+                               yolo_single_gate=yolo_single_gate)
+            and not args.force):
+        print(f"Transition not allowed: {src} → {args.stage}. "
+              f"Flow: 001→002→003→004→005→006 (non-critical yolo: 002→004 "
+              f"directly, no 003); returns: 003→002, 004→002, 005→004. "
+              f"Use --force for exceptions.")
+        return 1
+
     if card_src.is_file() and not args.force:
         by, at = poplib.parse_claim(meta)
         if by and by != args.by and not poplib.claim_expired(at):

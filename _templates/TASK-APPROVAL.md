@@ -2,9 +2,9 @@
 
 > Blockquotes are filling instructions — **delete them when filling**.
 
-- **Stage:** 003_human_approval · **Owner:** user | independent reviewer in yolo
+- **Stage:** 003_human_approval · **Owner:** user | independent reviewer in yolo `critical`
 
-> One round per visit to 003. In yolo, a **strong** critic signs; returns 1–2 automatically go to 002 and failure 3 activates the circuit breaker. Never delete old rounds.
+> One round per visit to 003. In yolo, this file only gets a 003 round when `critical: true` — a **strong** critic signs, returns 1–2 automatically go to 002 and failure 3 activates the circuit breaker; other yolo tasks transit 002 → 004 without a round. Never delete old rounds.
 
 ## Round 1 — YYYY-MM-DD
 

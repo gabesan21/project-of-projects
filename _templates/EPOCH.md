@@ -3,7 +3,7 @@
 > Blockquotes in this template are fill-in instructions — **delete them when filling it in**.
 
 - **Project:** [[categories/<category>/<project>/pop/PROJECT|<Project name>]] · **Roadmap:** [[categories/<category>/<project>/pop/ROADMAP|Roadmap]]
-- **Status:** pending | in progress | completed (or **continuous** — reserved for the Epoch 0 of maintenance, see [[AGENTS|AGENTS]]: never completes, the `weekly-review` doesn't chase it for stagnation)
+- **Status:** pending | in progress | completed
 - **Description:** one line — what this chapter delivers.
 - **Yolo:** yes | no — **optional** bullet (absent = no); only the human marks it.
 - **Abort/pause if:** objective condition, if any (audited by the `weekly-review`).

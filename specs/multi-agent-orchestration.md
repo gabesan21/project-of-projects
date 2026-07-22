@@ -22,7 +22,7 @@ Planning, execution, and review use distinct contexts. Cards persist a sufficien
 
 - 002 always uses a separate planner; 005 always uses one fresh independent reviewer per round.
 - A cohesive 004 front receives a direct executor. DAGs, multiple skills, or disjoint write sets receive a sub-orchestrator with explicit contracts.
-- Yolo 003 and 005 always use strong fresh critics. Each gate permits two automatic returns; failure three opens a circuit breaker requiring human intervention.
+- In yolo, 005 is the **single quality gate**: a strong fresh critic first checks whether the original request was met; 003 with a strong critic exists only for `critical: true`. Each gate permits two automatic returns; failure three opens a circuit breaker requiring human intervention.
 - 005 chooses `differential|full`; full is mandatory for critical tasks or after a return.
 - Yolo schedules waves of at most three tasks with satisfied dependencies and isolated repositories/write sets; collisions serialize.
 - 006 effects are mechanical/idempotent and external delivery ends at a human-merged `develop` → `main` PR.

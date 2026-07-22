@@ -95,6 +95,34 @@ class YoloFlowTest(unittest.TestCase):
         self.assertEqual(data["returns_003"], 1)
         self.assertEqual(data["test_seconds"], 12.5)
 
+    def test_non_critical_yolo_transits_002_to_004_directly(self):
+        task = "1.1.4-single-gate"
+        self.card(task, stage="002_planning")
+        result = self.run_cli("pop_move.py", task, "004_processing")
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        self.assertTrue(
+            (self.root / "kanban/004_processing" / task).is_dir())
+        self.assertFalse(
+            (self.root / "kanban/002_planning" / task).exists())
+
+    def test_critical_yolo_does_not_skip_003(self):
+        task = "1.1.5-critical-gate"
+        self.card(task, stage="002_planning", critical="true")
+        result = self.run_cli("pop_move.py", task, "004_processing")
+        self.assertEqual(result.returncode, 1)
+        self.assertTrue(
+            (self.root / "kanban/002_planning" / task).is_dir())
+        result = self.run_cli("pop_move.py", task, "003_human_approval")
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+
+    def test_non_yolo_does_not_skip_003(self):
+        task = "1.1.6-no-single-gate"
+        self.card(task, stage="002_planning", yolo="false")
+        result = self.run_cli("pop_move.py", task, "004_processing")
+        self.assertEqual(result.returncode, 1)
+        self.assertTrue(
+            (self.root / "kanban/002_planning" / task).is_dir())
+
 
 class YoloDeliveryTest(unittest.TestCase):
     def setUp(self):

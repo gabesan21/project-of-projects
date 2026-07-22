@@ -1,6 +1,6 @@
 ---
 name: weekly-review
-description: Periodic vault review - sweeps projects, epochs and tasks, flags what is stalled and proposes promotions or abandonments. Use when the user asks for a roadmap review or a vault overview.
+description: Periodic vault review - sweeps projects, epochs, modifications and tasks, flags what is stalled and proposes promotions or abandonments. Use when the user asks for a roadmap review or a vault overview.
 ---
 
 # weekly-review
@@ -19,14 +19,15 @@ Generates a vault overview and proposes actions. Changes nothing beyond the repo
    - **Outdated specs:** the `sync-specs` skill's audit (tasks in done whose specs weren't updated).
    - **DOX audit:** in application projects with a DOX tree ([[_templates/DOX|template]]), obsolete contracts (purpose/structure/flow changed without an update), dead links (laterals, skills, specs and indexes pointing to a nonexistent path) and blown caps (~60 lines, ~3 laterals, <7 references per contract).
    - **Note health:** orphan notes (no inbound wikilinks in the vault) and contradictions between notes/decisions and specs — reply ≤15 lines: candidates to link, merge or mark with `> Contradicts:`.
-   - **Memory and roadmap health:** completed-task residue reported by `pop_validate`; memories over 2000 characters or repetitive/narrative candidates for [[.agents/skills/optimize-memory/SKILL|optimize-memory]]. Report only—never compact or delete during review.
-   - **Stalled epochs:** "Abandon/pause if" conditions met in the epoch files; imported projects with Epoch 1 (Organization) open — since when and what is missing to release the gate. Epoch 0 (`status: continuous`, maintenance — see [[AGENTS|AGENTS]]) never completes by design: it is excluded from this stagnation check.
+   - **Memory, roadmap and modifications health:** completed-task residue reported by `pop_validate`; memories over 2000 characters or repetitive/narrative candidates for [[.agents/skills/optimize-memory/SKILL|optimize-memory]]. Report only—never compact or delete during review.
+   - **Stalled epochs:** "Abandon/pause if" conditions met in the epoch files; imported projects with Epoch 1 (Organization) open — since when and what is missing to release the gate.
+   - **Swollen modifications:** a modification with more than ~3 open tasks or open for too long → proposal of promotion to a roadmap phase/epoch via `plan-roadmap` (open tasks conclude as `M-`; only the not-yet-tasked work migrates — frontier in [[AGENTS|AGENTS]]).
    - **Orphaned yolo:** external `develop` scopes stalled without their final automatic `develop` → `main` PR. Root-local PoP is exempt because it delivers directly to `main`.
 3. **Consolidate:** the main agent only assembles the report from the scripts and the subagents' answers. Write it in the target's `notes/` (project: `pop/notes/`), or — if it covers the whole vault — in `REVIEW-YYYY-MM-DD.md` at the root, with:
    - **Waiting on you**: pending human gates and `open` questions in `open_questions/`, with link and since when.
    - **Stalled**: tasks/projects without movement, with a suggestion (resume, pause, abandon) and a one-line justification.
    - **Progress**: what moved since the last review (compare with the previous report, if any).
-   - **Proposals**: promotions of ideas to epoch, epochs ready to complete, priority adjustments, drafts in `drafts/` ready to process (`new-project`/`import-project`).
+   - **Proposals**: promotions of ideas to epoch, epochs ready to complete, modifications to promote to the roadmap, priority adjustments, drafts in `drafts/` ready to process (`new-project`/`import-project`).
 4. Link the report in INBOX.md (new "Reviews" section if needed) so the human can find it.
 
 ## Cautions

@@ -5,6 +5,7 @@
 - **Stage:** 005_verifying · **Owner:** independent reviewer
 
 > One fresh-context agent verifies behavior and quality. In yolo it is always **strong** and selects `differential|full`; full is mandatory for critical tasks or after a return.
+> **Yolo:** this is the single quality gate (003 exists only for `critical: true`). Answer **first** whether the original request — the card's What/Why — was met: without plan approval the brief is strategy, not contract; a plan deviation that serves the request is not a failure, plan adherence that misses the request is blocking.
 
 ## Round 1 — YYYY-MM-DD
 

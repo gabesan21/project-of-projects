@@ -31,7 +31,7 @@ def changed_paths(repo: Path, base: str) -> set[str]:
     return paths
 
 
-def normalize_scope(pattern: str) -> str:
+def normalize_allow(pattern: str) -> str:
     normalized = pattern.replace("\\", "/").removeprefix("./").rstrip("/")
     parts = PurePosixPath(normalized).parts
     if not normalized or normalized.startswith("/") or ".." in parts:
@@ -84,8 +84,8 @@ def main(argv: Optional[List[str]] = None) -> int:
     args = parse_args(argv)
     try:
         repo = Path(git(args.repo.resolve(), "rev-parse", "--show-toplevel").decode("utf-8").strip())
-        allowed = [normalize_scope(pattern) for pattern in args.allow]
-        denied = [normalize_scope(pattern) for pattern in args.deny]
+        allowed = [normalize_allow(pattern) for pattern in args.allow]
+        denied = [normalize_allow(pattern) for pattern in args.deny]
         changed = changed_paths(repo, args.base)
     except (RuntimeError, ValueError) as error:
         print(f"error: {error}", file=sys.stderr)

@@ -7,7 +7,7 @@
 - **Type:** default | included | multi-repo | full-multi-repo — see [[TYPES|TYPES]].
 - **Project language:** <en> — specs, notes, researches, code comments and the entire kanban flow follow this language.
 - **Supported languages (i18n):** <list of languages the application must support — handled in the roadmap and specs. Applications only; remove if not applicable.>
-- **Profile:** [[categories/<category>/<project>/pop/PROJECT|PROJECT]] · **Roadmap:** [[categories/<category>/<project>/pop/ROADMAP|ROADMAP]]
+- **Profile:** [[categories/<category>/<project>/pop/PROJECT|PROJECT]] · **Roadmap:** [[categories/<category>/<project>/pop/ROADMAP|ROADMAP]] · **Modifications:** [[categories/<category>/<project>/pop/MODIFICATIONS|MODIFICATIONS]] (created on demand)
 
 ## Repositories
 
@@ -21,16 +21,16 @@ _No external repository: the work lives in the PoP repository and task PRs targe
 
 ## Workflow
 
-Every change to the project goes through the kanban (`pop/kanban/001_initial_task → … → 006_done`):
+Every change to the project goes through the kanban (`pop/kanban/001_initial_task → … → 006_done`), with tasks coming from the roadmap (`<n>.<m>.<t>-<slug>`) or from modifications (`M-<n>.<t>-<slug>` — hotfixes, tweaks and small emergent features outside the plan; frontier in the vault's AGENTS.md):
 
 1. **001** — task is born (skill `new-task`), with `depends_on:` listing the prerequisite tasks.
 2. **002** — separate planner writes a concise brief with objective, strategy, fronts, ownership and criteria.
-3. **003** — human gate, or a strong independent critic in yolo; two returns are allowed before the circuit breaker requires human diagnosis.
+3. **003** — human gate; two returns are allowed before the circuit breaker requires human diagnosis. In yolo, this gate **exists only for `critical: true`** (strong independent critic) — other yolo tasks transit 002 → 004 directly.
 4. **004** — execution orchestrator chooses one executor, sequential specialists or isolated parallel waves; only it integrates ownership-validated diffs.
-5. **005** — a fresh independent reviewer checks behavior and quality, using differential verification unless risk requires full verification; yolo has the same two-return circuit breaker.
-6. **006** — the agent writes `pop/memory/<id>.md`, syncs specs/status, removes the completed task from the epoch roadmap, deletes the task folder and worktree, then follows the delivery route below.
+5. **005** — a fresh independent reviewer first checks whether the **original request** (the card's objective) was met, then specs, diff, tests and quality, using differential verification unless risk requires full verification; in yolo this is the **single quality gate**, always strong, with the same two-return circuit breaker.
+6. **006** — the agent writes `pop/memory/<id>.md`, syncs specs/status, removes the completed task from the epoch roadmap or modification, deletes the task folder and worktree, then follows the delivery route below.
 
-External yolo scopes integrate into `develop` and automatically open a final `develop` → `main` PR for human merge. Non-yolo work opens its configured task PR. The local meta PoP is the sole exception and delivers directly on `main` without task branches or PRs.
+External yolo scopes integrate into `develop` and, when the **marked scope** closes (single task, phase/epoch or modification), automatically open a final `develop` → `main` PR for human merge. Non-yolo work opens its configured task PR. The local meta PoP is the sole exception and delivers directly on `main` without task branches or PRs.
 
 **One run = up to the next human gate:** planner, execution and review stay in distinct contexts. The orchestrator chains stages until approval, critical review, `(user)`, block or merge. Full detail: [[WORKFLOW|WORKFLOW]].
 
@@ -76,4 +76,4 @@ External yolo scopes integrate into `develop` and automatically open a final `de
 - **Never** check `- [ ] Done` or execute `(user)` items — those belong exclusively to the human.
 - **Never** merge a task PR — merging is the human's job (or commanded by them in the merge round).
 - Every completed task produces `pop/memory/<id>.md` (ledger ≤2000 chars, final commit/PR and dates). Preserve critical decisions and chronology; summarize routine execution, using `optimize-memory` when needed.
-- Roadmaps contain epochs, phases and open task rows only. After memory/spec/status validation in 006, remove the completed task row and delete its `006_done` folder.
+- Roadmaps contain epochs, phases and open task rows only; modifications follow the same rule. After memory/spec/status validation in 006, remove the completed task row and delete its `006_done` folder.

@@ -3,13 +3,19 @@
 
 Creates `kanban/001_initial_task/<id>/<id>.md` in the indicated project's
 harness (`pop/kanban/...` in the new anatomy, `kanban/...` in the legacy one)
-from `_templates/TASK.md`, filling in id, project, epoch, phase, dates and
-title, and creates an empty `subtasks/` folder. Refuses if the task already
-exists in any project/stage (ids are unique across the vault).
+from `_templates/TASK.md`, filling in id, project, origin (roadmap epoch/phase
+or modification), dates and title, and creates an empty `subtasks/` folder.
+Refuses if the task already exists in any project/stage (ids are unique
+across the vault).
+
+Two id origins: roadmap `<epoch>.<phase>.<task>-<slug>` (e.g.
+1.2.3-user-table) and modifications `M-<modification>.<task>-<slug>` (e.g.
+M-1.1-adjust-contract — task 1 of modification M-1).
 
 Usage:
     python3 scripts/pop_task.py <category>/<project> <task-id> [--title "..."]
     e.g.: python3 scripts/pop_task.py agents/my-project 1.2.3-user-table-creation
+          python3 scripts/pop_task.py agents/my-project M-1.1-adjust-contract
     Embedded repo (full-multi-repo): <category>/<project>/<repo>.
 """
 
@@ -19,20 +25,42 @@ import sys
 
 import poplib
 
-TASK_ID = re.compile(r"^(\d+)\.(\d+)\.(\d+)-([a-z0-9][a-z0-9-]*)$")
+ROADMAP_ID = re.compile(r"^(\d+)\.(\d+)\.(\d+)-([a-z0-9][a-z0-9-]*)$")
+MODIFICATION_ID = re.compile(r"^M-(\d+)\.(\d+)-([a-z0-9][a-z0-9-]*)$")
 
 
 def fill_template(template, task_id, project, title):
-    """Replaces the obvious placeholders of _templates/TASK.md."""
-    epoch, phase_n, _, slug = TASK_ID.match(task_id).groups()
-    phase = f"{epoch}.{phase_n}"
-    numeric_id = task_id.split("-", 1)[0]
+    """Replaces the obvious placeholders of _templates/TASK.md.
+
+    Fills only the frontmatter block of the task's origin and deletes the
+    unused one, as the template instructs: roadmap keeps `epoch`/`phase`
+    (no `modification`); modifications keeps `modification: M-<n>`
+    (no `epoch`/`phase`).
+    """
     date = poplib.today()
+    roadmap = ROADMAP_ID.match(task_id)
     text = template
-    for old, new in (
-        ("<n>.<m>.<t>", numeric_id),
-        ("<n>.<m>", phase),
-        ("<n>", epoch),
+    if roadmap:
+        epoch, phase_n, task_n, slug = roadmap.groups()
+        numeric_id = f"{epoch}.{phase_n}.{task_n}"
+        text = text.replace("\nmodification:\n", "\n")
+        pairs = [
+            ("<n>.<m>.<t>", numeric_id),
+            ("<n>.<m>", f"{epoch}.{phase_n}"),
+            ("<n>", epoch),
+        ]
+    else:
+        mod_n, task_n, slug = MODIFICATION_ID.match(task_id).groups()
+        numeric_id = f"M-{mod_n}.{task_n}"
+        text = text.replace("\nepoch: <n>\n", "\n")
+        text = text.replace('\nphase: "<n>.<m>"\n', "\n")
+        text = text.replace("\nmodification:\n", f"\nmodification: M-{mod_n}\n")
+        pairs = [
+            ("<n>.<m>.<t>", numeric_id),
+            ("origin: roadmap", "origin: modifications"),
+            ("M-<n>", f"M-{mod_n}"),
+        ]
+    pairs += [
         ("<category>/<project>", project),
         ("<id>-<slug>", task_id),
         ("<short title>", title or slug.replace("-", " ")),
@@ -40,7 +68,8 @@ def fill_template(template, task_id, project, title):
         ("updated: YYYY-MM-DD", f"updated: {date}"),
         ("- YYYY-MM-DD — created in 001_initial_task — <reason/origin>",
          f"- {date} — created in 001_initial_task — via pop_task"),
-    ):
+    ]
+    for old, new in pairs:
         text = text.replace(old, new)
     return text
 
@@ -53,16 +82,19 @@ def main():
                         help="destination project (e.g. agents/my-project; "
                              "embedded repo: applications/my-app/frontend)")
     parser.add_argument("task_id", metavar="TASK-ID",
-                        help="full task id (e.g. 1.2.3-user-table-creation)")
+                        help="full task id (e.g. 1.2.3-user-table-creation "
+                             "or M-1.1-adjust-contract)")
     parser.add_argument("--title", help="short card title "
                                         "(default: slug with spaces)")
     parser.add_argument("--vault", metavar="DIR",
                         help="vault root (default: folder above scripts/)")
     args = parser.parse_args()
 
-    if not TASK_ID.match(args.task_id):
+    modification = MODIFICATION_ID.match(args.task_id)
+    if not modification and not ROADMAP_ID.match(args.task_id):
         print(f"Invalid id: {args.task_id} — expected "
-              f"<epoch>.<phase>.<task>-<kebab-slug> (e.g. 1.2.3-user-table).")
+              f"<epoch>.<phase>.<task>-<kebab-slug> (e.g. 1.2.3-user-table) or "
+              f"M-<modification>.<task>-<kebab-slug> (e.g. M-1.1-adjust-contract).")
         return 1
 
     root = poplib.vault_root(args.vault)
@@ -91,8 +123,14 @@ def main():
                       args.task_id, args.project, args.title),
         encoding="utf-8")
     print(f"OK: task created at {card}")
-    print("Reminder: fill in 'What', 'Why' and depends_on, and link "
-          "[[{}]] in the epoch file.".format(args.task_id))
+    if modification:
+        print("Reminder: fill in 'What', 'Why' and depends_on, and link "
+              "[[{}]] in the modification (MODIFICATIONS.md or "
+              "modifications/m-{}-*.md).".format(args.task_id,
+                                                 modification.group(1)))
+    else:
+        print("Reminder: fill in 'What', 'Why' and depends_on, and link "
+              "[[{}]] in the epoch file.".format(args.task_id))
     print("The task only leaves 001 once the human checks "
           "`- [x] Ready to plan` (Release section of the card).")
     return 0

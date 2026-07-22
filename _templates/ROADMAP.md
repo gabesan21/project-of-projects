@@ -2,6 +2,8 @@
 
 Profile: [[categories/<category>/<project>/pop/PROJECT|<Project name>]]
 
+> Whatever arrives **outside the plan** (hotfix, tweak, small emergent feature) doesn't go here — it goes to [[categories/<category>/<project>/pop/MODIFICATIONS|MODIFICATIONS]] ([[_templates/MODIFICATIONS|template]], created on demand). Frontier in [[AGENTS|AGENTS]].
+
 > Only the **epochs**, one line each. Phases and tasks live in each epoch's file in `pop/roadmap/` ([[_templates/EPOCH|template]]; in the vault-root meta-project: without the `pop/` prefix). Never add detail here.
 
 | # | Epoch | Description (≤1 line) | Status |

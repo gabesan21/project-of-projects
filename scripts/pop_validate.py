@@ -15,6 +15,8 @@ MAX_CAT_DESC = 600
 MAX_NOTE_LINES = 150
 EXEMPT_NAMES = {"AGENTS.md", "WORKFLOW.md", "README.md"}
 CARD_REQUIRED = ("id", "project", "stage", "created", "updated")
+ORIGIN_VALUES = ("roadmap", "modifications")
+MODIFICATION_REF = re.compile(r"^M-\d+$")
 SIZE_VALUES = {"S", "M", "L"}
 SPEC_REQUIRED = (
     "id", "project", "domain", "kind", "status", "implementation",
@@ -29,7 +31,7 @@ SPEC_ENUMS = {
 KEBAB_CASE = re.compile(r"^[a-z0-9]+(?:-[a-z0-9]+)*$")
 
 ROOT_ENTRY = re.compile(r"^- \[\[.*?\]\]\s*—\s*(.+)$")
-TASK_DIR = re.compile(r"^\d+\.\d+\.\d+-")
+TASK_DIR = re.compile(r"^(?:\d+\.\d+\.\d+|M-\d+\.\d+)-")
 WIKILINK = re.compile(r"!?\[\[([^\]|#^]*)")
 POP_HASH = re.compile(r"<!--\s*pop-hash:\s*(\S+)\s+sha256=([0-9a-fA-F]+)\s*-->")
 INLINE_CODE = re.compile(r"`[^`]*`")
@@ -303,6 +305,28 @@ def check_note_sizes(root, projects, violations):
                 violations.append(f"{path}:1: {count} lines (max. {limit})")
 
 
+def check_card_origin(card, meta, violations):
+    """Origin frontmatter: roadmap requires epoch/phase; modifications
+    requires `modification: M-<n>` (and does not require epoch/phase). An old
+    card without `origin` is inferred from the id's `M-` prefix."""
+    origin = meta.get("origin")
+    if origin in (None, ""):
+        origin = ("modifications"
+                  if str(meta.get("id") or "").startswith("M-") else "roadmap")
+    elif origin not in ORIGIN_VALUES:
+        violations.append(f"{card}:1: `origin` invalid `{origin}` "
+                          f"(use {' | '.join(ORIGIN_VALUES)})")
+        return
+    if origin == "roadmap":
+        for field in ("epoch", "phase"):
+            if meta.get(field) in (None, ""):
+                violations.append(f"{card}:1: frontmatter missing `{field}` "
+                                  "(roadmap origin)")
+    elif not MODIFICATION_REF.fullmatch(str(meta.get("modification") or "")):
+        violations.append(f"{card}:1: `modification` missing or invalid "
+                          f"`{meta.get('modification')}` (use M-<n>)")
+
+
 def check_cards(root, projects, violations):
     for project in projects:
         for stage, task_dir, card in poplib.iter_cards(project):
@@ -310,6 +334,7 @@ def check_cards(root, projects, violations):
             for field in CARD_REQUIRED:
                 if meta.get(field) in (None, ""):
                     violations.append(f"{card}:1: frontmatter missing `{field}`")
+            check_card_origin(card, meta, violations)
             if meta.get("stage") and meta["stage"] != stage:
                 violations.append(f"{card}:1: stage `{meta['stage']}` differs "
                                   f"from folder `{stage}`")
@@ -363,14 +388,17 @@ def check_worktrees(root, projects, warnings):
 
 
 def check_roadmap_residuals(root, violations):
+    """A completed task with memory cannot remain in the roadmap or the
+    modifications (in MODIFICATIONS.md the leftover is the task wikilink)."""
     for scope, path, number, task_id in pop_roadmap.residuals(root):
         memory = pop_roadmap.memory_path(root, scope, task_id)
         # Ignore untracked external clones so validation never mutates their scope.
         if scope != root and not pop_roadmap.tracked(root, memory):
             continue
         violations.append(
-            f"{path}:{number}: completed task left in roadmap `{task_id}` — "
-            "remove the row after validating memory")
+            f"{path}:{number}: residual completed task `{task_id}` — "
+            "remove the row (or the wikilink, in MODIFICATIONS.md) after "
+            "validating memory")
 
 
 # Legacy harness markers are rejected by the positive anatomy whitelist.

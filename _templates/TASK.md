@@ -1,8 +1,10 @@
 ---
 id: <n>.<m>.<t>
 project: <category>/<project>
+origin: roadmap
 epoch: <n>
 phase: "<n>.<m>"
+modification:
 stage: 001_initial_task
 critical: false
 yolo: false
@@ -25,8 +27,9 @@ updated: YYYY-MM-DD
 # <id>-<slug> — <short title>
 
 > Blockquotes in this template are fill-in instructions — **delete them when filling it in**. Harness paths carry the `pop/` prefix; the vault-root meta-project does not.
+> **Origin:** a roadmap task (`origin: roadmap`) uses id `<n>.<m>.<t>` and fills `epoch`/`phase` (delete `modification`); a modification task (`origin: modifications`) uses id `M-<n>.<t>` and fills `modification: M-<n>` (delete `epoch`/`phase`).
 
-- **Phase:** [[categories/<category>/<project>/pop/roadmap/<n>-<epoch-slug>|Phase <n>.<m>]]
+- **Origin:** [[categories/<category>/<project>/pop/roadmap/<n>-<epoch-slug>|Phase <n>.<m>]] — *or* [[categories/<category>/<project>/pop/MODIFICATIONS|M-<n>]] for a modification task.
 - **Plan:** [[<id>-<slug>.plan]] · **Approval:** [[<id>-<slug>.approval]] · **Verification:** [[<id>-<slug>.verify]]
 
 ## What
@@ -39,7 +42,7 @@ One sentence: why now, and what it unblocks.
 
 ## Release (user)
 
-> Only the human checks it, except under an explicit command recorded in the Log. Without `[x]`, the task does not leave 001. For `yolo: true`, roadmap release lets the agent check and log `released by yolo`; see [[WORKFLOW|WORKFLOW]].
+> Only the human checks it, except under an explicit command recorded in the Log. Without `[x]`, the task does not leave 001. For `yolo: true`, the roadmap/modifications release lets the agent check and log `released by yolo`; see [[WORKFLOW|WORKFLOW]].
 
 - [ ] Ready to plan
 

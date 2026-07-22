@@ -16,15 +16,16 @@ You are the **orchestrator**. Find the current stage, resolve gates and transiti
 3. While no legitimate stop exists, run the current [[WORKFLOW|WORKFLOW]] stage. Use `scripts/pop_move.py <task-id> <stage> --reason "..." --context <id>` for transitions; never duplicate its log manually.
 4. Release the claim only at a legitimate stop. Normal yolo returns at 003/005 automatically re-enter the loop.
 
-Outside yolo, human gates are 001 release, 003 approval, critical 005, `(user)` work, a block, and merge. In yolo, a fresh **strong** critic owns 003 and 005; only a technical block, `(user)` item, circuit breaker, or final merge stops early.
+Outside yolo, human gates are 001 release, 003 approval, critical 005, `(user)` work, a block, and merge. In yolo, 003 exists only for `critical: true` (fresh strong critic) and 005 is the **single quality gate**; only a technical block, `(user)` item, circuit breaker, or the final merge of the marked scope stops early.
 
 ## Yolo execution
 
+- A non-critical yolo task transits 002 → 004 **directly**, with no approval round — yolo trusts the agent's plan. `critical: true` keeps 003 with a fresh strong session of the [[.agents/skills/yolo-critic/SKILL|yolo-critic]].
 - Each 003 and 005 gate allows two automatic returns; the third failure activates `circuit_breaker` and requires human intervention.
 - Use `scripts/pop_yolo.py wave` to schedule at most three tasks with satisfied dependencies and isolated repositories/write sets. Collisions serialize.
 - A cohesive implementation uses one direct executor with `owns`, denies, and a criterion. Use a sub-orchestrator only for genuine topology.
-- The 005 critic records `differential|full`, reason, surface, and tests. `full` is mandatory for critical tasks and after any return.
-- 006 is mechanical/idempotent: local root PoP stays on `main`; external yolo tasks integrate into `develop`, then the scope opens `develop` → `main` without agent merge.
+- The 005 critic is always strong in a clean session and first checks whether the **original request** (the card's objective) was met — the brief is strategy, not an approved contract. It records `differential|full`, reason, surface, and tests; `full` is mandatory for critical tasks and after any return.
+- 006 is mechanical/idempotent: local root PoP stays on `main`; external yolo tasks integrate into `develop`, then the **marked scope** (single task, phase/epoch or modification) opens `develop` → `main` without agent merge.
 
 ## Turn discipline
 
@@ -36,7 +37,7 @@ Outside yolo, human gates are 001 release, 003 approval, critical 005, `(user)` 
 
 - **002 planner:** card + linked research/specs → concise objective, strategy, fronts, dependencies, risks, and criteria; no implementation or chain-of-thought.
 - **004 executor:** direct for one cohesive front; complex topology gets explicit `owns`, `may_read`, `must_not_edit`, dependencies, expected input, and criteria. Validate scope and the aggregate gate.
-- **005 reviewer:** fresh and independent; in yolo always strong. Compare objective/specs to behavior and classify evidence-backed findings.
-- **003 yolo critic:** strong, fresh, objective approval/return. Returns 1–2 loop; failure 3 opens the circuit.
+- **005 reviewer:** fresh and independent; in yolo always strong. First checks whether the original request was met, then compares objective/specs to behavior and classifies evidence-backed findings.
+- **003 yolo critic (only `critical: true`):** strong, fresh, objective approval/return. Returns 1–2 loop; failure 3 opens the circuit.
 
 Record minimal telemetry per stage: contexts, return count, verification strategy/tests, duration, and result. Never persist prompts, reasoning, or discarded attempts. Missing dependencies, scope violations, or changed contracts return/block; never fill another front opportunistically.

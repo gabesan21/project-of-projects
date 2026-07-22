@@ -1,4 +1,15 @@
 #!/usr/bin/env python3
+"""Keeps epoch and modification files with only still-open tasks.
+
+`close <id>` is the 006 operation: it requires a valid canonical memory in
+the same scope and removes only the task's row — in `roadmap/*.md` or
+`modifications/*.md` — or, for a single-task modification, only the
+`[[M-N.T-slug]]` wikilink of the matching `MODIFICATIONS.md` line (the
+modification's row stays). Epochs, phases and modifications are never
+removed. `prune --tracked-only` is the safe migration: it removes rows whose
+memory file is already tracked in Git. `check` lists leftovers without
+editing.
+"""
 
 from __future__ import annotations
 
@@ -11,9 +22,16 @@ from pathlib import Path
 
 import poplib
 
-TASK_ID = re.compile(r"(?<![0-9.])([0-9]+\.[0-9]+\.[0-9]+-[a-z0-9][a-z0-9-]*)")
+TASK_ID = re.compile(
+    r"(?<![0-9.])([0-9]+\.[0-9]+\.[0-9]+-[a-z0-9][a-z0-9-]*"
+    r"|M-[0-9]+\.[0-9]+-[a-z0-9][a-z0-9-]*)")
 ROW = re.compile(r"^\s*\|.*\|\s*$")
 REQUIRED_MEMORY = ("task", "project", "started", "finished", "commit")
+
+# Folders with task rows removable by close: epochs and multi-task
+# modifications. The MODIFICATIONS.md index gets its own handling (only the
+# task's wikilink leaves the row).
+ROW_DIRS = ("roadmap", "modifications")
 
 
 def task_from_row(line: str) -> str | None:
@@ -61,24 +79,95 @@ def tracked(root: Path, path: Path) -> bool:
     return result.returncode == 0
 
 
-def roadmap_rows(root: Path):
+def task_rows(root: Path):
+    """Table rows with a task id in roadmap/*.md and modifications/*.md."""
     for scope in poplib.discover_projects(root):
-        roadmap = poplib.harness_root(scope) / "roadmap"
-        if not roadmap.is_dir():
+        harness = poplib.harness_root(scope)
+        for folder in ROW_DIRS:
+            base = harness / folder
+            if not base.is_dir():
+                continue
+            for path in sorted(base.glob("*.md")):
+                for number, line in enumerate(
+                        path.read_text(encoding="utf-8").splitlines(), 1):
+                    task_id = task_from_row(line)
+                    if task_id:
+                        yield scope, path, number, task_id
+
+
+def modification_link_rows(root: Path):
+    """[[M-N.T-slug]] wikilinks in MODIFICATIONS.md table rows.
+
+    A single-task modification lives only in the index row; close removes
+    only that wikilink (the modification's row stays).
+    """
+    link = re.compile(r"\[\[(M-[0-9]+\.[0-9]+-[a-z0-9][a-z0-9-]*)")
+    for scope in poplib.discover_projects(root):
+        index = poplib.harness_root(scope) / "MODIFICATIONS.md"
+        if not index.is_file():
             continue
-        for path in sorted(roadmap.glob("*.md")):
-            for number, line in enumerate(path.read_text(encoding="utf-8").splitlines(), 1):
-                task_id = task_from_row(line)
-                if task_id:
-                    yield scope, path, number, task_id
+        for number, line in enumerate(
+                index.read_text(encoding="utf-8").splitlines(), 1):
+            if not ROW.match(line):
+                continue
+            for match in link.finditer(line):
+                yield scope, index, number, match.group(1)
 
 
 def residuals(root: Path, *, tracked_only: bool = False):
-    for scope, path, number, task_id in roadmap_rows(root):
+    rows = list(task_rows(root)) + list(modification_link_rows(root))
+    for scope, path, number, task_id in rows:
         memory = memory_path(root, scope, task_id)
         if (memory_valid(root, scope, task_id, canonical=False)
                 and (not tracked_only or tracked(root, memory))):
             yield scope, path, number, task_id
+
+
+def _remove_row(matches, task_id: str) -> bool:
+    """Removes the single `task_id` row among the origin files.
+
+    Returns True when removed; False when no row was found. Raises
+    RuntimeError when the task appears in more than one row (aborts without
+    writing anything).
+    """
+    count = sum(len(indexes) for _, _, indexes in matches)
+    if count == 0:
+        return False
+    if count != 1:
+        raise RuntimeError(
+            f"expected exactly 1 row for `{task_id}`, found {count}")
+    path, lines, indexes = matches[0]
+    remove_index = indexes[0]
+    kept = lines[:remove_index] + lines[remove_index + 1:]
+    path.write_text("\n".join(kept) + "\n", encoding="utf-8")
+    return True
+
+
+def _unlink_modification_index(harness: Path, task_id: str) -> None:
+    """Single task: removes only the [[M-N.T-slug]] wikilink from the index row.
+
+    The modification's row stays (status `completed`); the id returns to the
+    backticked `` `M-N.T-slug` `` form, like a not-yet-linked task.
+    """
+    index = harness / "MODIFICATIONS.md"
+    if not index.is_file():
+        raise RuntimeError(
+            f"no row for `{task_id}` in roadmap/modifications and "
+            f"{index} is missing")
+    lines = index.read_text(encoding="utf-8").splitlines()
+    hits = [i for i, line in enumerate(lines)
+            if ROW.match(line) and task_id in line]
+    if len(hits) != 1:
+        raise RuntimeError(
+            f"expected exactly 1 row for `{task_id}` in {index}, "
+            f"found {len(hits)}")
+    pattern = re.compile(
+        r"\[\[" + re.escape(task_id) + r"(?:\|[^\]]*)?\]\]")
+    lines[hits[0]], count = pattern.subn(f"`{task_id}`", lines[hits[0]])
+    if count != 1:
+        raise RuntimeError(
+            f"wikilink [[{task_id}]] not found in the row of {index}")
+    index.write_text("\n".join(lines) + "\n", encoding="utf-8")
 
 
 def remove_task(root: Path, scope: Path, task_id: str, *, canonical: bool,
@@ -88,22 +177,20 @@ def remove_task(root: Path, scope: Path, task_id: str, *, canonical: bool,
         raise RuntimeError(f"invalid or missing memory: {memory}")
     if tracked_only and not tracked(root, memory):
         raise RuntimeError(f"untracked memory: {memory}")
-    roadmap = poplib.harness_root(scope) / "roadmap"
+    harness = poplib.harness_root(scope)
     matches = []
-    for path in sorted(roadmap.glob("*.md")):
-        lines = path.read_text(encoding="utf-8").splitlines()
-        indexes = [i for i, line in enumerate(lines)
-                   if task_from_row(line) == task_id]
-        if indexes:
-            matches.append((path, lines, indexes))
-    count = sum(len(indexes) for _, _, indexes in matches)
-    if count != 1:
-        raise RuntimeError(
-            f"expected exactly 1 row for `{task_id}`, found {count}")
-    path, lines, indexes = matches[0]
-    remove_index = indexes[0]
-    kept = lines[:remove_index] + lines[remove_index + 1:]
-    path.write_text("\n".join(kept) + "\n", encoding="utf-8")
+    for folder in ROW_DIRS:
+        base = harness / folder
+        if not base.is_dir():
+            continue
+        for path in sorted(base.glob("*.md")):
+            lines = path.read_text(encoding="utf-8").splitlines()
+            indexes = [i for i, line in enumerate(lines)
+                       if task_from_row(line) == task_id]
+            if indexes:
+                matches.append((path, lines, indexes))
+    if not _remove_row(matches, task_id):
+        _unlink_modification_index(harness, task_id)
     return 1
 
 
@@ -119,7 +206,7 @@ def main() -> int:
     if args.command == "check":
         found = list(residuals(root, tracked_only=args.tracked_only))
         for _, path, number, task_id in found:
-            print(f"{path}:{number}: completed task left in roadmap `{task_id}`")
+            print(f"{path}:{number}: residual completed task `{task_id}`")
         return 1 if found else 0
 
     if args.command == "close":

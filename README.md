@@ -39,7 +39,7 @@ Working with AI agents across many projects tends to scatter context everywhere.
 
 ## How it works
 
-Every project lives in a category folder under `categories/` with the same anatomy — a sheet (`PROJECT.md`), a roadmap (`ROADMAP.md` + `roadmap/`, in epochs → phases → tasks), specs, skills, notes, researches, memory and a kanban every task travels through:
+Every project lives in a category folder under `categories/` with the same anatomy — a sheet (`PROJECT.md`), a roadmap (`ROADMAP.md` + `roadmap/`, in epochs → phases → tasks), modifications (`MODIFICATIONS.md` + `modifications/`) for work that arrives outside the plan, specs, skills, notes, researches, memory and a kanban every task travels through:
 
 ```mermaid
 flowchart LR
@@ -62,9 +62,9 @@ flowchart LR
 - **001 ends with your release:** the card is yours to edit until you check `- [x] Ready to plan` — agents (and automation) can't move an unfinished task into planning.
 - **003 is yours:** nothing touches a repository until you check `- [x] Done`.
 - **004 integrates in a task worktree** (`worktrees/<id>`, branch `task/<id>`); parallel fronts use isolated branches/worktrees and the orchestrator validates each diff before integration.
-- **Outside yolo, 006 opens a task PR** for human merge. External yolo tasks integrate into `develop` and the final scope opens `develop` → `main`; a root-local PoP works directly on `main`.
-- **Roadmaps remain lean** — completed task rows leave the epoch file in 006 only after canonical memory/spec/status validation.
-- **Yolo is bounded autonomy** — strong fresh critics own 003/005, two returns per gate are allowed, and failure three opens a human-reset circuit breaker. Independent tasks run in waves of at most three.
+- **Outside yolo, 006 opens a task PR** for human merge. External yolo tasks integrate into `develop` and the marked scope (single task, phase/epoch or modification) opens `develop` → `main`; a root-local PoP works directly on `main`.
+- **Roadmaps remain lean** — completed task rows leave the epoch or modification file in 006 only after canonical memory/spec/status validation.
+- **Yolo is bounded autonomy** — 005 is the single quality gate: a strong fresh critic first checks whether the original request was met; 003 exists only for `critical` tasks. Two returns per gate are allowed, and failure three opens a human-reset circuit breaker. Independent tasks run in waves of at most three.
 - **Yolo delivery:** each external scope lands on `develop` and automatically opens the final `develop` → `main` PR for human merge; only the local meta PoP delivers directly on `main`.
 
 Everything waiting on you shows up in **`INBOX.md`**, generated automatically via Dataview — the one file to open every day.
@@ -101,7 +101,7 @@ project-of-projects/
 | `plan-roadmap` | Builds/evolves a roadmap by interview (epochs → phases → candidate tasks). |
 | `new-task` | Quick interview that materializes a task into the kanban. |
 | `advance-task` | Moves a task through the flow 001→006, respecting human gates. |
-| `yolo-critic` | Independent yolo reviewer for the brief in 003 and implementation+quality in 005. |
+| `yolo-critic` | Independent yolo reviewer: single quality gate in 005 (003 only for `critical` tasks). |
 | `write-spec` | Creates/rewrites a standardized spec. |
 | `sync-specs` | Keeps specs faithful to reality as tasks progress. |
 | `weekly-review` | Vault-wide review: what waits on you, what stalled, proposals. |

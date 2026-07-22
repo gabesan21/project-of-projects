@@ -49,6 +49,8 @@ categories/<category>/<project>/
 │   ├── PROJECT.md       ← the sheet: what it is, structure, agent harness
 │   ├── ROADMAP.md       ← EPOCHS only: one line + status + link each
 │   ├── roadmap/         ← 1 file per epoch: phases and tasks, short descriptions
+│   ├── MODIFICATIONS.md ← MODIFICATIONS only: one line + status each (created on demand)
+│   ├── modifications/   ← 1 file per multi-task modification: tasks, short descriptions
 │   ├── researches/      ← research that feeds the roadmap: one folder per topic
 │   ├── skills/          ← reusable procedures, one per file
 │   ├── specs/           ← specifications, one per theme
@@ -65,14 +67,17 @@ categories/<category>/<project>/
 The dev who opens the project sees only the content, `AGENTS.md`, `.agents/` and `pop/`. **Exception:** projects created **before 2026-07-14** use the legacy anatomy (harness at the folder's root, content in `project/`) until migration — the `pop_*` scripts support both.
 
 - **PROJECT.md** — the sheet: what it is, why it exists, harness. It holds no tasks and no schedule.
-- **ROADMAP.md + roadmap/** — the path, in three levels with descriptions that are always short (≤1 line):
+- **ROADMAP.md + roadmap/** — the **planned** path, in three levels with descriptions that are always short (≤1 line):
   - **Epoch** (`1`): a big chapter of the project (e.g. "authentication", "payments"). One line in ROADMAP.md, detail in `roadmap/<n>-<slug>.md`.
   - **Phase** (`1.1`): a stage within the epoch (e.g. "user tables", "middleware"). Listed in the epoch's file.
   - **Task** (`1.1.1-<slug>`): the executable unit. It becomes a **folder in the kanban** and travels through the stages described in [[WORKFLOW|WORKFLOW]].
-  - **Epoch 0 (maintenance, reserved):** hotfixes and one-off tweaks go to a continuous Epoch 0 with one Phase `0.1`; like every epoch, only open tasks remain listed.
+- **MODIFICATIONS.md + modifications/** — the tracking of whatever arrives **outside the plan**: hotfixes, one-off tweaks, contract fixes/changes and small emergent features. Two levels:
+  - **Modification** (`M-<n>`): one line in MODIFICATIONS.md; detail in `modifications/m-<n>-<slug>.md` **only when multi-task**. Only the human creates a modification (the agent proposes).
+  - **Task** (`M-<n>.<t>-<slug>`): the executable unit, same kanban as the roadmap. A single-task modification lives only in the index line + card.
+  - **Roadmap × modifications frontier (3 questions):** does it fit in ~3 tasks? Does the what/how fit in a card, without a planning interview? Does it only touch existing contracts? Any "no" → roadmap (via `plan-roadmap`). When in doubt, modification — the `weekly-review` proposes promotion to the roadmap when a modification swells (open tasks conclude as `M-`; only the not-yet-tasked work migrates).
 - **Content at the root** — the real work (code, manuscript, repo clones), a fully free structure; if it lives in an external repository, the root holds only the harness and the repo is declared in the project's AGENTS.md. The names `pop` and `project` are **reserved** (don't use them for a content folder or repo). **researches/** — research that grounds the roadmap: one folder per topic, with the immutable raw source in `raw/` and the agent's synthesis alongside (skill `ingest-research`); deep-research prompts proposed by the agent for the **user** to run go in `RESEARCHES.md` (optional, next to the ROADMAP — [[_templates/RESEARCHES|template]]). **Research is always prior:** the agent does not search the web during the task flow — a knowledge gap becomes a prompt in `RESEARCHES.md` (section 002 of [[WORKFLOW|WORKFLOW]]).
 - **AGENTS.md + .agents/skills/** — make the project **standalone**: type, repositories, PR branch and the essentials of the workflow, with **real copies** of the core skills — even someone who doesn't use the PoP can work on the project. **Application** projects embed the **DOX** process there ([[_templates/DOX|template]]): a tree of AGENTS.md files in the code as hierarchical contracts per subtree.
-- **memory/** — one durable ledger per completed task; it authorizes removing the task row and card. Verbose ledgers are compacted by [[.agents/skills/optimize-memory/SKILL|optimize-memory]] without merging files or losing chronology/decisions. **worktrees/** — task worktrees outside a root-local PoP, always gitignored.
+- **memory/** — one durable ledger per completed task; it authorizes removing the task row from the roadmap/modifications and the card. Verbose ledgers are compacted by [[.agents/skills/optimize-memory/SKILL|optimize-memory]] without merging files or losing chronology/decisions. **worktrees/** — task worktrees outside a root-local PoP, always gitignored.
 - **skills/** — reusable "how to do X". **specs/** — current contracts. A collection becomes canonical atomically when it creates `specs/INDEX.md`: English metadata, `contract|overview`, `draft|active|superseded`, `planned|partial|implemented|not_applicable`, and at most one domain level. See [[specs/spec-architecture|spec architecture]].
 - **notes/** — notes from the agent **and** the user, with `author: agent | user` frontmatter, in the categories: `learnings/` (lessons from tasks), `decisions/` (decisions extracted from the sheet), `ideas/` (loose ideas) and `references/` (links and external material).
 
@@ -84,9 +89,9 @@ The PoP is a **repository aggregator**: every project declares a **type** in its
 
 ## IDs and link convention
 
-- IDs follow the hierarchy: epoch `1` → phase `1.1` → task `1.1.1-user-table-creation`. Slug in kebab-case, unique across the vault (if it collides with another project, adjust the slug).
-- **Task files move** between kanban stages, so all of them carry the task's unique name in the file name (`1.1.1-user-table-creation.md`, `1.1.1-user-table-creation.plan.md`…) and are linked **by name only**: `[[1.1.1-user-table-creation]]` resolves in any stage.
-- **Files that don't move** (sheets, roadmaps, specs, skills, indexes) are linked with full path + alias: `[[categories/agents/my-project/PROJECT|My Project]]`.
+- IDs follow the hierarchy of their origin: roadmap epoch `1` → phase `1.1` → task `1.1.1-user-table-creation`; modifications modification `M-1` → task `M-1.1-adjust-contract`. Numeric id = roadmap; `M-` prefix = modifications. Slug in kebab-case, unique across the vault (if it collides with another project, adjust the slug).
+- **Task files move** between kanban stages, so all of them carry the task's unique name in the file name (`1.1.1-user-table-creation.md`, `M-1.1-adjust-contract.plan.md`…) and are linked **by name only**: `[[1.1.1-user-table-creation]]` resolves in any stage.
+- **Files that don't move** (sheets, roadmaps, modifications, specs, skills, indexes) are linked with full path + alias: `[[categories/agents/my-project/PROJECT|My Project]]`.
 - **Links with a trigger:** in agent-facing navigation sections (the card's Links, related specs, memory, learnings, DOX contracts), every link carries 1 line saying **when** to follow it — a link without a trigger there is a link the agent rightly ignores.
 
 ## Indexes, INBOX, drafts and open questions
@@ -108,13 +113,13 @@ The central procedures are **skills** in the open Agent Skills format (`SKILL.md
 | `new-project` | Guided interview that creates a new project: essence, harness, roadmap and specs. Consumes a draft from `drafts/new/` if present. |
 | `import-project` | Imports an existing repository: recon, fit into type/category and Epoch 1 of organization. Consumes a draft from `drafts/import/` if present. |
 | `plan-roadmap` | Build/evolve the roadmap by interview (epochs → phases → candidate tasks). |
-| `new-task` | Quick interview that materializes a task in `kanban/001_initial_task`. |
+| `new-task` | Quick interview that materializes a roadmap or modification task in `kanban/001_initial_task`. |
 | `advance-task` | Move a task through the 001→006 flow, respecting the human gates. |
-| `yolo-critic` | Mandatory strong yolo critic in 003/005; two returns per gate and circuit breaker on failure three — [[WORKFLOW\|WORKFLOW]]. |
+| `yolo-critic` | Strong yolo critic: single gate in 005 (003 only for `critical`); two returns per gate and circuit breaker on the third — [[WORKFLOW\|WORKFLOW]]. |
 | `write-spec` | Create/rewrite a standardized spec, with questions per project type. |
 | `sync-specs` | Mandatory flow: keep specs faithful to reality as tasks advance. |
 | `ingest-research` | Ingests a delivered research result: immutable raw source in `raw/`, synthesis with triggered links and a contradiction check against specs/notes. |
-| `weekly-review` | Vault overview: what awaits the human, what is stalled, proposals. |
+| `weekly-review` | Vault overview: what awaits the human, what is stalled, proposals (including promotion of swollen modifications). |
 | `optimize-memory` | Compact memories while preserving one file per task, identity, chronology, commits/PRs, and critical decisions. |
 | `excalidraw-diagram` *(optional, external)* | `.excalidraw` diagrams that argue visually — for specs, plans and notes (pairs with the Obsidian Excalidraw plugin). By [coleam00](https://github.com/coleam00/excalidraw-diagram-skill) — clone it into `.agents/skills/excalidraw-diagram/`. |
 | `delegate-coding` | Hub of the coding-skill family: contract for delegating coding work to a headless CLI (always yolo, pre-existing auth with abort on error) and tool choice. Integration into the PoP workflow is a future decision. |
@@ -163,14 +168,14 @@ When creating a new skill: create the folder at `.agents/skills/<name>/SKILL.md`
 14. **Self-validation before finishing:** the agent checks its own changes from the session — index limits (144/600 chars), ~150 lines per note, complete frontmatter on cards, links following the convention — and fixes anything out of bounds before the commit.
 15. **Commit per session:** this vault is a git repository. When ending a work session, commit the changes with a short message in the vault's language saying what changed.
 16. **Worktrees and ownership:** outside a root-local PoP, 004 has one integration worktree per task. External yolo tasks integrate into `develop`; the final scope opens `develop` → `main`, and only the human merges. Dependencies are prerequisites — [[WORKFLOW|WORKFLOW]].
-17. **Durable memory and lean roadmap:** every completed task gets `memory/<id>.md` (≤2000 chars). After memory/spec/status validation, 006 removes its row from the epoch file and only then deletes `kanban/006_done/<id>/`. Root roadmaps hold epochs; epoch files hold phases and open tasks, including Epoch 0.
+17. **Durable memory and lean roadmap:** every completed task gets `memory/<id>.md` (≤2000 chars). After memory/spec/status validation, 006 removes its row from the epoch or modification file and only then deletes `kanban/006_done/<id>/`. Root roadmaps hold epochs; epoch files hold phases and open tasks; `MODIFICATIONS.md` and `modifications/` follow the same rule.
 18. **Delegation with a floor and ownership:** broad reading gets a specific capped contract. Work below ~5K tokens stays direct except mandatory role separation. A cohesive front gets a direct executor; DAGs/multiple skills/write sets get a sub-orchestrator. Yolo waves allow up to three independent tasks. Missing dependencies are reported, never implemented opportunistically.
 19. **Root-local PoP delivery:** when the scope is this vault root and the card declares `project: pop`, execute and close directly on `main`, without a task branch/worktree/PR. External projects and repositories follow rule 16 and are never changed by a root-PoP task.
 20. **An explicit human command is sovereign:** the flow's gates and pauses exist to stop the agent from acting in the human's place, not to restrict the human. A direct instruction from them in the conversation overrides any default of the flow — the agent obeys, doesn't reinterpret the request to fit it into the kanban, and records the deviation; facing genuine ambiguity or an irreversible action, it asks **one** question and then executes. Details in [[WORKFLOW|WORKFLOW]].
 
 ## Harness decisions
 
-The vault's architecture decisions live in `notes/decisions/`, one note per decision day (`YYYY-MM-DD-harness-decisions.md`) — consult them before proposing harness changes: [[notes/decisions/2026-07-20-harness-decisions|2026-07-20]].
+The vault's architecture decisions live in `notes/decisions/`, one note per decision day (`YYYY-MM-DD-harness-decisions.md`) — consult them before proposing harness changes: [[notes/decisions/2026-07-20-harness-decisions|2026-07-20]] · [[notes/decisions/2026-07-22-harness-decisions|2026-07-22]].
 
 ## Open decisions (to discuss)
 

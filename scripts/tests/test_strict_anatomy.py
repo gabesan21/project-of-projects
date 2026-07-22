@@ -87,6 +87,76 @@ class StrictAnatomyTest(unittest.TestCase):
                     / f"{task_id}.md")
             self.assertTrue(card.is_file(), f"card missing: {card}")
 
+    def test_pop_task_roadmap_fills_epoch_phase_and_deletes_modification(self):
+        task_id = "5.1.1-roadmap-ok"
+        result = self.run_script("pop_task.py", "a/novo", task_id)
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        card = (self.root / "categories/a/novo/pop/kanban/001_initial_task"
+                / task_id / f"{task_id}.md")
+        meta, _ = poplib.parse_frontmatter(card.read_text(encoding="utf-8"))
+        self.assertEqual(meta.get("id"), "5.1.1")
+        self.assertEqual(meta.get("origin"), "roadmap")
+        self.assertEqual(meta.get("epoch"), "5")
+        self.assertEqual(meta.get("phase"), "5.1")
+        self.assertNotIn("modification", meta)
+
+    def test_pop_task_modification_fills_modification_and_deletes_epoch_phase(self):
+        task_id = "M-1.1-adjust-contract"
+        result = self.run_script("pop_task.py", "a/novo", task_id)
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        card = (self.root / "categories/a/novo/pop/kanban/001_initial_task"
+                / task_id / f"{task_id}.md")
+        self.assertTrue(card.is_file(), f"card missing: {card}")
+        meta, _ = poplib.parse_frontmatter(card.read_text(encoding="utf-8"))
+        self.assertEqual(meta.get("id"), "M-1.1")
+        self.assertEqual(meta.get("origin"), "modifications")
+        self.assertEqual(meta.get("modification"), "M-1")
+        self.assertNotIn("epoch", meta)
+        self.assertNotIn("phase", meta)
+        # the final reminder points at the link in the modification
+        self.assertIn("modifications/m-1-", result.stdout)
+
+    def test_pop_task_rejects_invalid_ids(self):
+        for bad in ("M-1.1.1-extra-part", "1.1-missing-part",
+                    "m-1.1-lowercase", "M-1.x-no-slug"):
+            result = self.run_script("pop_task.py", "a/novo", bad)
+            self.assertEqual(result.returncode, 1, f"{bad} should fail")
+            self.assertIn("Invalid id", result.stdout)
+
+    def test_pop_validate_accepts_modification_card(self):
+        task_id = "M-2.1-val-modification"
+        self.assertEqual(
+            self.run_script("pop_task.py", "a/novo", task_id).returncode, 0)
+        release_card(self.root / "categories/a/novo/pop/kanban"
+                     / "001_initial_task" / task_id / f"{task_id}.md")
+        result = self.run_script("pop_validate.py")
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+
+    def test_pop_validate_requires_epoch_phase_in_roadmap_origin(self):
+        task_id = "9.9.9-no-epoch"
+        folder = self.root / "kanban/001_initial_task" / task_id
+        folder.mkdir(parents=True)
+        (folder / f"{task_id}.md").write_text(
+            "---\nid: 9.9.9\nproject: pop\norigin: roadmap\n"
+            "stage: 001_initial_task\ncreated: 2026-07-21\n"
+            "updated: 2026-07-21\n---\n", encoding="utf-8")
+        result = self.run_script("pop_validate.py")
+        self.assertEqual(result.returncode, 1)
+        self.assertIn("`epoch`", result.stdout)
+        self.assertIn("`phase`", result.stdout)
+
+    def test_pop_validate_requires_modification_in_modifications_origin(self):
+        task_id = "M-3.1-no-modification"
+        folder = self.root / "kanban/001_initial_task" / task_id
+        folder.mkdir(parents=True)
+        (folder / f"{task_id}.md").write_text(
+            "---\nid: M-3.1\nproject: pop\norigin: modifications\n"
+            "stage: 001_initial_task\ncreated: 2026-07-21\n"
+            "updated: 2026-07-21\n---\n", encoding="utf-8")
+        result = self.run_script("pop_validate.py")
+        self.assertEqual(result.returncode, 1)
+        self.assertIn("`modification`", result.stdout)
+
     def test_pop_move_001_para_002(self):
         label, rel, task_id = (
             "a/novo", "categories/a/novo/pop/kanban", "2.1.1-move-novo")
@@ -194,6 +264,12 @@ class IncludedInstallV2Test(unittest.TestCase):
         gitignore = (self.target / ".gitignore").read_text(encoding="utf-8")
         self.assertIn("pop/worktrees/*", gitignore)
         self.assertIn("!pop/worktrees/.gitkeep", gitignore)
+        workflow = (pop / "WORKFLOW.md").read_text(encoding="utf-8")
+        advance = (self.target / ".agents/skills/advance-task/SKILL.md").read_text(
+            encoding="utf-8")
+        self.assertIn("pop/scripts/pop_roadmap.py", workflow)
+        self.assertIn("pop/scripts/pop_move.py", advance)
+        self.assertNotIn("`scripts/pop_move.py", advance)
 
         # pop_validate --standalone running FROM INSIDE the repo (exercises
         # vault_root with scripts in pop/scripts, without --vault)
@@ -203,6 +279,14 @@ class IncludedInstallV2Test(unittest.TestCase):
             capture_output=True, text=True, cwd=self.target)
         self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
         self.assertIn("standalone valid", result.stdout)
+
+        # The copied installer must also find skills at the repo root, not in
+        # `pop/.agents/`, to allow future standalone updates.
+        result = subprocess.run(
+            [sys.executable, str(pop / "scripts" / "pop_install_included.py"),
+             "--audit-manifest"], capture_output=True, text=True,
+            cwd=self.target)
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
 
 
 if __name__ == "__main__":
