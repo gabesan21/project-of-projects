@@ -23,6 +23,8 @@ _No external repository: the work lives in the PoP repository and task PRs targe
 
 Every change to the project goes through the kanban (`pop/kanban/001_initial_task → … → 006_done`), with tasks coming from the roadmap (`<n>.<m>.<t>-<slug>`) or from modifications (`M-<n>.<t>-<slug>` — hotfixes, tweaks and small emergent features outside the plan; frontier in the vault's AGENTS.md):
 
+A change request with no card triggers `new-task` → `advance-task`; “start the flow in yolo” materializes/releases the task and follows the entire yolo route, never direct execution.
+
 1. **001** — task is born (skill `new-task`), with `depends_on:` listing the prerequisite tasks.
 2. **002** — separate planner writes a concise brief with objective, strategy, fronts, ownership and criteria.
 3. **003** — human gate; two returns are allowed before the circuit breaker requires human diagnosis. In yolo, this gate **exists only for `critical: true`** (strong independent critic) — other yolo tasks transit 002 → 004 directly.
@@ -72,7 +74,8 @@ External yolo scopes integrate into `develop` and, when the **marked scope** clo
 ## Essential rules
 
 - Content in en; wikilinks for internal references; files ≤~150 lines; dates YYYY-MM-DD.
-- **Never** change the real project outside a task in `004_processing` whose plan was approved in 003.
+- **Never** change the real project outside a task that legitimately reached `004_processing` (approved in 003 or non-critical yolo through 002→004).
+- A human command supersedes only the rule/gate it names; “apply”, “execute”, “urgent”, “finish it” or “in yolo” do not waive the flow. Only a literal waiver activates the deviation protocol in [[WORKFLOW|WORKFLOW]], always with memory and a specs/DOX impact assessment.
 - **Never** check `- [ ] Done` or execute `(user)` items — those belong exclusively to the human.
 - **Never** merge a task PR — merging is the human's job (or commanded by them in the merge round).
 - Every completed task produces `pop/memory/<id>.md` (ledger ≤2000 chars, final commit/PR and dates). Preserve critical decisions and chronology; summarize routine execution, using `optimize-memory` when needed.

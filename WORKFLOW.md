@@ -23,6 +23,8 @@ Cards keep `stage`, `critical`, `yolo`, `blocked`, `awaiting_merge`, return coun
 
 ## 001 — birth and release
 
+A change request with no active card enters through `new-task` and then `advance-task`; the absence of a card never authorizes editing. “Start the flow in yolo” materializes and releases the task, records `yolo: true`, and follows this same state machine.
+
 Create the card from the template, out of the roadmap or a modification, resolve epoch/phase/modification yolo inheritance, record `depends_on`, suggest S/M/L, and link relevant specs. The human owns `- [ ] Ready to plan`; an explicit command or a roadmap/modifications yolo mark may authorize the agent to check it with a log entry. WIP in 004 is at most three.
 
 ## 002 — planning
@@ -64,6 +66,7 @@ Inconclusive evidence is rerun. Outside yolo, critical tasks still await human a
 
 ## Yolo scheduling, telemetry, and circuit breaker
 
+- A yolo mark may come from the roadmap/modifications or from the human saying “start the flow in yolo”. With no card, `new-task` materializes and releases it while recording the conversational source; yolo is never a waiver.
 - `pop_yolo.py wave` selects up to three eligible tasks with satisfied dependencies and isolated projects by default; overlap serializes.
 - Collect every stage context before transition; never end with a stage agent running or merely promise agent-owned continuation.
 - Minimal telemetry stores stage, context count/IDs, return counters, verification strategy/tests, duration, and result. Never store prompts, chain-of-thought, or discarded attempts.
@@ -75,4 +78,14 @@ Inconclusive evidence is rerun. Outside yolo, critical tasks still await human a
 - Claim first; a live claim by another agent makes the task folder read-only.
 - Dependencies must be completed before consumers; never implement missing work opportunistically.
 - Every internal wikilink carries a trigger. Dates use `YYYY-MM-DD`; plans/notes stay near 150 lines.
-- Explicit human commands override default gates within their stated scope and are recorded.
+- **An explicit human command overrides only its stated scope:** obey without reinterpreting what it actually superseded, and record the deviation. “Apply”, “execute”, “urgent”, “finish it” and “in yolo” do not waive the card, kanban, or continuity; “start the flow in yolo” requires the entire yolo route. Only a literal and unequivocal waiver activates the protocol below; ambiguity or destructiveness allows one question.
+- **No work outside a task:** project content changes only in 004, after 003 or through the legitimate 002→004 transition for non-critical yolo, in the correct worktree. With no card, run `new-task` → `advance-task`; do not improvise.
+
+### Protocol for a deviation without kanban
+
+Only a literal human order such as “do not use the kanban” or “do this outside PoP” waives the stages. The waiver is specific: no other rule or protection is waived by inference.
+
+1. Before writing, record the authorizing command and scope in `memory/D-YYYYMMDD-<slug>.md`, using [[_templates/MEMORY|MEMORY]]; the `D-` ID identifies a deviation without a card.
+2. Preserve repository, safety, ownership, and merge rules that were not explicitly superseded.
+3. Before finishing, complete the memory with commit/PR, result, verification, and deviations; record the specs and DOX impact assessment and update only the contracts actually affected.
+4. Without unequivocal authorization or a route to that durable evidence, do not edit: materialize a normal task.

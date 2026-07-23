@@ -1,6 +1,6 @@
 ---
 name: new-task
-description: Quick interview that creates a task from the roadmap or a modification as a folder in pop/kanban/001_initial_task, with the card filled in, specs linked and a link in the epoch/modification. Use when the user asks to start/create a task.
+description: Quick interview that creates a task from the roadmap or a modification as a folder in pop/kanban/001_initial_task, with the card filled in, specs linked and a link in the epoch/modification. Use when the user asks to start/create a task or requests a change with no active card.
 ---
 
 # new-task
@@ -8,6 +8,8 @@ description: Quick interview that creates a task from the roadmap or a modificat
 Materializes a roadmap or modification task as a folder in the kanban, at stage `001_initial_task` — **confirming the essentials with the user before creating**. Full flow: [[WORKFLOW|WORKFLOW]].
 
 **Yolo mode (no interview):** a yolo-scope task (Yolo mode section of the WORKFLOW) is materialized directly by the orchestrator — the answers come from the roadmap/modifications (task description, dependencies from the table, `critical` from the project's default); skip the interview and follow the Procedure with the yolo adjustments.
+
+**Entry through a change request:** if the human asks to apply, execute, fix, or finish something and no active card exists, the missing card triggers this skill and then `advance-task`; it never authorizes direct editing. “Start the flow in yolo” sets `yolo: true`, confirms materialization/release, and chains the entire yolo route. Reuse everything already answered in the conversation and ask only about an indispensable project/origin ambiguity; a kanban waiver must be literal and follows the WORKFLOW protocol.
 
 **Delegate to subagents:** almost nothing — it is a short interview with the user; delegation begins at planning (`advance-task`).
 
@@ -35,7 +37,7 @@ Materializes a roadmap or modification task as a folder in the kanban, at stage 
    - The **Release** section stays with `- [ ] Ready to plan` **unchecked** — the card is born unreleased. **Exception:** a `yolo: true` task is born **checked**, with Log `released by yolo (marked on the roadmap/modifications)`.
 3. In the epoch or modification table (or the MODIFICATIONS.md line, if single-task), turn the task id into the wikilink `[[<id>-<slug>]]` and update the status to `001_initial_task`.
 4. If it is the project's first active task, check whether the project status in the INDEX files (category + root) should change to "in progress".
-5. Close by pointing at the **release gate**. Explicit “create and advance” may check it with a Log entry and chain to 003; `yolo: true` chains the yolo flow (single gate at 005; 003 only for `critical`).
+5. Close by pointing at the **release gate**: the card stays in 001 until the human checks `- [x] Ready to plan`. Explicit “create and advance” may check it with a Log entry and chain to 003; “start the flow in yolo” or `yolo: true` may check it, record the source, and chain the yolo flow (single gate at 005; 003 only for `critical`). None of these exceptions waives the card.
 
 ## Cautions
 

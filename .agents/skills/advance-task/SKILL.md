@@ -9,6 +9,11 @@ You are the **orchestrator**. Find the current stage, resolve gates and transiti
 
 **Delegate:** 002 and 005 always use fresh contexts. A cohesive 004 front goes directly to one executor; only a DAG, several skills, or disjoint write sets justify a sub-orchestrator. The main agent owns 001, 006, gates, and transitions.
 
+## Input
+
+- **Task id:** locate the task folder in the project's kanban.
+- **Change request with no id/card:** first run `new-task` with the context the human already provided, then resume this loop. A missing card is an entry into the flow, never authorization to write. If the human said “start the flow in yolo”, materialize/release with `yolo: true` and follow the entire route.
+
 ## Loop
 
 1. Claim first with `scripts/pop_claim.py <task-id>`. A live claim by another agent means read-only: report and stop.
@@ -41,3 +46,5 @@ Outside yolo, human gates are 001 release, 003 approval, critical 005, `(user)` 
 - **003 yolo critic (only `critical: true`):** strong, fresh, objective approval/return. Returns 1–2 loop; failure 3 opens the circuit.
 
 Record minimal telemetry per stage: contexts, return count, verification strategy/tests, duration, and result. Never persist prompts, reasoning, or discarded attempts. Missing dependencies, scope violations, or changed contracts return/block; never fill another front opportunistically.
+
+Never infer a waiver: “apply”, “execute”, “urgent”, “finish it” or “in yolo” do not waive the card, kanban, memory, specs, or DOX. Only a literal human waiver follows the WORKFLOW protocol for a deviation without kanban, and only within the named scope.

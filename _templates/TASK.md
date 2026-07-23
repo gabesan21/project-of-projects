@@ -42,7 +42,7 @@ One sentence: why now, and what it unblocks.
 
 ## Release (user)
 
-> Only the human checks it, except under an explicit command recorded in the Log. Without `[x]`, the task does not leave 001. For `yolo: true`, the roadmap/modifications release lets the agent check and log `released by yolo`; see [[WORKFLOW|WORKFLOW]].
+> Only the human checks it, except under an explicit command recorded in the Log. Without `[x]`, the task does not leave 001. For `yolo: true`, advance release from the roadmap/modifications or the human request “start the flow in yolo” lets the agent check it and record the source; yolo never waives the card or any remaining stage — see [[WORKFLOW|WORKFLOW]].
 
 - [ ] Ready to plan
 
