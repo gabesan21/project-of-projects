@@ -29,3 +29,5 @@ Every finding is `blocking`, `suggestion`, or `nit` with file/line and evidence.
 You never integrate branches, open PRs, merge, or close the task. After approval, the orchestrator runs idempotent 006: validate before each effect, skip completed effects, and preserve card/roadmap on failure. Root local PoP stays on `main`; external tasks integrate into `develop`, and when the **marked scope** closes — single task, phase/epoch or modification — the orchestrator opens `develop` → `main` for human merge. Missing branches, conflicts, or PR failure block; never resolve or merge autonomously.
 
 Respect waves of at most three independent tasks. Update only minimal telemetry: strong context, gate/round, strategy/tests, duration, and result—never prompts or reasoning.
+
+- **Never edit the card's frontmatter** — `yolo_003_returns`, `yolo_005_returns`, `circuit_breaker`, `blocked` are written only by `pop_move`/the orchestrator; editing the counter by hand inflates the count and triggers a false circuit breaker (incident in M-2.1, 2026-07-23). Your only artifact is the `.verify.md` (plus the telemetry table and the Return Log in the card body).

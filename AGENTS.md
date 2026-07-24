@@ -127,6 +127,11 @@ The central procedures are **skills** in the open Agent Skills format (`SKILL.md
 | `run-opencode` | Invoke headless opencode (`opencode run`) as the executor of a delegated coding task. |
 | `run-codex` | Invoke the headless Codex CLI (`codex exec`) as the executor of a delegated coding task. |
 | `run-droid` | Invoke Factory's headless droid CLI (`droid exec`) as the executor of a delegated coding task. |
+| `charm-bubbletea` | Elm framework for Go TUIs (Model/Update/View, Cmd/Msg) — the base of every vault TUI. **Go TUI projects only.** |
+| `charm-huh` | Terminal forms and prompts in Go (Form/Group/Field, validation, themes) to collect user input. **Go TUI projects only.** |
+| `charm-glamour` | Markdown rendering in the terminal (TermRenderer, styles, word wrap) — core of the PoP markdown reading/editing tools. **Go TUI projects only.** |
+| `charm-bubbles` | Ready-made Go TUI components (list, viewport, spinner, table, textinput…) as embeddable `tea.Model`s. **Go TUI projects only.** |
+| `charm-lipgloss` | Terminal style and layout in Go (immutable Style, adaptive colors, Join/Place, tables). **Go TUI projects only.** |
 | `clean-code-change` | Clean code practices for whoever writes code: contract before coding, readability, safe refactoring, debt triage — in 002 and 004 of code tasks. **Code projects only.** |
 | `clean-code-review` | Code review script with severity (blocking/suggestion/nit) and evidence — in 005 of code tasks and plan/PR gates. **Code projects only.** |
 | `frontend-design` | Distinctive visual direction when creating/reshaping UI — typography, aesthetics, escaping the generic AI look. External skill by [anthropics](https://github.com/anthropics/skills), vendored unchanged. Apache 2.0 license. |
