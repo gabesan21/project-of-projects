@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
 """Keeps epoch and modification files with only still-open tasks.
 
-`close <id>` is the 006 operation: it requires a valid canonical memory in
-the same scope and removes only the task's row — in `roadmap/*.md` or
-`modifications/*.md` — or, for a single-task modification, only the
-`[[M-N.T-slug]]` wikilink of the matching `MODIFICATIONS.md` line (the
+`close <id>` is the closing operation of 005_closing: it requires a valid
+canonical memory in the same scope and removes only the task's row — in
+`roadmap/*.md` or `modifications/*.md` — or, for a single-task modification,
+only the `[[M-N.T-slug]]` wikilink of the matching `MODIFICATIONS.md` line (the
 modification's row stays). Epochs, phases and modifications are never
 removed. `prune --tracked-only` is the safe migration: it removes rows whose
 memory file is already tracked in Git. `check` lists leftovers without
@@ -217,8 +217,9 @@ def main() -> int:
             print(f"task not found in kanban: {args.task_id}", file=sys.stderr)
             return 1
         scope, stage, _ = found
-        if stage != "006_done":
-            print(f"task must be in 006_done, currently in {stage}", file=sys.stderr)
+        if stage != "005_closing":
+            print(f"task must be in 005_closing, currently in {stage}",
+                  file=sys.stderr)
             return 1
         targets = [(scope, args.task_id)]
         canonical = True

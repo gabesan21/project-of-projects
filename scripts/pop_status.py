@@ -21,7 +21,7 @@ def _stale_since(meta):
 
 def collect(project):
     counts = {stage: 0 for stage in poplib.STAGES}
-    attention = {"release": [], "approval": [], "critical": [], "merge": [],
+    attention = {"release": [], "approval": [], "merge": [],
                  "blocked": [], "circuit": [], "stale": [], "claimed": []}
     for stage, task_dir, card in poplib.iter_cards(project):
         counts[stage] += 1
@@ -32,8 +32,6 @@ def collect(project):
         yolo = meta.get("yolo") is True
         if stage == "003_human_approval" and not yolo:
             attention["approval"].append(tid)
-        if stage == "005_verifying" and meta.get("critical") is True and not yolo:
-            attention["critical"].append(tid)
         if meta.get("awaiting_merge") is True and not yolo:
             attention["merge"].append(tid)
         if meta.get("blocked") is True:
@@ -44,12 +42,13 @@ def collect(project):
             r005 = meta.get("yolo_005_returns") or 0
             attention["circuit"].append(
                 f"{tid} — returns 003={r003}, 005={r005}")
-        if stage != "006_done":
+        # A task waiting for merge already has its own list; don't duplicate it.
+        if meta.get("awaiting_merge") is not True:
             days = _stale_since(meta)
             if days is not None and days > STALE_DAYS:
                 attention["stale"].append(f"{tid} — not updated for {days} days")
         by, at = poplib.parse_claim(meta)
-        if by and stage != "006_done":
+        if by:
             when = at.isoformat(timespec="minutes") if at else "?"
             mark = "" if not poplib.claim_expired(at) else " [EXPIRED]"
             attention["claimed"].append(f"{tid} — {by} since {when}{mark}")
@@ -98,7 +97,7 @@ def main():
         print("No project with a kanban found in the vault.")
         return 0
 
-    merged = {"release": [], "approval": [], "critical": [], "merge": [],
+    merged = {"release": [], "approval": [], "merge": [],
               "blocked": [], "circuit": [], "stale": [], "claimed": []}
     print(f"Vault: {root}")
     for project in projects:
@@ -111,12 +110,12 @@ def main():
     print_list("Waiting for human release (001, without "
                "`- [x] Ready to plan`)", merged["release"])
     print_list("Waiting for human approval (003)", merged["approval"])
-    print_list("Pending critical verification (005, critical)", merged["critical"])
-    print_list("Waiting for merge (awaiting_merge)", merged["merge"])
+    print_list("Waiting for merge (awaiting_merge — non-yolo verification "
+               "gate)", merged["merge"])
     print_list("Blocked", merged["blocked"])
     print_list("Yolo circuit breakers (human intervention)", merged["circuit"])
-    print_list(f"Stale (not updated for >{STALE_DAYS} days, outside 006)",
-               merged["stale"])
+    print_list(f"Stale (not updated for >{STALE_DAYS} days, outside the ones "
+               f"waiting for merge)", merged["stale"])
     print_list("In progress (active claim — do not take these tasks)",
                merged["claimed"])
     if not any(merged.values()):

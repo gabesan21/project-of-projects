@@ -31,10 +31,15 @@ def set_fields(card, fields):
 
 
 def dependencies_done(root, project, meta):
+    """A satisfied dependency requires `memory/<id>.md`.
+
+    There is no transitional per-stage window any more: in `005_closing` the
+    task may still be waiting for the quality gate, and the memory is only
+    born after approval/merge.
+    """
     for task_id in meta.get("depends_on") or []:
         memory = poplib.harness_root(project) / "memory" / f"{task_id}.md"
-        found = poplib.find_task(root, str(task_id))
-        if not memory.is_file() and (not found or found[1] != "006_done"):
+        if not memory.is_file():
             return False
     return True
 
@@ -44,8 +49,8 @@ def eligible(root, *, by, allow_same_project, limit):
     for project in poplib.discover_projects(root):
         label = poplib.project_label(root, project)
         for stage, task_dir, card in poplib.iter_cards(project):
-            if stage == "006_done":
-                continue
+            # No stage filter: the folder only exists while the task is in
+            # flight — closing 005_closing deletes the card.
             meta = poplib.read_card(card)
             if meta.get("yolo") is not True or meta.get("blocked") is True:
                 continue
@@ -114,12 +119,18 @@ def main():
     card = task_dir / f"{args.task_id}.md"
     meta = poplib.read_card(card)
     if args.command == "verify-mode":
-        try:
-            returns = int(meta.get("yolo_005_returns") or 0)
-        except (TypeError, ValueError):
-            returns = 0
-        mode = "full" if meta.get("critical") is True or returns else "differential"
-        why = "critical/previous return" if mode == "full" else "non-critical first round"
+        # A return does not imply a full review: only `premissa` invalidates
+        # what has already been verified. A gap or an execution failure only
+        # review the delta.
+        kind = meta.get("return_kind")
+        if meta.get("critical") is True:
+            mode, why = "full", "critical"
+        elif kind == "premissa":
+            mode, why = "full", "return over a wrong premise: replanning"
+        elif kind in ("lacuna", "execucao"):
+            mode, why = "differential", f"return over {kind}: differential on the delta"
+        else:
+            mode, why = "differential", "non-critical first round"
         print(f"{mode}\t{why}")
         return 0
     if args.command == "record":

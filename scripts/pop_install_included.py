@@ -1,5 +1,14 @@
 #!/usr/bin/env python3
-"""Installs or updates the standalone harness of an included repository.
+"""Installs and **updates** the standalone harness of a repository with an
+embedded PoP.
+
+The root PoP is the single source of the harness: no project evolves the
+WORKFLOW, the templates or the scripts on its own — it receives a managed copy
+of them. So that "update" is verifiable, every installation stamps the source's
+`content_sha` of the managed set into `.included-harness.json`;
+`--check-fresh` recomputes it and fails closed when the target has fallen
+behind. Without the stamp there is no way to tell a current clone from a clone
+stuck on an old version of the flow.
 
 Manifest v2 (`harness_root: "pop"`): files/directories/anatomy/keep_files are
 relative to harness_root and go into `target/pop/`; the `.included-harness.json`
@@ -11,6 +20,7 @@ AGENTS.md and CLAUDE.md always sit at the root of the target. Manifest v1 (no
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 import re
 import shutil
@@ -23,10 +33,67 @@ SKILLS_SOURCE = (SOURCE.parent / ".agents" / "skills"
                  if (SOURCE / ".included-harness.json").is_file()
                  else SOURCE / ".agents" / "skills")
 EXTERNAL_LINK = re.compile(r"\[\[categories/[^/]+/[^/]+/([^\]|#]+)([^\]]*)\]\]")
+# Manifest fallback: the target gets the harness, not the parent's tooling.
+DEFAULT_EXCLUDE = ("__pycache__", "tests", ".pytest_cache")
 
 
 def manifest():
     return json.loads(MANIFEST.read_text(encoding="utf-8"))
+
+
+def excluded(data, relative: Path) -> bool:
+    """A path the installer does not propagate (bytecode, the parent's suite)."""
+    names = set(data.get("exclude", DEFAULT_EXCLUDE))
+    return bool(names.intersection(relative.parts))
+
+
+def managed_sources(data):
+    """`(stable label, file)` for everything the installer propagates.
+
+    The label is independent of the target's layout, so the `content_sha` only
+    changes when the harness's **content** changes — not when the destination
+    changes.
+    """
+    for name in data["files"]:
+        yield name, SOURCE / name
+    for name in data["directories"]:
+        base = SOURCE / name
+        for path in sorted(base.rglob("*")):
+            relative = path.relative_to(base)
+            if path.is_file() and not excluded(data, relative):
+                yield f"{name}/{relative.as_posix()}", path
+    for name in data["skills"]:
+        base = SKILLS_SOURCE / name
+        for path in sorted(base.rglob("*")):
+            relative = path.relative_to(base)
+            if path.is_file() and not excluded(data, relative):
+                yield f"skills/{name}/{relative.as_posix()}", path
+    yield "manifest", MANIFEST
+
+
+def content_sha(data=None) -> str:
+    """Fingerprint of the harness at the source — the real version number."""
+    data = data or manifest()
+    digest = hashlib.sha256()
+    for label, path in sorted(managed_sources(data)):
+        digest.update(label.encode("utf-8"))
+        digest.update(b"\0")
+        digest.update(path.read_bytes())
+        digest.update(b"\0")
+    return digest.hexdigest()
+
+
+def installed_stamp(target: Path):
+    """`(marker path, recorded content_sha)` of the target; sha `None` if absent."""
+    marker = target / "pop" / ".included-harness.json"
+    if not marker.is_file():
+        marker = target / ".included-harness.json"
+    if not marker.is_file():
+        return None, None
+    try:
+        return marker, json.loads(marker.read_text(encoding="utf-8")).get("content_sha")
+    except json.JSONDecodeError:
+        return marker, None
 
 
 def localize(text: str, *, included_paths: bool = False) -> str:
@@ -53,12 +120,30 @@ def copy_file(source: Path, dest: Path, *, overwrite: bool = True,
         shutil.copy2(source, dest)
 
 
-def copy_tree(source: Path, dest: Path, *, included_paths: bool = False) -> None:
+def copy_tree(source: Path, dest: Path, *, included_paths: bool = False,
+              data=None) -> None:
+    """Mirrors `source` into `dest`: copies what exists and **removes what left**.
+
+    Without the pruning, a file deleted at the source survives forever in the
+    target — the clone would keep offering a template or a script the flow has
+    already retired.
+    """
+    data = data or manifest()
+    kept = set()
     for path in source.rglob("*"):
-        if path.is_dir() or "__pycache__" in path.parts:
+        relative = path.relative_to(source)
+        if path.is_dir() or excluded(data, relative):
             continue
-        copy_file(path, dest / path.relative_to(source),
-                  included_paths=included_paths)
+        kept.add(relative)
+        copy_file(path, dest / relative, included_paths=included_paths)
+    if not dest.is_dir():
+        return
+    for path in sorted(dest.rglob("*"), reverse=True):
+        relative = path.relative_to(dest)
+        if path.is_file() and relative not in kept:
+            path.unlink()
+        elif path.is_dir() and not any(path.iterdir()):
+            path.rmdir()
 
 
 def preserve_worktree_marker(target: Path, prefix: str = "") -> None:
@@ -107,11 +192,14 @@ def install(target: Path) -> None:
     for name in data["files"]:
         copy_file(SOURCE / name, hb / name, included_paths=True)
     for name in data["directories"]:
-        copy_tree(SOURCE / name, hb / name, included_paths=True)
+        copy_tree(SOURCE / name, hb / name, included_paths=True, data=data)
     for name in data["skills"]:
         copy_tree(SKILLS_SOURCE / name, target / ".agents/skills" / name,
-                  included_paths=True)
-    copy_file(MANIFEST, hb / ".included-harness.json")
+                  included_paths=True, data=data)
+    # The marker is the manifest plus this installation's content stamp.
+    stamp = dict(data, content_sha=content_sha(data))
+    (hb / ".included-harness.json").write_text(
+        json.dumps(stamp, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
     for rel in data["anatomy"]:
         (hb / rel).mkdir(parents=True, exist_ok=True)
     # Git does not preserve empty directories: these markers are a managed part
@@ -140,23 +228,46 @@ def install(target: Path) -> None:
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("target", nargs="?", type=Path)
-    parser.add_argument("--check", action="store_true")
+    parser.add_argument("--check", action="store_true",
+                        help="is the harness installed in the target?")
+    parser.add_argument("--check-fresh", action="store_true",
+                        help="is the target's harness at the source's version?")
     parser.add_argument("--audit-manifest", action="store_true")
+    parser.add_argument("--sha", action="store_true",
+                        help="print the content_sha of the harness at the source")
     args = parser.parse_args()
     missing = audit()
     if args.audit_manifest:
         if missing:
             print("incomplete manifest: " + ", ".join(missing), file=sys.stderr); return 1
         print("manifest complete"); return 0
+    if args.sha:
+        print(content_sha()); return 0
     if not args.target:
         parser.error("target is required")
     if args.check:
-        target_manifest = args.target / "pop" / ".included-harness.json"
-        if not target_manifest.is_file():
-            target_manifest = args.target / ".included-harness.json"
-        if missing or not target_manifest.is_file():
+        marker, _ = installed_stamp(args.target)
+        if missing or marker is None:
             print("incomplete harness", file=sys.stderr); return 1
         print("harness installed"); return 0
+    if args.check_fresh:
+        if missing:
+            print("incomplete manifest: " + ", ".join(missing), file=sys.stderr)
+            return 1
+        marker, stamped = installed_stamp(args.target)
+        if marker is None:
+            print(f"harness absent in {args.target}", file=sys.stderr); return 1
+        current = content_sha()
+        if stamped is None:
+            print(f"harness without a stamp in {marker} — installed before "
+                  f"content_sha; reinstall to date it", file=sys.stderr)
+            return 1
+        if stamped != current:
+            print(f"harness STALE in {args.target}: target {stamped[:12]} "
+                  f"≠ source {current[:12]} — run "
+                  f"`pop_install_included.py {args.target}`", file=sys.stderr)
+            return 1
+        print(f"harness current ({current[:12]})"); return 0
     try:
         install(args.target)
     except RuntimeError as error:

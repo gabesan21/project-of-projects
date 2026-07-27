@@ -19,6 +19,7 @@ pr:
 awaiting_merge: false
 yolo_003_returns: 0
 yolo_005_returns: 0
+return_kind:
 circuit_breaker: false
 created: YYYY-MM-DD
 updated: YYYY-MM-DD
@@ -28,6 +29,7 @@ updated: YYYY-MM-DD
 
 > Blockquotes in this template are fill-in instructions — **delete them when filling it in**. Harness paths carry the `pop/` prefix; the vault-root meta-project does not.
 > **Origin:** a roadmap task (`origin: roadmap`) uses id `<n>.<m>.<t>` and fills `epoch`/`phase` (delete `modification`); a modification task (`origin: modifications`) uses id `M-<n>.<t>` and fills `modification: M-<n>` (delete `epoch`/`phase`).
+> **Machine fields:** `yolo_*_returns`, `return_kind` and `circuit_breaker` are born empty/zeroed and are written **only** by `pop_move`/the orchestrator — editing them by hand inflates counters and makes the gate pick the wrong review mode.
 
 - **Origin:** [[categories/<category>/<project>/pop/roadmap/<n>-<epoch-slug>|Phase <n>.<m>]] — *or* [[categories/<category>/<project>/pop/MODIFICATIONS|M-<n>]] for a modification task.
 - **Plan:** [[<id>-<slug>.plan]] · **Approval:** [[<id>-<slug>.approval]] · **Verification:** [[<id>-<slug>.verify]]
@@ -48,13 +50,13 @@ One sentence: why now, and what it unblocks.
 
 ## Skills per stage
 
-> Fill 002 at creation and 004/005 during planning. List only skills that change how the owner should work.
+> Fill 002 at creation, and 004 and `005_closing` during planning. The `005_closing` row only applies to `yolo: true` — outside yolo the gate is the human PR. List only skills that change how the owner should work.
 
 | Stage | Project skills | Owner |
 |-------|----------------|-------|
 | 002_planning | [[categories/<category>/<project>/pop/skills/<skill>\|<skill>]] | agent |
 | 004_processing | [[categories/<category>/<project>/pop/skills/<skill>\|<skill>]] | agent |
-| 005_verifying | [[categories/<category>/<project>/pop/skills/<skill>\|<skill>]] | agent |
+| 005_closing | [[categories/<category>/<project>/pop/skills/<skill>\|<skill>]] | agent |
 
 ## Dependencies
 

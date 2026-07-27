@@ -10,7 +10,7 @@ authorization: <only for D-YYYYMMDD-<slug>: human command that waived the kanban
 
 # <id>-<slug> — <short title>
 
-> Durable ledger written and validated before removing the task from the roadmap and deleting `kanban/006_done/<id>/`. Total ≤2000 characters. Record facts and pointers instead of retelling planning or execution; use [[.agents/skills/optimize-memory/SKILL|optimize-memory]] if it grows without losing chronology or critical decisions. A literal human waiver of the kanban uses `task: D-YYYYMMDD-<slug>`, fills `authorization`, and has no card or roadmap row.
+> Durable ledger written and validated before removing the task from the roadmap and deleting `kanban/005_closing/<id>/`. Total ≤2000 characters. Record facts and pointers instead of retelling planning or execution; use [[.agents/skills/optimize-memory/SKILL|optimize-memory]] if it grows without losing chronology or critical decisions. A literal human waiver of the kanban uses `task: D-YYYYMMDD-<slug>`, fills `authorization`, and has no card or roadmap row.
 
 - **Delivery:** <observable result>.
 - **Changed areas:** `<subtree/file>` — <one line>.

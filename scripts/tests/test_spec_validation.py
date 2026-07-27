@@ -138,7 +138,7 @@ class SpecValidationTest(unittest.TestCase):
     def test_rejects_unreachable_current_spec(self):
         self.write_spec()
         self.adopt()
-        self.assert_invalid("unreachable por `specs/INDEX.md`")
+        self.assert_invalid("unreachable from `specs/INDEX.md`")
 
     def test_rejects_missing_supersession_target(self):
         self.write_spec(status="superseded", superseded_by="new")

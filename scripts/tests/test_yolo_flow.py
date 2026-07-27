@@ -9,7 +9,7 @@ from pathlib import Path
 
 SCRIPTS = Path(__file__).resolve().parent.parent
 STAGES = ("001_initial_task", "002_planning", "003_human_approval",
-          "004_processing", "005_verifying", "006_done")
+          "004_processing", "005_closing")
 
 
 class YoloFlowTest(unittest.TestCase):
@@ -59,11 +59,88 @@ class YoloFlowTest(unittest.TestCase):
         self.assertIn("blocked: true", text)
         self.assertTrue((card.parent / f"{task}.telemetry.json").is_file())
 
-    def test_verify_mode_is_full_for_critical_or_returned_task(self):
+    def test_plan_defect_counts_as_a_plan_return(self):
+        # 005_closing → 002 is a plan defect: it burns the plan counter, not
+        # the execution one (the executor delivered what it was given).
+        task = "1.1.3-plan-defect"
+        self.card(task, stage="005_closing")
+        result = self.run_cli("pop_move.py", task, "002_planning",
+                              "--reason", "plan defect",
+                              "--return-kind", "lacuna")
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        text = (self.root / "kanban/002_planning" / task
+                / f"{task}.md").read_text()
+        self.assertIn("yolo_003_returns: 1", text)
+        self.assertNotIn("yolo_005_returns: 1", text)
+        self.assertIn("return_kind: lacuna", text)
+
+    def test_plan_defect_without_classification_does_not_move_the_folder(self):
+        # Without lacuna|premissa, 002 does not know whether to amend or replan.
+        task = "1.1.5-no-classification"
+        self.card(task, stage="005_closing")
+        result = self.run_cli("pop_move.py", task, "002_planning")
+        self.assertEqual(result.returncode, 1)
+        self.assertIn("CLASSIFY THE RETURN", result.stdout)
+        self.assertTrue((self.root / "kanban/005_closing" / task).is_dir())
+        self.assertFalse((self.root / "kanban/002_planning" / task).exists())
+
+    def test_plan_classification_does_not_serve_the_execution_route(self):
+        task = "1.1.6-incompatible-route"
+        self.card(task, stage="005_closing")
+        result = self.run_cli("pop_move.py", task, "004_processing",
+                              "--return-kind", "premissa")
+        self.assertEqual(result.returncode, 1)
+        self.assertIn("INCOMPATIBLE RETURN", result.stdout)
+        self.assertTrue((self.root / "kanban/005_closing" / task).is_dir())
+
+    def test_execution_return_counts_in_the_execution_counter(self):
+        task = "1.1.4-returns-execution"
+        self.card(task, stage="005_closing")
+        result = self.run_cli("pop_move.py", task, "004_processing",
+                              "--reason", "blocking execution issue")
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        text = (self.root / "kanban/004_processing" / task
+                / f"{task}.md").read_text()
+        self.assertIn("yolo_005_returns: 1", text)
+        self.assertNotIn("yolo_003_returns: 1", text)
+        self.assertIn("return_kind: execucao", text)
+
+    def test_telemetry_records_the_cause_of_the_return(self):
+        task = "1.1.7-cause-telemetry"
+        self.card(task, stage="005_closing")
+        self.assertEqual(self.run_cli(
+            "pop_move.py", task, "002_planning",
+            "--return-kind", "premissa").returncode, 0)
+        result = self.run_cli("pop_yolo.py", "telemetry", task, "--json")
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        data = json.loads(result.stdout)
+        self.assertEqual(data["returns_premissa"], 1)
+        self.assertEqual(data["returns_lacuna"], 0)
+        self.assertEqual(data["returns_execucao"], 0)
+
+    def test_verify_mode_is_full_for_critical_or_wrong_premise(self):
+        # Only a wrong premise invalidates what has already been verified; a
+        # gap and an execution failure only review the delta.
         task = "1.1.2-verify-mode"
-        card = self.card(task, stage="005_verifying")
+        card = self.card(task, stage="005_closing")
         result = self.run_cli("pop_yolo.py", "verify-mode", task)
         self.assertTrue(result.stdout.startswith("differential"))
+
+        for kind in ("lacuna", "execucao"):
+            card.write_text(card.read_text().replace(
+                "critical: false", f"return_kind: {kind}\ncritical: false"))
+            result = self.run_cli("pop_yolo.py", "verify-mode", task)
+            self.assertTrue(result.stdout.startswith("differential"),
+                            f"{kind}: {result.stdout}")
+            self.assertIn("delta", result.stdout)
+            card.write_text(card.read_text().replace(
+                f"return_kind: {kind}\n", ""))
+
+        card.write_text(card.read_text().replace(
+            "critical: false", "return_kind: premissa\ncritical: false"))
+        self.assertTrue(self.run_cli(
+            "pop_yolo.py", "verify-mode", task).stdout.startswith("full"))
+
         card.write_text(card.read_text().replace("critical: false", "critical: true"))
         result = self.run_cli("pop_yolo.py", "verify-mode", task)
         self.assertTrue(result.stdout.startswith("full"))
@@ -145,10 +222,10 @@ class YoloDeliveryTest(unittest.TestCase):
         for stage in STAGES:
             (self.repo / "pop/kanban" / stage).mkdir(parents=True)
         task = "1.1.1-delivery"
-        folder = self.repo / "pop/kanban/006_done" / task
+        folder = self.repo / "pop/kanban/005_closing" / task
         folder.mkdir(parents=True)
         (folder / f"{task}.md").write_text(
-            "---\nproject: app/repo\nstage: 006_done\nyolo: true\n---\n")
+            "---\nproject: app/repo\nstage: 005_closing\nyolo: true\n---\n")
         self.git("add", "pop")
         self.git("commit", "-m", "harness")
 

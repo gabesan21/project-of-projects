@@ -16,7 +16,7 @@ What an agent needs to know before working on this: history, motivation, current
 
 ## Folder structure
 
-Standard anatomy (see the root AGENTS.md): the project's `AGENTS.md` + `.agents/skills/` at the root; **all the harness in `pop/`** — `pop/PROJECT.md` + `pop/ROADMAP.md` + `pop/roadmap/` (epochs), `pop/researches/` (research by topic), `pop/skills/`, `pop/specs/`, `pop/notes/` (learnings/decisions/ideas/references), `pop/memory/` (summaries of completed tasks), `pop/worktrees/` (gitignored), `pop/kanban/` (stages 001–006 of the [[WORKFLOW|WORKFLOW]]); the **project content** (code, manuscript, clones — per the type, [[TYPES|TYPES]]) lives directly at the root. List here only what deviates from the standard.
+Standard anatomy (see the root AGENTS.md): the project's `AGENTS.md` + `.agents/skills/` at the root; **all the harness in `pop/`** — `pop/PROJECT.md` + `pop/ROADMAP.md` + `pop/roadmap/` (epochs), `pop/researches/` (research by topic), `pop/skills/`, `pop/specs/`, `pop/notes/` (learnings/decisions/ideas/references), `pop/memory/` (summaries of completed tasks), `pop/worktrees/` (gitignored), `pop/kanban/` (stages 001–`005_closing` of the [[WORKFLOW|WORKFLOW]]); the **project content** (code, manuscript, clones — per the type, [[TYPES|TYPES]]) lives directly at the root. List here only what deviates from the standard.
 
 ## Agent harness
 

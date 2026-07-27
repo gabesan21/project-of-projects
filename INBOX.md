@@ -20,15 +20,9 @@ WHERE stage = "003_human_approval" AND yolo != true
 SORT updated ASC
 ```
 
-## Awaiting verification approval (005, critical tasks)
+## Awaiting merge (005_closing) — this is the verification gate outside yolo
 
-```dataview
-TABLE WITHOUT ID file.link AS Task, project AS Project, updated AS "Since"
-WHERE stage = "005_verifying" AND critical = true AND yolo != true
-SORT updated ASC
-```
-
-## Awaiting merge (006)
+Outside yolo there is no agentic reviewer: reviewing the PR **is** the verification. Until you merge, nothing happens — no memory, no specs, no roadmap cleanup.
 
 ```dataview
 TABLE WITHOUT ID file.link AS Task, project AS Project, pr AS PR
@@ -61,7 +55,7 @@ Informational (no decision needed): tasks with gates delegated to the critic age
 
 ```dataview
 TABLE WITHOUT ID file.link AS Task, project AS Project, stage AS Stage, updated AS "Since"
-WHERE yolo = true AND stage != "006_done"
+WHERE yolo = true
 SORT updated ASC
 ```
 

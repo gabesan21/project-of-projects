@@ -48,4 +48,4 @@ Ask what the code doesn't show: **(a)** what the project does today, in the user
 
 - **Recon is read-only:** the import doesn't change the imported repo in any way — the first real change will only exist via the kanban, and only after Epoch 1.
 - **Faithful spec = recon + user confirmation.** Don't write a spec from the code alone: what the user hasn't confirmed is born in the "Open" section.
-- The organization gate applies to **any agent, always** — it is not a suggestion. Epoch 1 completes via the derived status (all tasks in `006_done`/memory). Don't create tasks here (`new-task` skill) nor specs outside the flow (`write-spec` skill).
+- The organization gate applies to **any agent, always** — it is not a suggestion. Epoch 1 completes via the derived status (all tasks with a memory). Don't create tasks here (`new-task` skill) nor specs outside the flow (`write-spec` skill).

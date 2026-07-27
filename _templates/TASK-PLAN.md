@@ -4,7 +4,8 @@
 
 - **Stage:** 002_planning · **Owner:** planner agent
 
-> The planner is separate from the executor. This file stores the planning result: a brief sufficient for capable agents, without reasoning, pseudocode, implementation snippets or step-by-step edits. Target: ≤80 lines; ceiling ~150. If fronts do not fit, propose chained tasks through `depends_on`.
+> The planner is separate from the executor. This file stores the planning result: a brief sufficient for capable agents, without reasoning, pseudocode, implementation snippets or step-by-step edits.
+> **Ceiling: 80 lines, at any `size`** (validated by `pop_validate`). This is the slice everyone reads, so it does not grow with the task — what grows is the number of front files. Not fitting means **modularizing** into `subtasks/`, never compressing to the point of losing a decision. Splitting the task through `depends_on` is the exception, for when the fronts do not share an objective.
 
 ## Objective and expected result
 
@@ -26,11 +27,12 @@ A few paragraphs covering the base approach, execution-constraining decisions an
 
 ## Execution fronts
 
-> A front is an ownership unit, not an edit list. Use [[_templates/SUBTASKS|SUBTASKS]] only when a front needs its own file. Fronts without logical dependencies **and** without write overlap may run in parallel; others run in waves.
+> A front is an ownership unit, not an edit list. **Every front that goes to a separate context gets its own file** in `subtasks/` ([[_templates/SUBTASKS|SUBTASKS]], ≤50 lines) — it is that executor's reading slice; here stays only the summary line and the link. A single-front task has no `subtasks/`: the executor reads the plan, which is already short. Fronts without logical dependencies **and** without write overlap may run in parallel; others run in waves.
 
 ### <F01> — <name>
 
 - **Delivery:** <result of this front>.
+- **Contract:** [[<id>-<slug>.g01-<front-slug>]] — *follow it as this front's single execution slice* (omit when the task has a single front: the fields below suffice).
 - **Scope:** <functional boundary>.
 - **Owns:** `<files or patterns it may edit>`.
 - **May read:** `<allowed/recommended context>`.
@@ -56,6 +58,9 @@ A few paragraphs covering the base approach, execution-constraining decisions an
 - **Abort if:** <objective condition> — set `blocked: true` with <evidence>.
 
 ## Acceptance criteria
+
+> Observable criteria, compared at the `005_closing` gate. They are **the contract**: they bind the executor and the gate, and they must cover the card's What/Why — a criterion that does not cover the request is a plan defect and comes back here. Prefer the aggregate gate. A runtime surface requires at least one `re-run`.
+> **Append-only between rounds:** a `lacuna` return adds a row and keeps existing IDs — renumbering a criterion or a front breaks the references in `.verify.md` and in telemetry, and forces the re-review to start from scratch.
 
 | # | Criterion | Verification | Pass looks like | 005 mode |
 |---|---|---|---|---|

@@ -34,9 +34,9 @@ _(after Done: `approved → 004` or `changes requested → 002: <summary>`)_
 - **Decision:** approved → 004 | returned → 002 | circuit breaker.
 - **Reason/evidence:** <objective, no reasoning>.
 
-## Merge — 006 — YYYY-MM-DD
+## Merge — 005_closing — YYYY-MM-DD
 
-> Created when the applicable flow requires human merge. In yolo, follow [[WORKFLOW|WORKFLOW]] integration policy; do not invent another quality gate here.
+> Created when the applicable flow requires human merge. **Outside yolo, reviewing this PR is the verification** — there is no agentic reviewer, and no memory, spec sync or roadmap cleanup happens before the `- [x] Done`. In yolo, follow [[WORKFLOW|WORKFLOW]] integration policy; do not invent another quality gate here.
 
 - **PR:** <link> — `task/<id>-<slug>` → `<PR branch>`.
 - _Without git: record the applicable final approval._
@@ -46,6 +46,14 @@ _(after Done: `approved → 004` or `changes requested → 002: <summary>`)_
 _(merge, or explicitly authorize the agent)_
 
 - [ ] Done
+
+### Delta of the return
+
+> Fill in **only** if you ask for a correction instead of merging. Partial re-entry is not a yolo privilege: naming the delta keeps a one-front correction from re-executing the whole task. The agent carries the type with `pop_move --return-kind <type>`.
+
+- **Type:** lacuna (a criterion was missing; what was delivered is correct) | premissa (the strategy was wrong) | execucao (did not deliver what was agreed).
+- **Affected criteria/fronts:** <IDs> — <what is missing, one line>.
+- **Untouched fronts:** `<Fxx>` — do **not** re-execute.
 
 ### Agent decision
 

@@ -43,7 +43,7 @@ Like `multi-repo` in the main folder, but each repo cloned at the root carries i
 - **Main folder (in the PoP):** AGENTS.md, and in the parent's `pop/`: sheet, general ROADMAP + `roadmap/` (macro epochs whose phases point, with a trigger, to the individual ROADMAPs or to cross tasks), `kanban/` **for cross-repo tasks only**, `worktrees/` of those tasks, transversal `researches/` and `notes/`. **No `specs/` and no `memory/`** — they always live in the repos.
 - **Each repo:** full `included` anatomy; the repo's AGENTS.md declares `type: included` (the standalone truth) + a **"Part of"** section linking the parent project, the general ROADMAP and the cross kanban.
 - **Single-repo task** → the repo's own kanban, worktree in `pop/worktrees/<id>/` inside the repo (the repo is its own git).
-- **Cross-repo task** → central kanban; one worktree per affected repo in `pop/worktrees/<id>/<repo>/` in the parent (as in `multi-repo`); on completion (006), write `pop/memory/<id>.md` in **each affected repo** and sync the specs **in the repos** — the central card links those memories.
+- **Cross-repo task** → central kanban; one worktree per affected repo in `pop/worktrees/<id>/<repo>/` in the parent (as in `multi-repo`); on completion (`005_closing`), write `pop/memory/<id>.md` in **each affected repo** and sync the specs **in the repos** — the central card links those memories.
 - **Contract specs between repos** (e.g. front↔back API) live in the repo that "owns" the contract; the others link to it.
 - **Task slugs carry the repo name** (e.g. `1.2.1-front-login-page`): ids are unique across the whole vault and the scripts locate tasks by id.
 - Clones gitignored in the project's `.gitignore`; `pop/worktrees/` gitignored in each repo's `.gitignore`.

@@ -25,7 +25,7 @@ class CloseLifecycleTest(unittest.TestCase):
         self.tmp = tempfile.TemporaryDirectory()
         self.addCleanup(self.tmp.cleanup)
         self.root = Path(self.tmp.name) / "vault"
-        (self.root / "kanban/006_done").mkdir(parents=True)
+        (self.root / "kanban/005_closing").mkdir(parents=True)
         (self.root / "memory").mkdir(parents=True)
         (self.root / "roadmap").mkdir(parents=True)
         (self.root / "modifications").mkdir(parents=True)
@@ -35,7 +35,7 @@ class CloseLifecycleTest(unittest.TestCase):
             [sys.executable, str(SCRIPTS / script), *args, "--vault", str(self.root)],
             capture_output=True, text=True)
 
-    def write_card(self, task, stage="006_done"):
+    def write_card(self, task, stage="005_closing"):
         numeric = NUMERIC.match(task).group(0)
         fields = {"id": numeric, "project": "pop", "stage": stage,
                   "created": "2026-07-20", "updated": "2026-07-21"}
@@ -106,6 +106,18 @@ class CloseRoadmapTest(CloseLifecycleTest):
         self.assertIn("# Epoch 1", text)
         self.assertIn("## Phase 1.1", text)
         self.assertIn("1.1.2-open", text)
+
+    def test_close_refuses_task_outside_005_closing(self):
+        # Closing is the last act of 005_closing: a task in execution does not
+        # close.
+        (self.root / "kanban/004_processing").mkdir(parents=True)
+        self.write_card(TASK_R, stage="004_processing")
+        self.write_memory(TASK_R)
+        epoch = self.write_epoch()
+        result = self.run_cli("pop_roadmap.py", "close", TASK_R)
+        self.assertEqual(result.returncode, 1)
+        self.assertIn("005_closing", result.stderr)
+        self.assertIn(TASK_R, epoch.read_text(encoding="utf-8"))
 
     def test_close_aborts_without_pr_key_but_accepts_empty_pr(self):
         self.write_card(TASK_R)

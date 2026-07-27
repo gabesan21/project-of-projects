@@ -56,11 +56,11 @@ categories/<category>/<project>/
 │   ├── specs/           ← specifications, one per theme
 │   ├── notes/           ← agent and user notes, by category
 │   │   └── learnings/ decisions/ ideas/ references/
-│   ├── memory/          ← 1 summary ≤2000 chars per completed task (generated in 006)
+│   ├── memory/          ← 1 summary ≤2000 chars per completed task (generated in 005_closing)
 │   ├── worktrees/       ← git worktrees of tasks in execution (never committed)
 │   └── kanban/          ← flow stages (see [[WORKFLOW|WORKFLOW]])
 │       ├── 001_initial_task/ 002_planning/ 003_human_approval/
-│       └── 004_processing/ 005_verifying/ 006_done/
+│       └── 004_processing/ 005_closing/
 └── <project content>     ← code, manuscript etc., directly at the root: free structure
 ```
 
@@ -77,7 +77,7 @@ The dev who opens the project sees only the content, `AGENTS.md`, `.agents/` and
   - **Roadmap × modifications frontier (3 questions):** does it fit in ~3 tasks? Does the what/how fit in a card, without a planning interview? Does it only touch existing contracts? Any "no" → roadmap (via `plan-roadmap`). When in doubt, modification — the `weekly-review` proposes promotion to the roadmap when a modification swells (open tasks conclude as `M-`; only the not-yet-tasked work migrates).
 - **Content at the root** — the real work (code, manuscript, repo clones), a fully free structure; if it lives in an external repository, the root holds only the harness and the repo is declared in the project's AGENTS.md. The names `pop` and `project` are **reserved** (don't use them for a content folder or repo). **researches/** — research that grounds the roadmap: one folder per topic, with the immutable raw source in `raw/` and the agent's synthesis alongside (skill `ingest-research`); deep-research prompts proposed by the agent for the **user** to run go in `RESEARCHES.md` (optional, next to the ROADMAP — [[_templates/RESEARCHES|template]]). **Research is always prior:** the agent does not search the web during the task flow — a knowledge gap becomes a prompt in `RESEARCHES.md` (section 002 of [[WORKFLOW|WORKFLOW]]).
 - **AGENTS.md + .agents/skills/** — make the project **standalone**: type, repositories, PR branch and the essentials of the workflow, with **real copies** of the core skills — even someone who doesn't use the PoP can work on the project. **Application** projects embed the **DOX** process there ([[_templates/DOX|template]]): a tree of AGENTS.md files in the code as hierarchical contracts per subtree.
-- **memory/** — one durable ledger per completed task; it authorizes removing the task row from the roadmap/modifications and the card. Verbose ledgers are compacted by [[.agents/skills/optimize-memory/SKILL|optimize-memory]] without merging files or losing chronology/decisions. **worktrees/** — task worktrees outside a root-local PoP, always gitignored.
+- **memory/** — one durable ledger per completed task; it authorizes removing the task row from the roadmap/modifications and deleting the card folder in `005_closing`. Verbose ledgers are compacted by [[.agents/skills/optimize-memory/SKILL|optimize-memory]] without merging files or losing chronology/decisions. **worktrees/** — task worktrees outside a root-local PoP, always gitignored.
 - **skills/** — reusable "how to do X". **specs/** — current contracts. A collection becomes canonical atomically when it creates `specs/INDEX.md`: English metadata, `contract|overview`, `draft|active|superseded`, `planned|partial|implemented|not_applicable`, and at most one domain level. See [[specs/spec-architecture|spec architecture]].
 - **notes/** — notes from the agent **and** the user, with `author: agent | user` frontmatter, in the categories: `learnings/` (lessons from tasks), `decisions/` (decisions extracted from the sheet), `ideas/` (loose ideas) and `references/` (links and external material).
 
@@ -86,6 +86,10 @@ When creating a project, **copy the templates from `_templates/`** and create th
 ## Types and repositories
 
 The PoP is a **repository aggregator**: every project declares a **type** in its AGENTS.md — `default` (a folder in the vault, content at its root, optional repo declared only there), `included` (the project's root is the external repo, with `pop/` committed into it), `multi-repo` (one clone per repo at the folder's root, a single `pop/`) or `full-multi-repo` (several repos, each clone with its own embedded `pop/`; the mother's `pop/` holds the general ROADMAP and a kanban for cross-repo tasks only) — detail in [[TYPES|TYPES]]. Repos of `included`, `multi-repo` and `full-multi-repo` go in the **Aggregated repositories** section of the root [[INDEX|INDEX]]; clones are never committed to the PoP (`.gitignore`).
+
+### The root PoP installs and updates the harness
+
+This vault is the **single source** of the harness. Every project that runs standalone — an `included` clone, an embedded repo of a `full-multi-repo` — never evolves WORKFLOW, templates, scripts or core skills on its own: it receives a **managed copy** via `python3 scripts/pop_install_included.py <dir>`, which mirrors the set declared in [[_templates/included-manifest.json|included-manifest]] and **prunes** whatever left the source. Each install stamps the source harness's `content_sha` into the target's `pop/.included-harness.json`, so "up to date" is verifiable: `--check-fresh <dir>` fails closed when the target fell behind, and `pop_validate` reports a stale target as a violation. Fixing harness by editing the local copy is always wrong — the project **reinstalls**.
 
 ## IDs and link convention
 
@@ -98,7 +102,7 @@ The PoP is a **repository aggregator**: every project declares a **type** in its
 
 - **`INDEX.md` (root):** vault structure + every project, description of **up to 144 characters** each, and the **Aggregated repositories** list (repos to clone, with path and PR branch).
 - **`categories/<category>/INDEX.md`:** per project: link, **status** and description of **up to 600 characters**.
-- **`INBOX.md` (root):** everything awaiting the human — generated **automatically via Dataview** from the cards' frontmatter (in `001_initial_task` awaiting your release, `003_human_approval`, critical items in `005_verifying`, blocked ones) and from the open questions in `open_questions/`. Don't edit the lists by hand; it is the only file the human needs to open each day.
+- **`INBOX.md` (root):** everything awaiting the human — generated **automatically via Dataview** from the cards' frontmatter (in `001_initial_task` awaiting your release, `003_human_approval`, awaiting merge in `005_closing`, blocked ones) and from the open questions in `open_questions/`. Don't edit the lists by hand; it is the only file the human needs to open each day.
 - **`drafts/`:** project drafts filled in by the **human** from the templates [[_templates/NEW_PROJECT|NEW_PROJECT]] (→ `drafts/new/`) and [[_templates/IMPORT_PROJECT|IMPORT_PROJECT]] (→ `drafts/import/`) — they let you draft several projects before engaging an agent. The `new-project`/`import-project` skills consume the draft as a pre-answered interview (they confirm, they don't re-ask) and **delete it** when the project is materialized.
 - **`open_questions/`:** general questions from the agent that depend on the human and belong to no card — decisions about new projects, overall vault structure etc. One file per question ([[_templates/OPEN-QUESTION|template]], `status: open | answered`); the open ones show up in the INBOX. Answered → the agent applies the answer, marks it `answered` and, if it becomes a harness decision, records it in `notes/decisions/`.
 
@@ -114,8 +118,8 @@ The central procedures are **skills** in the open Agent Skills format (`SKILL.md
 | `import-project` | Imports an existing repository: recon, fit into type/category and Epoch 1 of organization. Consumes a draft from `drafts/import/` if present. |
 | `plan-roadmap` | Build/evolve the roadmap by interview (epochs → phases → candidate tasks). |
 | `new-task` | Quick interview that materializes a roadmap or modification task in `kanban/001_initial_task`; also handles change requests with no active card. |
-| `advance-task` | Move a task through the 001→006 flow, respecting the human gates. |
-| `yolo-critic` | Strong yolo critic: single gate in 005 (003 only for `critical`); two returns per gate and circuit breaker on the third — [[WORKFLOW\|WORKFLOW]]. |
+| `advance-task` | Move a task through the 001→005_closing flow, respecting the human gates. |
+| `yolo-critic` | Strong yolo critic: single gate in `005_closing` (003 only for `critical`); two returns per route and circuit breaker on the third — [[WORKFLOW\|WORKFLOW]]. |
 | `write-spec` | Create/rewrite a standardized spec, with questions per project type. |
 | `sync-specs` | Mandatory flow: keep specs faithful to reality as tasks advance. |
 | `ingest-research` | Ingests a delivered research result: immutable raw source in `raw/`, synthesis with triggered links and a contradiction check against specs/notes. |
@@ -133,7 +137,7 @@ The central procedures are **skills** in the open Agent Skills format (`SKILL.md
 | `charm-bubbles` | Ready-made Go TUI components (list, viewport, spinner, table, textinput…) as embeddable `tea.Model`s. **Go TUI projects only.** |
 | `charm-lipgloss` | Terminal style and layout in Go (immutable Style, adaptive colors, Join/Place, tables). **Go TUI projects only.** |
 | `clean-code-change` | Clean code practices for whoever writes code: contract before coding, readability, safe refactoring, debt triage — in 002 and 004 of code tasks. **Code projects only.** |
-| `clean-code-review` | Code review script with severity (blocking/suggestion/nit) and evidence — in 005 of code tasks and plan/PR gates. **Code projects only.** |
+| `clean-code-review` | Code review script with severity (blocking/suggestion/nit) and evidence — in `005_closing` of code tasks and plan/PR gates. **Code projects only.** |
 | `frontend-design` | Distinctive visual direction when creating/reshaping UI — typography, aesthetics, escaping the generic AI look. External skill by [anthropics](https://github.com/anthropics/skills), vendored unchanged. Apache 2.0 license. |
 | `web-artifacts-builder` | Build elaborate multi-component web artifacts (React, Tailwind, shadcn/ui). External skill by [anthropics](https://github.com/anthropics/skills), vendored unchanged. Apache 2.0 license. |
 | `react-best-practices` | React/Next.js performance best practices from Vercel engineering — when writing, reviewing or refactoring. External skill by [vercel-labs](https://github.com/vercel-labs/agent-skills), vendored unchanged. MIT license. |
@@ -151,7 +155,7 @@ The central procedures are **skills** in the open Agent Skills format (`SKILL.md
 | `ui-design-review` | Visual/aesthetic evaluation: typography, color, spacing, hierarchy, consistency and category conventions. External skill by [mastepanoski](https://github.com/mastepanoski/claude-skills), vendored unchanged. MIT license. |
 | `don-norman-principles-audit` | Evaluate UX/UI against Don Norman's 7 design principles. External skill by [mastepanoski](https://github.com/mastepanoski/claude-skills), vendored unchanged. MIT license. |
 | `ui-change` | UI design+implementation process: single tone, tokens as a lintable contract, DESIGN.md as memory, 6 mandatory states, anti-drift inventory — in 002 and 004 of frontend tasks. **Frontend projects only.** |
-| `ui-review` | UI review with evidence: Nielsen pass/fail with severity 1-4, WCAG 2.2 AA in two layers, screenshot→vision visual loop until severity <2 — in 005 and frontend gates. **Frontend projects only.** |
+| `ui-review` | UI review with evidence: Nielsen pass/fail with severity 1-4, WCAG 2.2 AA in two layers, screenshot→vision visual loop until severity <2 — in `005_closing` and frontend gates. **Frontend projects only.** |
 
 When creating a new skill: create the folder at `.agents/skills/<name>/SKILL.md` and register it in the table above. When changing a core workflow skill, propagate the copy to the projects' `.agents/skills/` (the `weekly-review` audits the drift; `excalidraw-diagram` is third-party — don't edit it, update it from upstream). The `clean-code-*` skills are copied **only to code projects** — their absence in a writing/work project is not drift.
 
@@ -161,7 +165,7 @@ When creating a new skill: create the folder at `.agents/skills/<name>/SKILL.md`
 2. **It is an Obsidian vault:** use wikilinks `[[...]]` for every internal reference, following the link convention above.
 3. **Cross-reference within the project:** when mentioning a spec, skill, task or note **from the same project** — or shared vault material (core skills, `_templates/`, [[WORKFLOW|WORKFLOW]], [[TYPES|TYPES]], indexes) — link it following the link convention. Do **not** reference material from **another project** — see rule 4.
 4. **Projects are independent islands:** each project is, at first sight, **unrelated** to its neighbors. Never mix material from different projects, and a project **never** references, depends on or integrates another vault project (no "integration epoch", "consumer project" or "sibling project" in the harness). Genuinely cross-project work is exactly what the `multi-repo`/`full-multi-repo` types exist to cover (see [[TYPES|TYPES]]); outside them, only cite another project if the **human explicitly asks**. Every project folder follows the standard anatomy.
-5. **Modularization — no file too large:** a note must not exceed **~150 lines** (exception: the AGENTS.md of an **application** project, which embeds the DOX process). A plan is a brief, not an exception: if it grows, split the task or move durable contracts into specs. A file answers **one** question; roadmap descriptions stay one line.
+5. **Modularization — no file too large:** a note must not exceed **~150 lines**; a project's AGENTS.md is capped at **~60** and only an **application**'s exceeds it, to embed the DOX process. A project AGENTS.md holds what belongs to that project and **points** to [[WORKFLOW|WORKFLOW]]/[[TYPES|TYPES]] — narrating the flow there is duplication that rots ([[_templates/AGENTS-PROJECT|the template]] lists what must not go in). A plan is a brief, not an exception: if it grows, split the task or move durable contracts into specs. A file answers **one** question; roadmap descriptions stay one line.
 6. **One run = up to the next human gate:** the agent advances the task and only stops where a human decision is awaited — gates and orchestration in [[WORKFLOW|WORKFLOW]].
 7. **Explicit owner:** every stage, subtask and skill has a declared owner (`agent` or `user`) and the agent never executes a `(user)` item — table and rules in [[WORKFLOW|WORKFLOW]].
 8. **Indexes always in sync:** when creating, completing or changing a project's status, update the category `INDEX.md` **and** the root one. Respect the limits: 144 chars (root), 600 chars (category).
@@ -173,7 +177,7 @@ When creating a new skill: create the folder at `.agents/skills/<name>/SKILL.md`
 14. **Self-validation before finishing:** the agent checks its own changes from the session — index limits (144/600 chars), ~150 lines per note, complete frontmatter on cards, links following the convention — and fixes anything out of bounds before the commit.
 15. **Commit per session:** this vault is a git repository. When ending a work session, commit the changes with a short message in the vault's language saying what changed.
 16. **Worktrees and ownership:** outside a root-local PoP, 004 has one integration worktree per task. External yolo tasks integrate into `develop`; the final scope opens `develop` → `main`, and only the human merges. Dependencies are prerequisites — [[WORKFLOW|WORKFLOW]].
-17. **Durable memory and lean roadmap:** every completed task gets `memory/<id>.md` (≤2000 chars). After memory/spec/status validation, 006 removes its row from the epoch or modification file and only then deletes `kanban/006_done/<id>/`. Root roadmaps hold epochs; epoch files hold phases and open tasks; `MODIFICATIONS.md` and `modifications/` follow the same rule.
+17. **Durable memory and lean roadmap:** every completed task gets `memory/<id>.md` (≤2000 chars). After memory/spec/status validation, the close-out of `005_closing` removes its row from the epoch or modification file and only then deletes `kanban/005_closing/<id>/`. Root roadmaps hold epochs; epoch files hold phases and open tasks; `MODIFICATIONS.md` and `modifications/` follow the same rule.
 18. **Delegation with a floor and ownership:** broad reading gets a specific capped contract. Work below ~5K tokens stays direct except mandatory role separation. A cohesive front gets a direct executor; DAGs/multiple skills/write sets get a sub-orchestrator. Yolo waves allow up to three independent tasks. Missing dependencies are reported, never implemented opportunistically.
 19. **Root-local PoP delivery:** when the scope is this vault root and the card declares `project: pop`, execute and close directly on `main`, without a task branch/worktree/PR. External projects and repositories follow rule 16 and are never changed by a root-PoP task.
 20. **An explicit human command is sovereign, with no implicit waiver:** the gates stop the agent from acting in the human's place; they do not restrict the human. A direct instruction overrides **only** the rule or gate it names; the agent obeys within that scope and records the deviation. Only an unequivocal command such as “do not use the kanban” or “do this outside PoP” waives the stages — never continuity: it still requires an identifiable memory and a recorded specs/DOX impact assessment, updating them when affected. Genuine ambiguity or an irreversible action allows **one** question. Details in [[WORKFLOW|WORKFLOW]].

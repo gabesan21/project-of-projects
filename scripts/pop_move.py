@@ -9,7 +9,14 @@ import poplib
 RETURNS = {
     ("003_human_approval", "002_planning"),
     ("004_processing", "002_planning"),
-    ("005_verifying", "004_processing"),
+    ("005_closing", "004_processing"),
+    ("005_closing", "002_planning"),
+}
+
+# Returns that fail the plan, not the execution (`yolo_003_returns` counter).
+PLAN_RETURNS = {
+    ("003_human_approval", "002_planning"),
+    ("005_closing", "002_planning"),
 }
 
 
@@ -17,7 +24,8 @@ def transition_allowed(src, dst, *, yolo_single_gate=False):
     """True when dst is src's next stage or a permitted return.
 
     `yolo_single_gate` (non-critical yolo task) allows the 002→004 jump:
-    yolo's single quality gate is 005 (see the WORKFLOW's Yolo mode section).
+    yolo's single quality gate is the one in 005_closing (see the WORKFLOW's
+    Yolo mode section).
     """
     stages = poplib.STAGES
     if stages.index(dst) == stages.index(src) + 1:
@@ -25,6 +33,38 @@ def transition_allowed(src, dst, *, yolo_single_gate=False):
     if yolo_single_gate and (src, dst) == ("002_planning", "004_processing"):
         return True
     return (src, dst) in RETURNS
+
+
+def resolve_return_kind(src, dst, requested):
+    """Classification to write in `return_kind:`, or (None, error message).
+
+    A return is incremental, so the kind is required wherever it changes what
+    happens next: `005_closing→002` decides between amending the plan
+    (`lacuna`) and replanning (`premissa`), and that choice also sets the mode
+    of the re-review. `005_closing→004` is always `execucao`. In every other
+    transition the field does not apply — in `003→002` nothing has been
+    executed yet.
+    """
+    if (src, dst) == ("005_closing", "002_planning"):
+        if requested in ("lacuna", "premissa"):
+            return requested, None
+        return None, ("CLASSIFY THE RETURN: a plan defect requires "
+                      "`--return-kind lacuna` (incomplete plan, what was "
+                      "delivered is correct → amendment) or `--return-kind "
+                      "premissa` (wrong strategy → replanning). Without it "
+                      "002 does not know the size of the fix (use --force for "
+                      "exceptions).")
+    if (src, dst) == ("005_closing", "004_processing"):
+        if requested in (None, "execucao"):
+            return "execucao", None
+        return None, (f"INCOMPATIBLE RETURN: `{requested}` classifies a plan "
+                      "defect and goes to 002_planning; the route to 004 is "
+                      "always `execucao` (use --force for exceptions).")
+    if requested:
+        return None, (f"`--return-kind` does not apply to {src} → {dst}: only "
+                      "returns leaving 005_closing are classified (use "
+                      "--force for exceptions).")
+    return None, None
 
 
 def update_card(card, new_stage, reason, fields=None):
@@ -76,6 +116,10 @@ def main():
                         help="destination stage")
     parser.add_argument("--reason", default="transition via pop_move",
                         help="short reason recorded in the card log")
+    parser.add_argument("--return-kind", choices=poplib.RETURN_KINDS,
+                        help="classification of a return leaving 005_closing: "
+                             "lacuna|premissa (→002, required) or execucao "
+                             "(→004, default)")
     parser.add_argument("--context", action="append", default=[],
                         help="agent context used at this stage; repeatable")
     parser.add_argument("--test-seconds", type=float, default=0,
@@ -106,9 +150,10 @@ def main():
                                yolo_single_gate=yolo_single_gate)
             and not args.force):
         print(f"Transition not allowed: {src} → {args.stage}. "
-              f"Flow: 001→002→003→004→005→006 (non-critical yolo: 002→004 "
-              f"directly, no 003); returns: 003→002, 004→002, 005→004. "
-              f"Use --force for exceptions.")
+              f"Flow: 001→002→003→004→005_closing (non-critical yolo: "
+              f"002→004 directly, no 003); returns: 003→002, 004→002, "
+              f"005_closing→004 (execution) and 005_closing→002 (plan "
+              f"defect). Use --force for exceptions.")
         return 1
 
     if card_src.is_file() and not args.force:
@@ -127,11 +172,20 @@ def main():
             return 1
 
     return_gate = None
-    if (src, args.stage) == ("003_human_approval", "002_planning"):
+    if (src, args.stage) in PLAN_RETURNS:
         return_gate = "003"
-    elif (src, args.stage) == ("005_verifying", "004_processing"):
+    elif (src, args.stage) == ("005_closing", "004_processing"):
         return_gate = "005"
+
+    return_kind, kind_error = resolve_return_kind(src, args.stage,
+                                                  args.return_kind)
+    if kind_error and not args.force:
+        print(kind_error)
+        return 1
+
     fields = {}
+    if return_kind:
+        fields["return_kind"] = return_kind
     if meta.get("yolo") is True and return_gate:
         key = f"yolo_{return_gate}_returns"
         try:
@@ -166,6 +220,7 @@ def main():
         poplib.record_telemetry(dest, {
             "event": "transition", "from": src, "to": args.stage,
             "contexts": args.context, "test_seconds": args.test_seconds,
+            "return_kind": return_kind,
             "result": "returned" if return_gate else "advanced"})
     else:
         print(f"[WARNING] card not found for update: {card}")

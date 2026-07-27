@@ -7,7 +7,7 @@ status: active
 implementation: implemented
 origin: "4.1"
 created: 2026-07-13
-updated: 2026-07-21
+updated: 2026-07-27
 supersedes: []
 superseded_by:
 ---
@@ -20,7 +20,7 @@ After an `included` repository is cloned and opened as the working directory, it
 
 ## Expected behavior
 
-- The clone can execute stages 001→006, normal and yolo, using only versioned local files and declared external tools.
+- The clone can execute stages 001→`005_closing`, normal and yolo, using only versioned local files and declared external tools.
 - `AGENTS.md`, `CLAUDE.md`, `.agents/skills/`, and `pop/` make every referenced instruction, command, template, gate, and skill locally available.
 - `pop_install_included.py` uses `_templates/included-manifest.json` as the single package inventory and is safely repeatable.
 - `pop/.included-harness.json` records the installed package; managed paths are refreshed while project-owned roadmap/specs/notes/memory/cards remain intact.

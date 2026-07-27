@@ -9,6 +9,19 @@
 - **Supported languages (i18n):** <list of languages the application must support — handled in the roadmap and specs. Applications only; remove if not applicable.>
 - **Profile:** [[categories/<category>/<project>/pop/PROJECT|PROJECT]] · **Roadmap:** [[categories/<category>/<project>/pop/ROADMAP|ROADMAP]] · **Modifications:** [[categories/<category>/<project>/pop/MODIFICATIONS|MODIFICATIONS]] (created on demand)
 
+## What does NOT go in this file
+
+> Fill-in instruction — **keep this section in the project**: it is what stops the file from swelling.
+
+Single source: what lives in the vault is never copied here, because duplication is guaranteed drift — the flow changes and the copy starts lying. **Never** write here:
+
+- narration of the kanban stages (names, order, what each one does) — only [[WORKFLOW|WORKFLOW]];
+- the context protocol and any reading/search heuristic — [[WORKFLOW|WORKFLOW]] and the skills;
+- general vault rules (kanban mandatory, memory/lean roadmap, sovereignty of the human command) — the "Transversal rules" section of [[WORKFLOW|WORKFLOW]], which the installer delivers alongside the harness;
+- any copyable excerpt of [[WORKFLOW|WORKFLOW]] or [[TYPES|TYPES]] — link it with a trigger instead of reproducing it.
+
+Only what belongs to **this project** goes here: type, language, repos and PR branch, skills and verification commands, DOX. **Cap: ~60 lines** — the only exception is the DOX section of applications.
+
 ## Repositories
 
 | Repo | URL | Clone at | PR branch |
@@ -21,28 +34,11 @@ _No external repository: the work lives in the PoP repository and task PRs targe
 
 ## Workflow
 
-Every change to the project goes through the kanban (`pop/kanban/001_initial_task → … → 006_done`), with tasks coming from the roadmap (`<n>.<m>.<t>-<slug>`) or from modifications (`M-<n>.<t>-<slug>` — hotfixes, tweaks and small emergent features outside the plan; frontier in the vault's AGENTS.md):
+Every change to the project goes through the kanban in `pop/kanban/`, with tasks coming from the roadmap (`<n>.<m>.<t>-<slug>`) or from modifications (`M-<n>.<t>-<slug>`).
 
-A change request with no card triggers `new-task` → `advance-task`; “start the flow in yolo” materializes/releases the task and follows the entire yolo route, never direct execution.
-
-1. **001** — task is born (skill `new-task`), with `depends_on:` listing the prerequisite tasks.
-2. **002** — separate planner writes a concise brief with objective, strategy, fronts, ownership and criteria.
-3. **003** — human gate; two returns are allowed before the circuit breaker requires human diagnosis. In yolo, this gate **exists only for `critical: true`** (strong independent critic) — other yolo tasks transit 002 → 004 directly.
-4. **004** — execution orchestrator chooses one executor, sequential specialists or isolated parallel waves; only it integrates ownership-validated diffs.
-5. **005** — a fresh independent reviewer first checks whether the **original request** (the card's objective) was met, then specs, diff, tests and quality, using differential verification unless risk requires full verification; in yolo this is the **single quality gate**, always strong, with the same two-return circuit breaker.
-6. **006** — the agent writes `pop/memory/<id>.md`, syncs specs/status, removes the completed task from the epoch roadmap or modification, deletes the task folder and worktree, then follows the delivery route below.
-
-External yolo scopes integrate into `develop` and, when the **marked scope** closes (single task, phase/epoch or modification), automatically open a final `develop` → `main` PR for human merge. Non-yolo work opens its configured task PR. The local meta PoP is the sole exception and delivers directly on `main` without task branches or PRs.
-
-**One run = up to the next human gate:** planner, execution and review stay in distinct contexts. The orchestrator chains stages until approval, critical review, `(user)`, block or merge. Full detail: [[WORKFLOW|WORKFLOW]].
-
-## Context protocol
-
-1. Start from the card/brief and read **only** the specs, skills and contracts they trigger.
-2. Missing context → a subagent with a specific question, never "read the folder to get familiar".
-3. Stop searching once you can answer *what changes and where* — anything beyond that is overthinking.
-4. A doubt the search did not resolve = **RECON NEEDED** in the plan or `blocked:` on the card — never an assumption.
-5. Specs and memory exist so the past is never reread: consult them before any git/code archaeology.
+- A change request with no card triggers `new-task` → `advance-task`; “start the flow in yolo” materializes/releases the task and follows the entire yolo route, never direct execution.
+- **Delivery:** the task PR targets the **PR branch declared** in the repositories table above; the merge is always the human's.
+- **Stages, gates, yolo route and context protocol:** [[WORKFLOW|WORKFLOW]] is the single source — read it before creating, advancing, verifying or closing any task of this project, and do not replicate any of it here.
 
 ## Skills
 
@@ -69,14 +65,11 @@ External yolo scopes integrate into `develop` and, when the **marked scope** clo
 
 ## DOX process (applications only)
 
-> **Application** projects paste here the full section from [[_templates/DOX|_templates/DOX.md]] — a tree of AGENTS.md files in the code as hierarchical contracts. This AGENTS.md may exceed the ~150 lines to hold it. **Remove this section in all other project types.**
+> **Application** projects paste here the full section from [[_templates/DOX|_templates/DOX.md]] — a tree of AGENTS.md files in the code as hierarchical contracts. This AGENTS.md may exceed the ~60-line cap to hold it — and only because of it. **Remove this section in all other project types.**
 
 ## Essential rules
 
-- Content in en; wikilinks for internal references; files ≤~150 lines; dates YYYY-MM-DD.
-- **Never** change the real project outside a task that legitimately reached `004_processing` (approved in 003 or non-critical yolo through 002→004).
-- A human command supersedes only the rule/gate it names; “apply”, “execute”, “urgent”, “finish it” or “in yolo” do not waive the flow. Only a literal waiver activates the deviation protocol in [[WORKFLOW|WORKFLOW]], always with memory and a specs/DOX impact assessment.
+- Content in the language declared above; wikilinks for internal references; files ≤~150 lines; dates YYYY-MM-DD.
 - **Never** check `- [ ] Done` or execute `(user)` items — those belong exclusively to the human.
 - **Never** merge a task PR — merging is the human's job (or commanded by them in the merge round).
-- Every completed task produces `pop/memory/<id>.md` (ledger ≤2000 chars, final commit/PR and dates). Preserve critical decisions and chronology; summarize routine execution, using `optimize-memory` when needed.
-- Roadmaps contain epochs, phases and open task rows only; modifications follow the same rule. After memory/spec/status validation in 006, remove the completed task row and delete its `006_done` folder.
+- **General vault rules** — kanban mandatory to touch the project, memory + lean roadmap at close-out, sovereignty of the human command with no implicit waiver: the "Transversal rules" section of the [[WORKFLOW|WORKFLOW]] installed alongside this harness (not the parent vault's AGENTS.md). *Read it before acting outside a task or before reading a request as a waiver of the flow.*

@@ -1,6 +1,8 @@
 # Front <F01> — <name> — [[<id>-<slug>]]
 
-> Optional: create only when a front has distinct ownership, owner or dependency worth tracking. Do not describe code or micro-edits.
+> Blockquotes are filling instructions — **delete them when filling**.
+> This file is **one executor's reading slice**: mandatory for every front that goes to a separate context, dispensable only when the task has a single front. Together with the card's What/Why and the plan's objective/strategy, it is *all* that executor receives — never the whole plan, never other fronts. Ceiling of 50 lines (validated by `pop_validate`): if it does not fit, the front is too big and splits in two.
+> Do not describe code or micro-edits.
 
 - **Delivery:** <result>.
 - **Scope:** <functional boundary>.

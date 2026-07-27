@@ -7,7 +7,7 @@
 - **Description:** one line — what changes and why.
 - **Yolo:** yes | no — **optional** bullet (absent = no); only the human marks it.
 
-> Only still-open tasks — **always one-line descriptions**. Detail goes to the spec or to the task's kanban folder. A started task gets the `[[M-<n>.<t>-<slug>]]` link; on completing 006, it leaves the table after its valid memory (see [[WORKFLOW|WORKFLOW]]). Per-task yolo opt-in/out: append ` · yolo: yes` (or ` · yolo: no`) to the end of the Description cell — no new column.
+> Only still-open tasks — **always one-line descriptions**. Detail goes to the spec or to the task's kanban folder. A started task gets the `[[M-<n>.<t>-<slug>]]` link; on closing the `005_closing` stage, it leaves the table after its valid memory (see [[WORKFLOW|WORKFLOW]]). Per-task yolo opt-in/out: append ` · yolo: yes` (or ` · yolo: no`) to the end of the Description cell — no new column.
 
 | Task | Description (≤1 line) | Status |
 |------|-----------------------|--------|

@@ -13,6 +13,11 @@ import pop_roadmap
 MAX_ROOT_DESC = 144
 MAX_CAT_DESC = 600
 MAX_NOTE_LINES = 150
+MAX_PLAN_LINES = 80      # plan root (`<id>.plan.md`), regardless of size
+MAX_FRONT_LINES = 50     # front file in `subtasks/`: one executor's slice
+MAX_PROJECT_AGENTS = 60  # a project's AGENTS.md: a pointer, not a copy of the flow
+# An application embeds the DOX process and only for that exceeds the cap (rule 5).
+DOX_MARKER = "DOX process"
 EXEMPT_NAMES = {"AGENTS.md", "WORKFLOW.md", "README.md"}
 CARD_REQUIRED = ("id", "project", "stage", "created", "updated")
 ORIGIN_VALUES = ("roadmap", "modifications")
@@ -37,7 +42,9 @@ POP_HASH = re.compile(r"<!--\s*pop-hash:\s*(\S+)\s+sha256=([0-9a-fA-F]+)\s*-->")
 INLINE_CODE = re.compile(r"`[^`]*`")
 LINK_SKIP_PARTS = {"external-repository", ".obsidian", ".git", "worktrees",
                    "__pycache__", "node_modules", "vendor"}
-# kanban): um card em 001-005 linka `.plan/.approval/.verify` que ainda no
+# Suffixes of the task's own stage artifacts (created only as it advances in
+# the kanban): a freshly created card links `.plan/.approval/.verify` that are
+# not born yet — an expected navigation link, not a real break (see [[WORKFLOW]]).
 STAGE_ARTIFACT_SUFFIXES = (".plan", ".approval", ".verify")
 EXTERNAL_PROJECT_LINK = re.compile(r"\[\[categories/[^/]+/[^/]+/")
 
@@ -147,10 +154,10 @@ def check_spec_collections(root, projects, violations):
             updated = _valid_iso_date(meta.get("updated"))
             if created is None:
                 violations.append(f"{path}:1: `created` invalid "
-                                  f"`{meta.get('created')}` (use AAAA-MM-DD)")
+                                  f"`{meta.get('created')}` (use YYYY-MM-DD)")
             if updated is None:
                 violations.append(f"{path}:1: `updated` invalid "
-                                  f"`{meta.get('updated')}` (use AAAA-MM-DD)")
+                                  f"`{meta.get('updated')}` (use YYYY-MM-DD)")
             if created and updated and updated < created:
                 violations.append(f"{path}:1: `updated` precedes `created`")
 
@@ -237,8 +244,8 @@ def check_spec_collections(root, projects, violations):
         for path, meta in metadata.items():
             if meta.get("status") in {"draft", "active"} and path not in reachable:
                 violations.append(
-                    f"{path}:1: spec `{meta.get('status')}` unreachable por "
-                    "`specs/INDEX.md` diretamente ou via overview")
+                    f"{path}:1: spec `{meta.get('status')}` unreachable from "
+                    "`specs/INDEX.md` directly or via an overview")
 
 
 def lines_outside_fences(path):
@@ -287,14 +294,26 @@ def check_category_indexes(root, categories, violations):
 
 
 def note_limit(path):
+    """Line limit for the file, or None when exempt.
+
+    Planning artifacts have their own, shorter ruler: the plan root is the
+    slice everyone reads and the front file is the slice one executor reads. A
+    plan that does not fit **modularizes** into `subtasks/`; compressing it or
+    splitting the task is the exception (see section 002 of the WORKFLOW).
+    """
     if path.name in EXEMPT_NAMES:
         return None
     if path.name.endswith(".excalidraw.md"):
         return None  # Excalidraw diagram: embedded JSON, not a note.
+    if path.name.endswith(".plan.md"):
+        return MAX_PLAN_LINES
+    if path.parent.name == "subtasks":
+        return MAX_FRONT_LINES
     return MAX_NOTE_LINES
 
 
 def check_note_sizes(root, projects, violations):
+    """Harness .md <=150 lines (plan: 80; front file in `subtasks/`: 50)."""
     for scope in projects:
         for path in poplib.iter_harness_markdown(scope):
             limit = note_limit(path)
@@ -342,6 +361,11 @@ def check_cards(root, projects, violations):
             if size not in (None, "") and str(size) not in SIZE_VALUES:
                 violations.append(f"{card}:1: `size` invalid `{size}` "
                                   f"(use S | M | L)")
+            kind = meta.get("return_kind")
+            if kind not in (None, "") and str(kind) not in poplib.RETURN_KINDS:
+                violations.append(
+                    f"{card}:1: `return_kind` invalid `{kind}` "
+                    f"(use {' | '.join(poplib.RETURN_KINDS)})")
             for gate in ("003", "005"):
                 key = f"yolo_{gate}_returns"
                 if key not in meta:
@@ -489,6 +513,63 @@ def check_hash_pins(root, violations):
                         f"update to sha256={actual}")
 
 
+def check_project_agents(root, projects, violations):
+    """A project's AGENTS.md fits in 60 lines — it is a pointer, not a copy.
+
+    The file grows on its own whenever it narrates the flow instead of linking
+    the WORKFLOW, and the narration rots at the first stage change. An
+    application that embeds the DOX process is the only exemption (rule 5). The
+    root AGENTS.md is the vault's, not a project's: out of reach.
+    """
+    for project in projects:
+        if project == root:
+            continue
+        path = project / "AGENTS.md"
+        if not path.is_file():
+            continue
+        text = path.read_text(encoding="utf-8")
+        if DOX_MARKER in text:
+            continue
+        total = len(text.splitlines())
+        if total > MAX_PROJECT_AGENTS:
+            violations.append(
+                f"{path}:1: {total} lines (max. {MAX_PROJECT_AGENTS}) — "
+                f"point at the WORKFLOW instead of narrating the flow")
+
+
+def check_harness_freshness(root, projects, violations):
+    """A harness installed in a project is at the source's version.
+
+    The root PoP is the single source: a project with
+    `pop/.included-harness.json` received a managed copy of the WORKFLOW, the
+    templates and the scripts. If the `content_sha` stamp diverges, that
+    project is running a flow the vault has already abandoned — fail closed,
+    because the remedy is a single command. Only the vault that **is** the
+    source runs this check (a clone does not audit itself).
+    """
+    try:
+        import pop_install_included as installer
+    except ImportError:
+        return
+    if installer.SOURCE != root or not installer.MANIFEST.is_file():
+        return
+    current = installer.content_sha()
+    for project in projects:
+        marker, stamped = installer.installed_stamp(project)
+        if marker is None:
+            continue
+        label = project.relative_to(root)
+        if stamped is None:
+            violations.append(
+                f"{marker}: harness without a `content_sha` stamp — reinstall "
+                f"with `python3 scripts/pop_install_included.py {label}`")
+        elif stamped != current:
+            violations.append(
+                f"{marker}: harness STALE ({stamped[:12]} ≠ source "
+                f"{current[:12]}) — reinstall with "
+                f"`python3 scripts/pop_install_included.py {label}`")
+
+
 def check_standalone(root, violations):
     hb = root / "pop"
     manifest_path = hb / ".included-harness.json"
@@ -553,6 +634,8 @@ def main():
     check_spec_collections(root, projects, violations)
     check_wikilinks(root, warnings)
     check_hash_pins(root, violations)
+    check_project_agents(root, projects, violations)
+    check_harness_freshness(root, projects, violations)
     if args.standalone:
         check_standalone(root, violations)
 

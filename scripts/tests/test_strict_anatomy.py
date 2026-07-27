@@ -9,6 +9,7 @@ project and a new embedded repo (full-multi-repo). Stdlib only.
 Usage:
     python3 -m unittest discover -s scripts/tests -v   (from the vault root)
 """
+import json
 import shutil
 import subprocess
 import sys
@@ -186,6 +187,23 @@ class StrictAnatomyTest(unittest.TestCase):
         result = self.run_script("pop_validate.py")
         self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
 
+    def test_pop_validate_flags_invalid_return_kind(self):
+        # `return_kind` is written only by pop_move; a value outside the enum
+        # means a hand edit and breaks the choice of the re-review mode.
+        self.assertEqual(
+            self.run_script("pop_task.py", "a/novo", "5.1.1-return-kind")
+            .returncode, 0)
+        card = (self.root / "categories/a/novo/pop/kanban" / "001_initial_task"
+                / "5.1.1-return-kind" / "5.1.1-return-kind.md")
+        release_card(card)
+        self.assertEqual(self.run_script("pop_validate.py").returncode, 0)
+
+        card.write_text(card.read_text(encoding="utf-8").replace(
+            "return_kind:", "return_kind: parcial"), encoding="utf-8")
+        result = self.run_script("pop_validate.py")
+        self.assertEqual(result.returncode, 1, result.stdout + result.stderr)
+        self.assertIn("`return_kind` invalid `parcial`", result.stdout)
+
     def test_pop_validate_nao_avisa_link_estagio_irmao(self):
         # a card in 001 links `.plan/.approval/.verify` (from the template)
         # that are only born as the task advances — expected navigation link,
@@ -219,17 +237,78 @@ class StrictAnatomyTest(unittest.TestCase):
         result = self.run_script("pop_validate.py")
         self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
 
-    def test_pop_validate_applies_150_line_limit_to_plan(self):
-        plans = self.root / "specs"
-        plans.mkdir()
-        plan = plans / "limit.plan.md"
-        plan.write_text("line\n" * 150, encoding="utf-8")
+    def test_pop_validate_applies_150_line_limit_to_harness_note(self):
+        notes = self.root / "specs"
+        notes.mkdir()
+        note = notes / "limit.md"
+        note.write_text("line\n" * 150, encoding="utf-8")
         self.assertEqual(self.run_script("pop_validate.py").returncode, 0)
 
-        plan.write_text("line\n" * 151, encoding="utf-8")
+        note.write_text("line\n" * 151, encoding="utf-8")
         result = self.run_script("pop_validate.py")
         self.assertEqual(result.returncode, 1, result.stdout + result.stderr)
         self.assertIn("151 lines (max. 150)", result.stdout)
+
+    def test_pop_validate_applies_80_line_limit_to_plan_root(self):
+        # A big plan modularizes into `subtasks/`; the root is read by everyone.
+        folder = self.root / "kanban/002_planning/1.1.1-t"
+        folder.mkdir(parents=True)
+        plan = folder / "1.1.1-t.plan.md"
+        plan.write_text("line\n" * 80, encoding="utf-8")
+        self.assertEqual(self.run_script("pop_validate.py").returncode, 0)
+
+        plan.write_text("line\n" * 81, encoding="utf-8")
+        result = self.run_script("pop_validate.py")
+        self.assertEqual(result.returncode, 1, result.stdout + result.stderr)
+        self.assertIn("81 lines (max. 80)", result.stdout)
+
+    def test_pop_validate_applies_50_line_limit_to_front_file(self):
+        # A front file is the reading slice of a single executor.
+        folder = self.root / "kanban/002_planning/1.1.1-t/subtasks"
+        folder.mkdir(parents=True)
+        front = folder / "1.1.1-t.g01-front.md"
+        front.write_text("line\n" * 50, encoding="utf-8")
+        self.assertEqual(self.run_script("pop_validate.py").returncode, 0)
+
+        front.write_text("line\n" * 51, encoding="utf-8")
+        result = self.run_script("pop_validate.py")
+        self.assertEqual(result.returncode, 1, result.stdout + result.stderr)
+        self.assertIn("51 lines (max. 50)", result.stdout)
+
+
+class ProjectAgentsCapTest(unittest.TestCase):
+    """A project's AGENTS.md is a pointer: 60 lines, DOX the only exception."""
+
+    def setUp(self):
+        self._tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(self._tmp.cleanup)
+        self.root = Path(self._tmp.name)
+        self.project = self.root / "categories/agents/p"
+        (self.project / "pop/kanban/001_initial_task").mkdir(parents=True)
+        self.agents = self.project / "AGENTS.md"
+
+    def validate(self):
+        return subprocess.run(
+            [sys.executable, str(SCRIPTS / "pop_validate.py"),
+             "--vault", str(self.root)], capture_output=True, text=True)
+
+    def test_accepts_short_pointer_and_refuses_narrating_the_flow(self):
+        self.agents.write_text("line\n" * 60, encoding="utf-8")
+        self.assertNotIn("max. 60", self.validate().stdout)
+
+        self.agents.write_text("line\n" * 61, encoding="utf-8")
+        result = self.validate()
+        self.assertEqual(result.returncode, 1, result.stdout + result.stderr)
+        self.assertIn("61 lines (max. 60)", result.stdout)
+
+    def test_application_with_dox_is_exempt(self):
+        self.agents.write_text("## DOX process\n" + "line\n" * 200,
+                               encoding="utf-8")
+        self.assertNotIn("max. 60", self.validate().stdout)
+
+    def test_vault_root_agents_is_not_a_project_agents(self):
+        (self.root / "AGENTS.md").write_text("line\n" * 200, encoding="utf-8")
+        self.assertNotIn("max. 60", self.validate().stdout)
 
 
 class IncludedInstallV2Test(unittest.TestCase):
@@ -287,6 +366,85 @@ class IncludedInstallV2Test(unittest.TestCase):
              "--audit-manifest"], capture_output=True, text=True,
             cwd=self.target)
         self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+
+
+class HarnessFreshnessTest(unittest.TestCase):
+    """The root PoP as updater: content stamp and failing closed."""
+
+    def setUp(self):
+        self._tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(self._tmp.cleanup)
+        self.target = Path(self._tmp.name) / "repo"
+        self.target.mkdir()
+        self.marker = self.target / "pop" / ".included-harness.json"
+
+    def installer(self, *args):
+        return subprocess.run(
+            [sys.executable, str(SCRIPTS / "pop_install_included.py"), *args],
+            capture_output=True, text=True)
+
+    def install(self):
+        result = self.installer(str(self.target))
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+
+    def test_install_stamps_the_source_content_sha(self):
+        self.install()
+        stamp = json.loads(self.marker.read_text(encoding="utf-8"))
+        sha = self.installer("--sha")
+        self.assertEqual(stamp["content_sha"], sha.stdout.strip())
+
+    def test_check_fresh_accepts_a_freshly_installed_target(self):
+        self.install()
+        result = self.installer("--check-fresh", str(self.target))
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        self.assertIn("harness current", result.stdout)
+
+    def test_check_fresh_refuses_a_stale_target(self):
+        self.install()
+        stamp = json.loads(self.marker.read_text(encoding="utf-8"))
+        stamp["content_sha"] = "0" * 64
+        self.marker.write_text(json.dumps(stamp), encoding="utf-8")
+        result = self.installer("--check-fresh", str(self.target))
+        self.assertEqual(result.returncode, 1)
+        self.assertIn("STALE", result.stderr)
+
+    def test_check_fresh_refuses_a_target_without_a_stamp(self):
+        """An installation older than the stamp is indistinguishable from stale."""
+        self.install()
+        stamp = json.loads(self.marker.read_text(encoding="utf-8"))
+        del stamp["content_sha"]
+        self.marker.write_text(json.dumps(stamp), encoding="utf-8")
+        result = self.installer("--check-fresh", str(self.target))
+        self.assertEqual(result.returncode, 1)
+        self.assertIn("without a stamp", result.stderr)
+
+    def test_check_fresh_refuses_a_target_without_a_harness(self):
+        result = self.installer("--check-fresh", str(self.target))
+        self.assertEqual(result.returncode, 1)
+        self.assertIn("absent", result.stderr)
+
+    def test_update_prunes_what_left_the_source(self):
+        """Without pruning, a retired template survives forever in the target."""
+        self.install()
+        residue = self.target / "pop" / "_templates" / "TASK-OBSOLETE.md"
+        residue.write_text("a stage that no longer exists\n", encoding="utf-8")
+        self.install()
+        self.assertFalse(residue.exists())
+
+    def test_target_does_not_receive_the_parents_test_suite(self):
+        self.install()
+        self.assertFalse((self.target / "pop/scripts/tests").exists())
+        self.assertTrue((self.target / "pop/scripts/poplib.py").is_file())
+
+    def test_content_sha_follows_a_change_in_the_harness(self):
+        """The stamp is content identity, not layout identity."""
+        before = self.installer("--sha").stdout.strip()
+        workflow = SCRIPTS.parent / "WORKFLOW.md"
+        original = workflow.read_text(encoding="utf-8")
+        self.addCleanup(workflow.write_text, original, "utf-8")
+        workflow.write_text(original + "\n<!-- test touch -->\n",
+                            encoding="utf-8")
+        self.assertNotEqual(self.installer("--sha").stdout.strip(), before)
 
 
 if __name__ == "__main__":
