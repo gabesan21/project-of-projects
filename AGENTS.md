@@ -118,6 +118,7 @@ The central procedures are **skills** in the open Agent Skills format (`SKILL.md
 |-------|-------------|
 | `new-project` | Guided interview that creates a new project: essence, harness, roadmap and specs. Consumes a draft from `drafts/new/` if present. |
 | `import-project` | Imports an existing repository: recon, fit into type/category and Epoch 1 of organization. Consumes a draft from `drafts/import/` if present. |
+| `recon-project` | Generates and consumes the deterministic `RECON.md` report of a directory before sweeping files — delegated recon, 002 with broad reading, Epoch 1 of `import-project`. |
 | `plan-roadmap` | Build/evolve the roadmap by interview (epochs → phases → candidate tasks). |
 | `new-task` | Quick interview that materializes a roadmap or modification task in `kanban/001_initial_task`; also handles change requests with no active card. |
 | `advance-task` | Move a task through the 001→005_closing flow, respecting the human gates. |
@@ -125,7 +126,7 @@ The central procedures are **skills** in the open Agent Skills format (`SKILL.md
 | `write-spec` | Create/rewrite a standardized spec, with questions per project type. |
 | `sync-specs` | Mandatory flow: keep specs faithful to reality as tasks advance. |
 | `ingest-research` | Ingests a delivered research result: immutable raw source in `raw/`, synthesis with triggered links and a contradiction check against specs/notes. |
-| `weekly-review` | Vault overview: what awaits the human, what is stalled, proposals (including promotion of swollen modifications). |
+| `weekly-review` | Overview of the current scope: what awaits the human, what is stalled, proposals (including promotion of swollen modifications). The fronts for whoever hosts projects live in `origin-scope.md`, which is not installed. |
 | `optimize-memory` | Compact memories while preserving one file per task, identity, chronology, commits/PRs, and critical decisions. |
 | `excalidraw-diagram` *(optional, external)* | `.excalidraw` diagrams that argue visually — for specs, plans and notes (pairs with the Obsidian Excalidraw plugin). By [coleam00](https://github.com/coleam00/excalidraw-diagram-skill) — clone it into `.agents/skills/excalidraw-diagram/`. |
 | `delegate-coding` | Hub of the coding-skill family: contract for delegating coding work to a headless CLI (always yolo, pre-existing auth with abort on error) and tool choice. Integration into the PoP workflow is a future decision. |

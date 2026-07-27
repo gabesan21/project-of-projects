@@ -30,6 +30,22 @@ Cards keep `stage`, `critical`, `yolo`, `blocked`, `awaiting_merge`, return coun
 - **Yolo gates are always strong**, independent of size: `005_closing` is the single quality gate of every yolo task; 003 exists only for `critical: true`. An executor rises from `cheap` to `medium` on the next round **only after an `execucao` return** — a `lacuna`/`premissa` return is not its failure and does not change its tier.
 - Recon is delegated only for a specific gap above the ~5K-token floor; zero recon workers is normal.
 
+## Task folder contents
+
+```
+<id>/
+├── <id>.md                 ← card
+├── <id>.plan.md            ← root of the 002 brief (≤80 lines, always)
+├── <id>.approval.md        ← 003 rounds
+├── <id>.verify.md          ← the independent reviewer's judgment (yolo only)
+└── subtasks/               ← one front per file (≤50 lines): an executor's read slice
+    └── <id>.g01-<slug>.md
+```
+
+Mandatory whenever the front goes to a separate context; a single-front task has no `subtasks/`. The caps are enforced by `scripts/pop_validate.py`.
+
+Templates: [[_templates/TASK|TASK]] · [[_templates/TASK-PLAN|TASK-PLAN]] · [[_templates/TASK-APPROVAL|TASK-APPROVAL]] · [[_templates/TASK-VERIFY|TASK-VERIFY]] · [[_templates/SUBTASKS|SUBTASKS]] · [[_templates/MEMORY|MEMORY]].
+
 ## 001 — birth and release
 
 A change request with no active card enters through `new-task` and then `advance-task`; the absence of a card never authorizes editing. “Start the flow in yolo” materializes and releases the task, records `yolo: true`, and follows this same state machine.

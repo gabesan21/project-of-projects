@@ -17,6 +17,7 @@ Python 3.9+, standard library only.
 | `pop_delivery.py` | Idempotent external-yolo integration into `develop` and final `develop` → `main` PR creation/reuse. |
 | `pop_check_scope.py` | Validates committed/local/untracked diff against ownership and deny globs. |
 | `pop_install_included.py` | Installs/**updates** the harness declared in `_templates/included-manifest.json`: mirrors the managed set into the target and writes into it the source's `content_sha` plus the **inventory** of what it wrote. The next update's prune reaches only that inventory — a managed directory is not an exclusive one, so the project's own files under `pop/scripts/` stay. `--check-fresh <dir>` recomputes it and fails closed when the target has fallen behind (`pop_validate` reports it as a violation); `--sha` prints the source's version — run from an installed copy, both report only the local version, because comparing is the installer's job; `--audit-boundary` fails a package that names anything above the target's root; `--check` only checks whether it is installed; `--audit-manifest` audits manifest closure. |
+| `pop_recon.py <dir>` | Deterministic recon report of any directory (zero LLM, stdlib only): truncated tree, languages/LOC, manifests (`package.json`/`go.mod`/`pyproject.toml`/`Cargo.toml`), hotspots by git churn (degrades with a note when there is no `.git`), entry points/configs/CI and, for mostly-markdown bases, writing mode (chapters, wordcount, frontmatter). `--output [PATH]` writes to a file (default `RECON.md`) instead of stdout. |
 
 Example:
 

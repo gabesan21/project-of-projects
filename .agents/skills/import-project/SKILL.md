@@ -19,8 +19,9 @@ Brings a project **that already exists** (repository or local folder) into the P
 ## Step 1 — Codebase recon
 
 1. Ask where the project lives: repository URL and/or local path. Clone/read **without changing anything**.
-2. Launch **parallel subagents**, one per front: **(a)** structure and stack; **(b)** how it's built/tested/run (scripts, CI); **(c)** existing docs (README, docs/, key comments); **(d)** git history — activity, branches, commit conventions; **(e)** visible fragile or unfinished spots.
-3. Consolidate a **short map** (≤30 lines) and present it to the user for correction before proceeding.
+2. **Before launching the subagents**, generate the `RECON.md` of the cloned directory with the [[.agents/skills/recon-project/SKILL|recon-project]] skill (`python3 scripts/pop_recon.py <dir>`) and read it first — pass it as context to each subagent, to reduce each front's manual sweep.
+3. Launch **parallel subagents**, one per front: **(a)** structure and stack; **(b)** how it's built/tested/run (scripts, CI); **(c)** existing docs (README, docs/, key comments); **(d)** git history — activity, branches, commit conventions; **(e)** visible fragile or unfinished spots.
+4. Consolidate a **short map** (≤30 lines) and present it to the user for correction before proceeding.
 
 ## Step 2 — Fit into the vault
 
