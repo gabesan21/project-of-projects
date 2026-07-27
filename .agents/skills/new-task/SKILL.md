@@ -22,14 +22,14 @@ Materializes a roadmap or modification task as a folder in the kanban, at stage 
 5. **Specs and research:** which durable contracts does it affect? Link an existing spec; create a draft through `write-spec` only if it introduces durable behavior, interface or invariant. A technical decision without prior research gets a `RESEARCHES.md` prompt before 002.
 6. **Size:** does the change fit in **one cohesive brief** (≤~150 lines, preferably much less)? Independent objectives or too many fronts for a readable DAG → propose tasks chained by `depends_on` — in a modification, multi-task gets its own file in `pop/modifications/`.
 7. **Effort (`size`):** propose `S | M | L` by delivery volume, with one-line rationale. Size alone does not choose topology: risk, skills, dependencies and write sets determine one executor or fronts/waves; planner and reviewer remain separate.
-8. Propose the **id and slug** — roadmap: `<n>.<m>.<t>-<slug>` (`t` is the next free number in the phase); modification: `M-<n>.<t>-<slug>` (`t` is the next free number in the modification, starting at 1). Kebab-case slug, unique in the vault. Confirm.
+8. Propose the **id and slug** — roadmap: `<n>.<m>.<t>-<slug>` (`t` is the next free number in the phase); modification: `M-<n>.<t>-<slug>` (`t` is the next free number in the modification, starting at 1). Kebab-case slug, unique in the scope. Confirm.
 
 ## Procedure
 
 1. Confirm the task exists (or add it) in its origin:
    - **Roadmap:** the phase table in `pop/roadmap/<n>-<epoch-slug>.md`.
    - **Modifications:** if `pop/MODIFICATIONS.md` doesn't exist yet, create it from `_templates/MODIFICATIONS.md` and add the `M-<n>` line. A **multi-task** modification also gets `pop/modifications/m-<n>-<slug>.md` from `_templates/MODIFICATION.md`, listing the task there; a **single-task** modification lives only in the MODIFICATIONS.md line.
-2. Create the folder `pop/kanban/001_initial_task/<id>-<slug>/` (the vault-root meta-project and not-yet-migrated projects: harness at the root, no `pop/`) with the card `<id>-<slug>.md` copied from `_templates/TASK.md`:
+2. Create the folder `pop/kanban/001_initial_task/<id>-<slug>/` (a scope whose harness lives at its own root: the same paths, without the `pop/` prefix) with the card `<id>-<slug>.md` copied from `_templates/TASK.md`:
    - Full frontmatter (`id`, `project`, `origin`, `epoch`/`phase` **or** `modification`, `stage: 001_initial_task`, `critical`, `yolo`, `size`, `blocked: false`, `depends_on: [...]`, `awaiting_merge: false`, dates) — delete the block of the unused origin.
    - **Resolve the yolo inheritance** (epoch → phase → task marker, or modification → task marker; the ` · yolo: no` opt-out wins): inherited/marked → `yolo: true` + a Log line with the origin (`yolo inherited from phase X.Y` / `yolo inherited from modification M-N`).
    - **Stamp the `size`:** the ` · size:` marker of the task's line in the origin, or the interview's suggestion (yolo mode without a marker: suggest it yourself) — always with a 1-line justification in the Log (`size M suggested: <reason>`). The human corrects it freely in 001.

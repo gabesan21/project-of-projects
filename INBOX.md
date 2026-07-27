@@ -40,7 +40,7 @@ SORT updated ASC
 
 ## Open questions
 
-Questions from the agent that belong to no card — decisions about new projects, overall vault structure etc. (folder `open_questions/`).
+Questions from the agent that belong to no card — decisions about the structure of the scope etc. (folder `open_questions/`).
 
 ```dataview
 TABLE WITHOUT ID file.link AS Question, origin AS Origin, created AS "Since"

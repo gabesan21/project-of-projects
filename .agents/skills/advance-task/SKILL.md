@@ -5,7 +5,7 @@ description: Orchestrates a task through kanban 001→005_closing, delegating ea
 
 # advance-task
 
-You are the **orchestrator**. Find the current stage, resolve gates and transitions, and continue until the next legitimate human gate. [[WORKFLOW|WORKFLOW]] is authoritative: read the current stage and transversal rules, not the whole vault.
+You are the **orchestrator**. Find the current stage, resolve gates and transitions, and continue until the next legitimate human gate. [[WORKFLOW|WORKFLOW]] is authoritative: read the current stage and transversal rules, not the whole scope.
 
 **Delegate:** 002 always uses a fresh context, and so does the `005_closing` gate **in yolo**. A cohesive 004 front goes directly to one executor; only a DAG, several skills, or disjoint write sets justify a sub-orchestrator. The main agent owns 001, the gates, the transitions, and the whole of `005_closing` outside yolo — there is no agentic reviewer there.
 
@@ -33,7 +33,7 @@ Outside yolo, human gates are 001 release, 003 approval, `(user)` work, a block,
 - A cohesive implementation uses one direct executor with `owns`, denies, and a criterion. Use a sub-orchestrator only for genuine topology.
 - The `005_closing` critic is always strong in a clean session and first checks whether the **original request** (the card's objective) was met — the brief is strategy, not an approved contract. It records `differential|full`, reason, surface, and tests; `full` is mandatory for critical tasks and after a `premissa` return (`scripts/pop_yolo.py verify-mode <id>` computes it from `return_kind`).
 - The gate has **three exits**: approved; execution blocker → 004 (`yolo_005_returns`, kind `execucao`); plan defect → 002 (`yolo_003_returns`, kind `lacuna` or `premissa`), when the plan's criteria did not cover the card's request and the executor delivered the slice it was given. Every return names a **delta** — type, affected criteria, fronts re-entering, fronts staying intact.
-- Delivery/close-out is mechanical and idempotent: local root PoP stays on `main`; external yolo tasks integrate into `develop`, then the **marked scope** (single task, phase/epoch or modification) opens `develop` → `main` without agent merge.
+- Delivery/close-out is mechanical and idempotent: a local scope stays on `main`; external yolo tasks integrate into `develop`, then the **marked scope** (single task, phase/epoch or modification) opens `develop` → `main` without agent merge.
 
 ## Turn discipline
 

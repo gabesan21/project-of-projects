@@ -128,7 +128,7 @@ def main():
                         help="agent identifier (default: user@host; same as pop_claim)")
     parser.add_argument("--force", action="store_true",
                         help="allow a nonstandard transition and override claim/release")
-    parser.add_argument("--vault", metavar="DIR",
+    parser.add_argument("--scope", "--vault", dest="vault", metavar="DIR",
                         help="vault root (default: directory above scripts/)")
     args = parser.parse_args()
 

@@ -73,7 +73,7 @@ def main():
                         help="base branch for the new branch (add only)")
     parser.add_argument("--delete-branch", action="store_true",
                         help="on remove, delete the branch even if unmerged")
-    parser.add_argument("--vault", metavar="DIR",
+    parser.add_argument("--scope", "--vault", dest="vault", metavar="DIR",
                         help="vault root (default: directory above scripts/)")
     args = parser.parse_args()
 

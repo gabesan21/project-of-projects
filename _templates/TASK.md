@@ -27,7 +27,7 @@ updated: YYYY-MM-DD
 
 # <id>-<slug> — <short title>
 
-> Blockquotes in this template are fill-in instructions — **delete them when filling it in**. Harness paths carry the `pop/` prefix; the vault-root meta-project does not.
+> Blockquotes in this template are fill-in instructions — **delete them when filling it in**. Harness paths carry the `pop/` prefix; a scope whose harness lives at its own root does not.
 > **Origin:** a roadmap task (`origin: roadmap`) uses id `<n>.<m>.<t>` and fills `epoch`/`phase` (delete `modification`); a modification task (`origin: modifications`) uses id `M-<n>.<t>` and fills `modification: M-<n>` (delete `epoch`/`phase`).
 > **Machine fields:** `yolo_*_returns`, `return_kind` and `circuit_breaker` are born empty/zeroed and are written **only** by `pop_move`/the orchestrator — editing them by hand inflates counters and makes the gate pick the wrong review mode.
 

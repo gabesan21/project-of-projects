@@ -88,8 +88,10 @@ class LocalCliTest(unittest.TestCase):
                 result = run("python3", "pop/scripts/" + name, "--help", cwd=target)
                 self.assertEqual(result.returncode, 0, name + result.stderr)
             task = "1.1.1-fixture-task"
-            self.assertEqual(run("python3", "pop/scripts/pop_task.py", "pop", task,
-                                 "--title", "Fixture", cwd=target).returncode, 0)
+            # An installed scope is named after its own root. Calling itself
+            # `pop` would make the card inherit the host's delivery route.
+            self.assertEqual(run("python3", "pop/scripts/pop_task.py", target.name,
+                                 task, "--title", "Fixture", cwd=target).returncode, 0)
             self.assertEqual(run("python3", "pop/scripts/pop_claim.py", task,
                                  "--by", "fixture", cwd=target).returncode, 0)
             self.assertEqual(run("python3", "pop/scripts/pop_claim.py", task,
@@ -99,5 +101,65 @@ class LocalCliTest(unittest.TestCase):
                                                      "- [x] Ready to plan"))
             self.assertEqual(run("python3", "pop/scripts/pop_move.py", task,
                                  "002_planning", "--reason", "fixture", cwd=target).returncode, 0)
-            self.assertEqual(run("python3", "pop/scripts/pop_status.py", "--project", "pop",
+            self.assertEqual(run("python3", "pop/scripts/pop_status.py", "--project", target.name,
                                  cwd=target).returncode, 0)
+
+
+class BoundaryTest(unittest.TestCase):
+    """An installed harness is a complete world: nothing resolves above its root.
+
+    The real case behind these tests: a project installed **inside** the tree
+    of whoever installed it. The tool loads the ancestor's `AGENTS.md` on its
+    own, and from then on every "vault" becomes the one above. The harness does
+    not control the tool — it controls what it says and what the scripts
+    resolve.
+    """
+
+    def setUp(self):
+        self.tmp = tempfile.TemporaryDirectory()
+        # A complete, plausible ancestor: its own AGENTS.md, kanban and index.
+        self.host = Path(self.tmp.name) / "host"
+        (self.host / "kanban" / "001_initial_task").mkdir(parents=True)
+        (self.host / "AGENTS.md").write_text("# Host\nNot the scope.\n")
+        (self.host / "INDEX.md").write_text("# Host index\n")
+        self.target = self.host / "categories" / "apps" / "child"
+        self.target.mkdir(parents=True)
+        (self.target / "AGENTS.md").write_text("# Child\n")
+        self.assertEqual(run("python3", str(INSTALL), str(self.target)).returncode, 0)
+
+    def tearDown(self): self.tmp.cleanup()
+
+    def test_scripts_stop_at_the_installed_scope_root(self):
+        module = self.target / "pop" / "scripts" / "poplib.py"
+        # Import by path: the name `poplib` collides with the stdlib POP3 module.
+        probe = ("import importlib.util as u; "
+                 f"s = u.spec_from_file_location('pl', r'{module}'); "
+                 "m = u.module_from_spec(s); s.loader.exec_module(m); "
+                 "print(m.vault_root())")
+        for cwd in (self.target, self.target / "pop" / "kanban"):
+            result = run("python3", "-c", probe, cwd=cwd)
+            self.assertEqual(result.returncode, 0, result.stderr)
+            self.assertEqual(result.stdout.strip(), str(self.target.resolve()))
+
+    def test_no_installed_file_points_outside(self):
+        for path in sorted(self.target.rglob("*.md")):
+            text = path.read_text(encoding="utf-8").lower()
+            for token in ("[[categories/", "root pop", "parent pop",
+                          "parent vault", "meta-project", str(self.host).lower()):
+                self.assertNotIn(token, text, f"{path}: {token}")
+
+    def test_full_flow_without_the_origin_on_disk(self):
+        """The cut-dependency criterion: it works cloned on its own."""
+        alone = Path(self.tmp.name) / "alone"
+        shutil.copytree(self.target, alone)
+        task = "1.1.1-fixture-task"
+        self.assertEqual(run("python3", "pop/scripts/pop_task.py", alone.name,
+                             task, "--title", "Fixture", cwd=alone).returncode, 0)
+        card = alone / "pop/kanban/001_initial_task" / task / f"{task}.md"
+        card.write_text(card.read_text().replace("size: S | M | L", "size: S"))
+        for args in (("pop/scripts/pop_validate.py", "--standalone"),
+                     ("pop/scripts/pop_status.py",),
+                     ("pop/scripts/pop_install_included.py", "--check-fresh", ".")):
+            result = run("python3", *args, cwd=alone)
+            self.assertEqual(result.returncode, 0,
+                             " ".join(args) + result.stdout + result.stderr)

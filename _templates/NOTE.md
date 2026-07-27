@@ -7,7 +7,7 @@ created: YYYY-MM-DD
 
 > Blockquotes in this template are fill-in instructions — **delete them when filling it in**.
 
-> Lives in `pop/notes/<category>/` (in the vault-root meta-project: without the `pop/` prefix): `learnings/` (learnings from tasks), `decisions/` (decisions extracted from the profile), `ideas/` (loose ideas) or `references/` (links and external materials).
+> Lives in `pop/notes/<category>/` (a scope whose harness lives at its own root: without the `pop/` prefix): `learnings/` (learnings from tasks), `decisions/` (decisions extracted from the profile), `ideas/` (loose ideas) or `references/` (links and external materials).
 
 Free-form content — but ≤150 lines and answering **one** question. Link the origin (task, spec, conversation): [[<task-id>]] · [[categories/<category>/<project>/pop/specs/<spec>|<spec>]]
 

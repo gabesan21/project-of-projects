@@ -41,10 +41,20 @@ def manifest():
     return json.loads(MANIFEST.read_text(encoding="utf-8"))
 
 
-def excluded(data, relative: Path) -> bool:
-    """A path the installer does not propagate (bytecode, the parent's suite)."""
+def excluded(data, relative: Path, label: str = "") -> bool:
+    """A path the installer does not propagate.
+
+    Two lists, two reasons. `exclude` drops noise by folder name (bytecode,
+    the source's own test suite). `exclude_files` drops, by exact label,
+    material that **only exists for whoever hosts other projects** —
+    aggregation indexes, project creation, cross-scope overview. It is not
+    omitted to save space: were it to reach the target, the installed harness
+    would again describe a world above its own root.
+    """
     names = set(data.get("exclude", DEFAULT_EXCLUDE))
-    return bool(names.intersection(relative.parts))
+    if names.intersection(relative.parts):
+        return True
+    return bool(label) and label in set(data.get("exclude_files", ()))
 
 
 def managed_sources(data):
@@ -60,14 +70,16 @@ def managed_sources(data):
         base = SOURCE / name
         for path in sorted(base.rglob("*")):
             relative = path.relative_to(base)
-            if path.is_file() and not excluded(data, relative):
-                yield f"{name}/{relative.as_posix()}", path
+            label = f"{name}/{relative.as_posix()}"
+            if path.is_file() and not excluded(data, relative, label):
+                yield label, path
     for name in data["skills"]:
         base = SKILLS_SOURCE / name
         for path in sorted(base.rglob("*")):
             relative = path.relative_to(base)
-            if path.is_file() and not excluded(data, relative):
-                yield f"skills/{name}/{relative.as_posix()}", path
+            label = f"skills/{name}/{relative.as_posix()}"
+            if path.is_file() and not excluded(data, relative, label):
+                yield label, path
     yield "manifest", MANIFEST
 
 
@@ -97,12 +109,13 @@ def installed_stamp(target: Path, key: str = "content_sha"):
 
 
 def is_vendored() -> bool:
-    """This script is the copy installed in a project, not the parent's original.
+    """This script is the copy installed in a scope, not the original.
 
-    The copy cannot answer about freshness: its `SOURCE` is the local harness,
-    already localized at install time, so the hash never matches the parent's.
-    Answering "STALE" there would teach the project to reinstall the harness
-    from itself — the opposite of a single source.
+    The copy cannot **compare** versions: its `SOURCE` is the local harness,
+    already localized at install time, so the hash never matches the origin's.
+    It answers what it knows about itself — the stamped version — and stops
+    there. Sending it to look for the origin would turn a local question into
+    a boundary crossing.
     """
     return (SOURCE / ".included-harness.json").is_file()
 
@@ -132,7 +145,7 @@ def copy_file(source: Path, dest: Path, *, overwrite: bool = True,
 
 
 def copy_tree(source: Path, dest: Path, *, included_paths: bool = False,
-              data=None) -> list:
+              data=None, label_prefix: str = "") -> list:
     """Copies `source` into `dest` and returns the files it wrote.
 
     It does not scan the destination: a managed folder is **not** an exclusive
@@ -145,7 +158,8 @@ def copy_tree(source: Path, dest: Path, *, included_paths: bool = False,
     written = []
     for path in source.rglob("*"):
         relative = path.relative_to(source)
-        if path.is_dir() or excluded(data, relative):
+        label = f"{label_prefix}{relative.as_posix()}" if label_prefix else ""
+        if path.is_dir() or excluded(data, relative, label):
             continue
         target_file = dest / relative
         copy_file(path, target_file, included_paths=included_paths)
@@ -193,6 +207,72 @@ def preserve_worktree_marker(target: Path, prefix: str = "") -> None:
     ignore.write_text(text, encoding="utf-8")
 
 
+# Terms describing a world **above** the target's root. If any reaches the
+# target, the installed harness goes back to teaching the agent to climb — the
+# very failure that `exclude_files` and this guard exist to prevent. The gate
+# is about text the agent reads as instruction.
+BOUNDARY_TOKENS = ("vault", "categories/", "meta-project", "root pop",
+                   "parent pop", "parent vault", "drafts/", "hosting scope's",
+                   "aggregated repositories", "parent project")
+# In code, an identifier or a glob is not an instruction: `vault_root`,
+# `--vault` and the `categories/*/*` pattern are internal mechanics and stay.
+# What is banned is **text spoken to the agent** telling it to leave the scope.
+BOUNDARY_TOKENS_CODE = ("meta-project", "root pop", "parent pop", "parent vault")
+
+
+def _spoken_strings(source: str):
+    """Literals the script **says** to the user: print, help= and errors."""
+    import ast
+    try:
+        tree = ast.parse(source)
+    except SyntaxError:
+        return
+    for node in ast.walk(tree):
+        if not isinstance(node, ast.Call):
+            continue
+        target = node.func
+        name = getattr(target, "id", None) or getattr(target, "attr", None)
+        spoken = name in {"print", "error", "RuntimeError", "ValueError",
+                          "SystemExit", "append"}
+        for argument in (node.args if spoken else []):
+            for piece in ast.walk(argument):
+                if isinstance(piece, ast.Constant) and isinstance(piece.value, str):
+                    yield piece.value
+        for keyword in node.keywords:
+            if keyword.arg != "help":
+                continue
+            for piece in ast.walk(keyword.value):
+                if isinstance(piece, ast.Constant) and isinstance(piece.value, str):
+                    yield piece.value
+
+
+def boundary_violations() -> list[str]:
+    """Managed labels that name something outside the target's scope.
+
+    Fail closed: installing a harness that describes its host is the defect,
+    not a wording detail. The target should not even have the vocabulary to
+    describe whoever installed it.
+    """
+    data = manifest()
+    found = []
+    for label, path in sorted(managed_sources(data)):
+        if path.suffix not in {".md", ".py"}:
+            continue
+        # Audit what **reaches** the target: `localize` already rewrites the
+        # category-prefixed wikilinks, so failing on them is a false positive.
+        text = localize(path.read_text(encoding="utf-8"),
+                        included_paths=path.suffix == ".md")
+        if path.suffix == ".md":
+            haystacks, tokens = [text], BOUNDARY_TOKENS
+        else:
+            haystacks, tokens = list(_spoken_strings(text)), BOUNDARY_TOKENS_CODE
+        hits = sorted({token for token in tokens
+                       for hay in haystacks if token in hay.lower()})
+        if hits:
+            found.append(f"{label}: {', '.join(hits)}")
+    return found
+
+
 def audit() -> list[str]:
     data = manifest()
     missing = []
@@ -212,6 +292,10 @@ def install(target: Path) -> None:
     missing = audit()
     if missing:
         raise RuntimeError("incomplete manifest: " + ", ".join(missing))
+    leaks = boundary_violations()
+    if leaks:
+        raise RuntimeError("managed set names the hosting scope: "
+                           + "; ".join(leaks))
     data = manifest()
     # harness_root: "pop" in manifest v2; "" (target root) in legacy v1.
     hr = data.get("harness_root", "") or ""
@@ -224,11 +308,12 @@ def install(target: Path) -> None:
         written.append(hb / name)
     for name in data["directories"]:
         written += copy_tree(SOURCE / name, hb / name, included_paths=True,
-                             data=data)
+                             data=data, label_prefix=f"{name}/")
     for name in data["skills"]:
         written += copy_tree(SKILLS_SOURCE / name,
                              target / ".agents/skills" / name,
-                             included_paths=True, data=data)
+                             included_paths=True, data=data,
+                             label_prefix=f"skills/{name}/")
     inventory = sorted(path.relative_to(target).as_posix() for path in written)
     prune(target, previous or [], [path.relative_to(target).as_posix()
                                    for path in written])
@@ -270,6 +355,8 @@ def main() -> int:
     parser.add_argument("--check-fresh", action="store_true",
                         help="is the target's harness at the source's version?")
     parser.add_argument("--audit-manifest", action="store_true")
+    parser.add_argument("--audit-boundary", action="store_true",
+                        help="is the managed set free of the hosting scope?")
     parser.add_argument("--sha", action="store_true",
                         help="print the content_sha of the harness at the source")
     args = parser.parse_args()
@@ -278,11 +365,22 @@ def main() -> int:
         if missing:
             print("incomplete manifest: " + ", ".join(missing), file=sys.stderr); return 1
         print("manifest complete"); return 0
+    if args.audit_boundary:
+        leaks = boundary_violations()
+        if leaks:
+            print("managed set names the hosting scope:", file=sys.stderr)
+            for leak in leaks:
+                print(f"  {leak}", file=sys.stderr)
+            return 1
+        print("boundary intact"); return 0
     if (args.sha or args.check_fresh) and is_vendored():
-        print("command only exists at the source: this is a project's installed "
-              "harness. Run it from the parent PoP, the single source.",
-              file=sys.stderr)
-        return 2
+        # A local, complete answer. Comparing against the origin is the job of
+        # whoever installed it; the scope does not leave to find that out.
+        _, stamped = installed_stamp(SOURCE.parent)
+        version = stamped[:12] if stamped else "unstamped"
+        print(f"harness installed at version {version} — comparing against the "
+              f"origin is done by whoever installed it, not by this scope")
+        return 0
     if args.sha:
         print(content_sha()); return 0
     if not args.target:

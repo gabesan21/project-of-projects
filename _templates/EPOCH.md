@@ -14,7 +14,7 @@
 
 ## Recon and forks
 
-> Researches in `pop/researches/` (in the vault-root meta-project: without the `pop/` prefix) that grounded the breakdown; whatever remained unanswered is RECON NEEDED, with the check that resolves it. Forks: pre-identified route changes.
+> Researches in `pop/researches/` (a scope whose harness lives at its own root: without the `pop/` prefix) that grounded the breakdown; whatever remained unanswered is RECON NEEDED, with the check that resolves it. Forks: pre-identified route changes.
 
 - [[categories/<category>/<project>/pop/researches/<topic>/<note>|<topic>]] — what it established, in one line.
 - [ ] RECON NEEDED: <assumption> — check: <research/experiment/task that resolves it>.

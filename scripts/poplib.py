@@ -30,12 +30,28 @@ RETURN_KINDS = ("lacuna", "premissa", "execucao")
 RELEASE_MARK = re.compile(r"^\s*[-*]\s*\[[xX]\]\s*Ready to plan")
 
 def vault_root(override: Optional[str] = None) -> Path:
+    """Root of the current scope.
+
+    In an installed harness the scripts live in `pop/scripts/`: the root is
+    the folder above `pop/`, and the search **stops there**. The marker is the
+    boundary — no script walks past it looking for a larger scope, even when
+    one exists on disk. An installed harness is a complete world.
+    """
     if override:
         return Path(override).resolve()
     base = Path(__file__).resolve().parent.parent
     if base.name == "pop" and (base / ".included-harness.json").is_file():
         return base.parent
     return base
+
+
+def is_installed_scope(root: Path) -> bool:
+    """The scope received its harness from an origin (it is not the origin).
+
+    An installed scope hosts no other projects, keeps no aggregation indexes
+    and does not answer for the origin's version.
+    """
+    return (root / "pop" / ".included-harness.json").is_file()
 
 
 def harness_root(project: Path) -> Path:
@@ -156,14 +172,22 @@ def iter_all_harness_markdown(root: Path) -> Iterator[Path]:
 
 
 def project_label(root: Path, project: Path) -> str:
+    """Short name of a project folder.
+
+    The root is only called `pop` when it is the scope hosting the others
+    (kanban at the root itself). An installed scope also has `project ==
+    root`, but reusing the label there would make its cards say
+    `project: pop` and wrongly inherit the host's delivery route — it uses
+    the name of its own root instead.
+    """
     if project == root:
-        return "pop"
+        return "pop" if (root / "kanban").is_dir() else root.name
     parts = project.relative_to(root / "categories").parts
     return "/".join(parts)
 
 
 def project_dir(root: Path, label: str) -> Path:
-    if label == "pop":
+    if label == project_label(root, root):
         return root
     parts = [p for p in label.split("/") if p]
     return root.joinpath("categories", *parts)

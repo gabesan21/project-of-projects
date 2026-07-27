@@ -330,7 +330,7 @@ class IncludedInstallV2Test(unittest.TestCase):
         self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
 
         pop = self.target / "pop"
-        for rel in ("WORKFLOW.md", "TYPES.md", "INBOX.md",
+        for rel in ("WORKFLOW.md", "INBOX.md",
                     ".included-harness.json", "scripts/pop_validate.py",
                     "_templates/TASK.md", "kanban/001_initial_task/.gitkeep",
                     "worktrees/.gitkeep"):
@@ -457,16 +457,53 @@ class HarnessFreshnessTest(unittest.TestCase):
         self.install()
         self.assertTrue(preexisting.is_file())
 
-    def test_installed_copy_refuses_to_answer_about_freshness(self):
-        """The child's copy is not the source: it cannot say whether it is current."""
+    def test_installed_copy_answers_for_itself_and_points_nowhere(self):
+        """The copy reports its own version — and never points outside.
+
+        Refusing with an error pushed the agent to run the command at the
+        source, which is exactly the boundary crossing the harness must not
+        teach.
+        """
         self.install()
         vendored = self.target / "pop" / "scripts" / "pop_install_included.py"
+        stamp = json.loads((self.target / "pop" / ".included-harness.json")
+                           .read_text(encoding="utf-8"))["content_sha"]
         for flag in ("--check-fresh", "--sha"):
             result = subprocess.run(
                 [sys.executable, str(vendored), flag, str(self.target)],
                 capture_output=True, text=True, cwd=self.target)
-            self.assertEqual(result.returncode, 2, flag)
-            self.assertIn("single source", result.stderr)
+            self.assertEqual(result.returncode, 0, flag + result.stderr)
+            self.assertIn(stamp[:12], result.stdout, flag)
+            for outside in ("parent PoP", "root PoP", "single source"):
+                self.assertNotIn(outside, result.stdout + result.stderr, flag)
+
+    def test_target_does_not_receive_hosting_scope_material(self):
+        """What only serves a host of projects never travels to the child."""
+        self.install()
+        for rel in ("pop/TYPES.md", "pop/_templates/NEW_PROJECT.md",
+                    "pop/_templates/IMPORT_PROJECT.md",
+                    ".agents/skills/weekly-review/origin-scope.md"):
+            self.assertFalse((self.target / rel).exists(), rel)
+        self.assertTrue(
+            (self.target / ".agents/skills/weekly-review/SKILL.md").is_file())
+
+    def test_managed_set_does_not_name_the_hosting_scope(self):
+        """The guard that keeps copied text from describing the world above."""
+        result = self.installer("--audit-boundary")
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+
+    def test_install_fails_when_the_package_leaks_the_host(self):
+        """Fail closed: a package naming its host does not install."""
+        workflow = SCRIPTS.parent / "WORKFLOW.md"
+        original = workflow.read_text(encoding="utf-8")
+        self.addCleanup(workflow.write_text, original, "utf-8")
+        workflow.write_text(original + "\nRun it from the root PoP.\n",
+                            encoding="utf-8")
+        result = subprocess.run(
+            [sys.executable, str(SCRIPTS / "pop_install_included.py"),
+             str(self.target)], capture_output=True, text=True)
+        self.assertEqual(result.returncode, 1, result.stdout)
+        self.assertIn("hosting scope", result.stderr)
 
     def test_target_does_not_receive_the_parents_test_suite(self):
         self.install()

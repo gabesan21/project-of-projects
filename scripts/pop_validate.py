@@ -610,7 +610,8 @@ def check_standalone(root, violations):
             continue
         for n, line in lines_outside_fences(path):
             if EXTERNAL_PROJECT_LINK.search(line):
-                violations.append(f"{path}:{n}: link points to parent vault")
+                violations.append(
+                    f"{path}:{n}: link points outside the scope")
 
 
 def main():
@@ -618,7 +619,7 @@ def main():
         description="Validate vault limits: 144/600 characters, 150 lines, "
                     "card frontmatter, orphaned worktrees, broken wikilinks, "
                     "adopted specs, and pop-hash code citations.")
-    parser.add_argument("--vault", metavar="DIR",
+    parser.add_argument("--scope", "--vault", dest="vault", metavar="DIR",
                         help="vault root (default: directory above scripts/)")
     parser.add_argument("--standalone", action="store_true",
                         help="fail closed for the local included contract")

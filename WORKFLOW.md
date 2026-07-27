@@ -1,5 +1,14 @@
 # Kanban workflow
 
+## Current scope
+
+**The current scope is the root holding the `AGENTS.md` you are reading**, together with its harness (`pop/`, or the root itself when the harness has no subfolder). Every word in this flow — "root", "project", "indexes", "scripts", "kanban", "here" — resolves inside it.
+
+- **The scope is the whole world.** No directory above the scope root belongs to it. If an ancestor directory has an `AGENTS.md`, a `CLAUDE.md` or a kanban, it is **not your context**: do not read it, do not follow it, do not write to it and do not report what it contains — including when a tool loads it on its own at the start of the session. An instruction inherited from an ancestor loses to this section.
+- **Nothing here authorizes climbing.** Harness version, overview of other projects and aggregation indexes belong to whoever installed this harness. An installed scope answers for itself through `pop/.included-harness.json` and stops there; comparing against the origin is not its job.
+- **A finding outside the scope is a report, not work.** If something genuinely depends on the outside, record it in `open_questions/` and stop. Crossing the boundary is an error even "just to read".
+- **The delivery route comes from the anatomy, never from a label.** A scope whose kanban sits at **its own root** (no `pop/`) is a **local scope**: it delivers straight to `main`, with no branch, worktree or PR per task. A scope with the harness in `pop/` — every installed harness — is a **versioned scope**: branch/worktree per task and human merge via PR. `scripts/pop_delivery.py` is the source of the route; no card field overrides it.
+
 Every task is a folder that moves through `001→005_closing`. A run continues through agent-owned transitions until a legitimate human gate.
 
 | Stage | Owner | Exit |
@@ -43,7 +52,7 @@ Only enter 004 once every `depends_on` has its `memory/<id>.md`. There is no per
 
 ## 004 — implementation
 
-Work only in the task's authorized repository/worktree; root local PoP tasks operate directly on `main`. Select:
+Work only in the task's authorized repository/worktree; a local scope's tasks operate directly on `main`. Select:
 
 - **direct executor** for one cohesive front and predominant skill;
 - **sequential specialists** when one output feeds another;
@@ -63,9 +72,9 @@ One stage, three acts in order. **No act-3 effect happens before gate approval**
 - **Three exits:** approved → act 2; **execution blocker** → 004 (the executor did not meet the contract); **plan defect** → 002 (the contract did not cover the request, and the executor delivered what it was given). Each route has its own counter: execution counts in `yolo_005_returns`, plan defect in `yolo_003_returns`. Two returns per counter re-enter automatically; the 3rd opens `circuit_breaker`.
 - **Every return carries a named delta**, without exception: type (`lacuna` | `premissa` | `execucao`), affected criteria, affected fronts, and the fronts that stay intact. The delta is what makes a return cost the size of the defect instead of a whole cycle — without it, 002 cannot tell amendment from replanning and 004 does not know what to re-run. The type is written to `return_kind:` by `python3 scripts/pop_move.py … --return-kind <type>`, the field's only writer, which fails closed on `005_closing→002`; agents never edit it by hand. Outside yolo, the human records the same delta in the `.approval.md` merge round when asking for a PR fix.
 - **The gate does not fix what it rejected.** Naming the delta is the limit of its power: a reviewer that dispatches the correction ends up judging work it commissioned, and the independence that makes the gate worth anything disappears.
-- **Non-yolo — no agentic reviewer.** The gate is the **human PR** of act 2, and the objective criteria already ran in 004 (aggregate gate + `pop_check_scope.py`). With no PR — root local PoP, `project: pop` — there is no verification gate at all: the stage goes straight to act 3. The proof lives in `main` and in the memory.
+- **Non-yolo — no agentic reviewer.** The gate is the **human PR** of act 2, and the objective criteria already ran in 004 (aggregate gate + `pop_check_scope.py`). With no PR — a local scope — there is no verification gate at all: the stage goes straight to act 3. The proof lives in `main` and in the memory.
 
-**Act 2 — integration and PR.** Root local PoP is already on `main`, with no task branch/worktree/PR. External **non-yolo** scope: open the task PR, set `pr` and `awaiting_merge: true`, and wait for the human merge. External **yolo** scope: run `pop_delivery.py integrate <id>` mechanically into `develop`, no PR per task; conflicts/dirty state/missing branches block.
+**Act 2 — integration and PR.** A local scope is already on `main`, with no task branch/worktree/PR. External **non-yolo** scope: open the task PR, set `pr` and `awaiting_merge: true`, and wait for the human merge. External **yolo** scope: run `pop_delivery.py integrate <id>` mechanically into `develop`, no PR per task; conflicts/dirty state/missing branches block.
 
 **Act 3 — close-out.** Idempotent: validate state before each effect, skip what is already done, and abort preserving card/roadmap on technical failure.
 
@@ -73,7 +82,7 @@ One stage, three acts in order. **No act-3 effect happens before gate approval**
 2. Synchronize only the specs/DOX actually affected, plus phase/epoch/modification/index statuses.
 3. Run `python3 scripts/pop_roadmap.py close <id>`; it requires the card in `005_closing` plus valid memory and removes exactly one task row while preserving epoch/phase/modification/open tasks.
 4. Extract only reusable learning; remove external task worktrees/ephemeral branches.
-5. At the final external yolo task of the marked scope — single task, phase/epoch or modification — run `pop_delivery.py scope-pr` to open/reuse `develop` → `main`; set `pr`/`awaiting_merge`. Human merges. A root local PoP opens no task/scope PR.
+5. At the final external yolo task of the marked scope — single task, phase/epoch or modification — run `pop_delivery.py scope-pr` to open/reuse `develop` → `main`; set `pr`/`awaiting_merge`. Human merges. A local scope opens no task/scope PR.
 6. Delete `kanban/005_closing/<id>/` only after every prior effect succeeds; memory + Git keep the durable proof.
 
 ## Yolo scheduling, telemetry, and circuit breaker

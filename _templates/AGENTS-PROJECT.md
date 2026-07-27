@@ -4,7 +4,7 @@
 
 > Project managed by the **ProjectOfProjects (PoP)** workflow. `CLAUDE.md` is a symlink to this file — always edit this one.
 
-- **Type:** default | included | multi-repo | full-multi-repo — see [[TYPES|TYPES]].
+- **Scope:** this directory is the entire scope of the flow — the harness travels with it and **nothing above this root belongs to it**, even when a tool loads an ancestor `AGENTS.md` on its own ("Current scope" section of [[WORKFLOW|WORKFLOW]]).
 - **Project language:** <en> — specs, notes, researches, code comments and the entire kanban flow follow this language.
 - **Supported languages (i18n):** <list of languages the application must support — handled in the roadmap and specs. Applications only; remove if not applicable.>
 - **Profile:** [[categories/<category>/<project>/pop/PROJECT|PROJECT]] · **Roadmap:** [[categories/<category>/<project>/pop/ROADMAP|ROADMAP]] · **Modifications:** [[categories/<category>/<project>/pop/MODIFICATIONS|MODIFICATIONS]] (created on demand)
@@ -13,24 +13,22 @@
 
 > Fill-in instruction — **keep this section in the project**: it is what stops the file from swelling.
 
-Single source: what lives in the vault is never copied here, because duplication is guaranteed drift — the flow changes and the copy starts lying. **Never** write here:
+Single source: what lives in the harness is never copied here, because duplication is guaranteed drift — the flow changes and the copy starts lying. **Never** write here:
 
 - narration of the kanban stages (names, order, what each one does) — only [[WORKFLOW|WORKFLOW]];
 - the context protocol and any reading/search heuristic — [[WORKFLOW|WORKFLOW]] and the skills;
-- general vault rules (kanban mandatory, memory/lean roadmap, sovereignty of the human command) — the "Transversal rules" section of [[WORKFLOW|WORKFLOW]], which the installer delivers alongside the harness;
-- any copyable excerpt of [[WORKFLOW|WORKFLOW]] or [[TYPES|TYPES]] — link it with a trigger instead of reproducing it.
+- general flow rules (kanban mandatory, memory/lean roadmap, sovereignty of the human command) — the "Transversal rules" section of [[WORKFLOW|WORKFLOW]], which the installer delivers alongside the harness;
+- any copyable excerpt of [[WORKFLOW|WORKFLOW]] — link it with a trigger instead of reproducing it.
 
-Only what belongs to **this project** goes here: type, language, repos and PR branch, skills and verification commands, DOX. **Cap: ~60 lines** — the only exception is the DOX section of applications.
+Only what belongs to **this project** goes here: language, repos and PR branch, skills and verification commands, DOX. **Cap: ~60 lines** — the only exception is the DOX section of applications.
 
 ## Repositories
 
 | Repo | URL | Clone at | PR branch |
 |------|-----|----------|-----------|
-| <name> | <url> | `<name>/` at the project root (default/multi-repo/full-multi-repo) \| the project root **is** the repo (included) | <main> |
+| <name> | <url> | `<name>/` at the project root \| the project root itself **is** the repo | <main> |
 
-_No external repository: the work lives in the PoP repository and task PRs target its main branch._
-
-> **`full-multi-repo`:** each embedded repo has its **own AGENTS.md** (type `included`) with a **"Part of"** section linking this parent project, the general ROADMAP and the cross-repo kanban. Specs and memory live only in the repos — see [[TYPES|TYPES]].
+_No external repository: the work lives in the repository that hosts this harness and task PRs target its main branch._
 
 ## Workflow
 
@@ -72,4 +70,4 @@ Every change to the project goes through the kanban in `pop/kanban/`, with tasks
 - Content in the language declared above; wikilinks for internal references; files ≤~150 lines; dates YYYY-MM-DD.
 - **Never** check `- [ ] Done` or execute `(user)` items — those belong exclusively to the human.
 - **Never** merge a task PR — merging is the human's job (or commanded by them in the merge round).
-- **General vault rules** — kanban mandatory to touch the project, memory + lean roadmap at close-out, sovereignty of the human command with no implicit waiver: the "Transversal rules" section of the [[WORKFLOW|WORKFLOW]] installed alongside this harness (not the parent vault's AGENTS.md). *Read it before acting outside a task or before reading a request as a waiver of the flow.*
+- **General flow rules** — kanban mandatory to touch the project, memory + lean roadmap at close-out, sovereignty of the human command with no implicit waiver: the "Transversal rules" section of the [[WORKFLOW|WORKFLOW]] installed alongside this harness. *Never an AGENTS.md inherited from an ancestor directory.* *Read it before acting outside a task or before reading a request as a waiver of the flow.*

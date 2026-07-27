@@ -81,7 +81,7 @@ def main():
         description="Vault overview: tasks by stage and pending gates.")
     parser.add_argument("--project", metavar="CATEGORY/PROJECT",
                         help="limit output to one project")
-    parser.add_argument("--vault", metavar="DIR",
+    parser.add_argument("--scope", "--vault", dest="vault", metavar="DIR",
                         help="vault root (default: directory above scripts/)")
     args = parser.parse_args()
 

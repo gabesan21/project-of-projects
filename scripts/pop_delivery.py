@@ -82,7 +82,7 @@ def main():
     merge.add_argument("task_id")
     merge.add_argument("--repo")
     merge.add_argument("--dry-run", action="store_true")
-    merge.add_argument("--vault")
+    merge.add_argument("--scope", "--vault", dest="vault")
     pr = sub.add_parser("scope-pr")
     pr.add_argument("--repo", default=".")
     pr.add_argument("--dry-run", action="store_true")
@@ -99,7 +99,7 @@ def main():
         meta = poplib.read_card(task_dir / f"{args.task_id}.md")
         route = poplib.delivery_route(root, project, yolo=meta.get("yolo") is True)
         if not route["worktree"]:
-            raise RuntimeError("the local PoP meta-project delivers directly to main")
+            raise RuntimeError("a local scope delivers directly to main")
         if meta.get("yolo") is not True:
             raise RuntimeError("integrate is only for an external yolo task")
         print(integrate(repo_for(project, args.repo), args.task_id, args.dry_run))

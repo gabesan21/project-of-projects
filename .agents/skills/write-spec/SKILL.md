@@ -7,7 +7,7 @@ description: Standardizes spec creation for any kind of project (software, writi
 
 A spec records a **durable contract**, not the contingent implementation chosen for one task. Prefer behavior, invariants, promised interfaces, errors/limits and objective conformance criteria. Do not persist chain-of-thought, pseudocode, edit sequences or speculative snippets.
 
-Creates a spec in `pop/specs/` (the vault-root meta-project and not-yet-migrated projects: harness at the root, no `pop/`) from `_templates/SPEC.md`, interviewing the user with the right questions for the project type. A spec answers **one** question; if it starts answering two, it is two specs.
+Creates a spec in `pop/specs/` (a scope whose harness lives at its own root: the same paths, without the `pop/` prefix) from `_templates/SPEC.md`, interviewing the user with the right questions for the project type. A spec answers **one** question; if it starts answering two, it is two specs.
 
 **Delegate to subagents:** almost nothing — it is an interview; broad reading of existing material to ground the spec goes to a subagent with a specific question and an answer ≤30 lines.
 
