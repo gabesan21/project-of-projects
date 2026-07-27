@@ -137,7 +137,7 @@ python3 scripts/pop_install_included.py --sha                       # the source
 python3 scripts/pop_install_included.py --audit-manifest            # the manifest covers everything it should
 ```
 
-Each install mirrors the set declared in `_templates/included-manifest.json`, **prunes** whatever left the source, and stamps the source's `content_sha` into the target's `pop/.included-harness.json`. That stamp is the whole reason "up to date" is checkable: without it, a clone parked on an old version of the flow is indistinguishable from a current one. `pop_validate.py` turns a stale or unstamped target into a **violation**, and `weekly-review` surfaces it with the one-command remedy.
+Each install mirrors the set declared in `_templates/included-manifest.json` and writes two things into the target's `pop/.included-harness.json`: the source's `content_sha` and the **inventory** of the files it wrote. The stamp is the whole reason "up to date" is checkable — without it, a clone parked on an old version of the flow is indistinguishable from a current one — and `pop_validate.py` turns a stale or unstamped target into a **violation** that `weekly-review` surfaces with the one-command remedy. The inventory is what authorizes the *next* update to prune a retired template or script: only files the installer itself brought before are candidates, because **a managed folder is not an exclusive folder** — your project may keep its own scripts and fixtures in `pop/scripts/`, and an update must never touch them.
 
 Fixing a harness is therefore always a **reinstall**, never an edit to the local copy: a patched copy silently forks the workflow, and the next install overwrites it anyway.
 
