@@ -58,7 +58,14 @@ def memory_valid(root: Path, scope: Path, task_id: str, *, canonical: bool) -> b
         return False
     if meta.get("task") != task_id:
         return False
-    if meta.get("project") != poplib.project_label(root, scope):
+    # The label tells sibling projects apart, so it only makes sense when the
+    # scope is a project **inside** an aggregating vault. In a standalone clone
+    # the scope is the root itself: there the memory was written with the label
+    # relative to the parent vault, which the clone has no way to reproduce —
+    # demanding equality would make the repo unable to validate its own memories.
+    if scope != root and meta.get("project") != poplib.project_label(root, scope):
+        return False
+    if scope == root and not meta.get("project"):
         return False
     try:
         started = datetime.date.fromisoformat(str(meta["started"]))

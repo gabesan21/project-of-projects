@@ -129,7 +129,14 @@ def check_spec_collections(root, projects, violations):
             else:
                 ids[spec_id] = path
 
-            if meta.get("project") != expected_project:
+            # Same criterion as `memory_valid`: the label separates sibling
+            # projects, so it only holds where siblings exist. In a standalone
+            # clone (scope == root) the spec carries the parent vault's label,
+            # which the clone does not reproduce — the field just has to be filled.
+            if project == root:
+                if not meta.get("project"):
+                    violations.append(f"{path}:1: empty `project`")
+            elif meta.get("project") != expected_project:
                 violations.append(
                     f"{path}:1: `project` `{meta.get('project')}` differs from "
                     f"scope label `{expected_project}`")

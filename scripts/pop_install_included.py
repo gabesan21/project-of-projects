@@ -83,17 +83,28 @@ def content_sha(data=None) -> str:
     return digest.hexdigest()
 
 
-def installed_stamp(target: Path):
-    """`(marker path, recorded content_sha)` of the target; sha `None` if absent."""
+def installed_stamp(target: Path, key: str = "content_sha"):
+    """`(marker path, recorded field)` of the target; `None` if absent."""
     marker = target / "pop" / ".included-harness.json"
     if not marker.is_file():
         marker = target / ".included-harness.json"
     if not marker.is_file():
         return None, None
     try:
-        return marker, json.loads(marker.read_text(encoding="utf-8")).get("content_sha")
+        return marker, json.loads(marker.read_text(encoding="utf-8")).get(key)
     except json.JSONDecodeError:
         return marker, None
+
+
+def is_vendored() -> bool:
+    """This script is the copy installed in a project, not the parent's original.
+
+    The copy cannot answer about freshness: its `SOURCE` is the local harness,
+    already localized at install time, so the hash never matches the parent's.
+    Answering "STALE" there would teach the project to reinstall the harness
+    from itself — the opposite of a single source.
+    """
+    return (SOURCE / ".included-harness.json").is_file()
 
 
 def localize(text: str, *, included_paths: bool = False) -> str:
@@ -121,29 +132,46 @@ def copy_file(source: Path, dest: Path, *, overwrite: bool = True,
 
 
 def copy_tree(source: Path, dest: Path, *, included_paths: bool = False,
-              data=None) -> None:
-    """Mirrors `source` into `dest`: copies what exists and **removes what left**.
+              data=None) -> list:
+    """Copies `source` into `dest` and returns the files it wrote.
 
-    Without the pruning, a file deleted at the source survives forever in the
-    target — the clone would keep offering a template or a script the flow has
-    already retired.
+    It does not scan the destination: a managed folder is **not** an exclusive
+    folder. The project legitimately keeps files of its own in `pop/scripts/`
+    (its own verification, fixtures), and deleting everything that does not
+    come from the source destroys the project's work. The pruning is driven by
+    the previous installation's inventory — see `prune`.
     """
     data = data or manifest()
-    kept = set()
+    written = []
     for path in source.rglob("*"):
         relative = path.relative_to(source)
         if path.is_dir() or excluded(data, relative):
             continue
-        kept.add(relative)
-        copy_file(path, dest / relative, included_paths=included_paths)
-    if not dest.is_dir():
-        return
-    for path in sorted(dest.rglob("*"), reverse=True):
-        relative = path.relative_to(dest)
-        if path.is_file() and relative not in kept:
-            path.unlink()
-        elif path.is_dir() and not any(path.iterdir()):
-            path.rmdir()
+        target_file = dest / relative
+        copy_file(path, target_file, included_paths=included_paths)
+        written.append(target_file)
+    return written
+
+
+def prune(target: Path, previous, written) -> list:
+    """Removes what the previous installation brought and this one no longer does.
+
+    Only files the **installer itself** wrote before are candidates: it is the
+    only way to retire a template or a script without touching what belongs to
+    the project. With no previous inventory, nothing is removed.
+    """
+    removed = []
+    for rel in sorted(set(previous) - {str(p) for p in written}, reverse=True):
+        path = target / rel
+        if not path.is_file():
+            continue
+        path.unlink()
+        removed.append(rel)
+        parent = path.parent
+        while parent != target and parent.is_dir() and not any(parent.iterdir()):
+            parent.rmdir()
+            parent = parent.parent
+    return removed
 
 
 def preserve_worktree_marker(target: Path, prefix: str = "") -> None:
@@ -188,16 +216,25 @@ def install(target: Path) -> None:
     # harness_root: "pop" in manifest v2; "" (target root) in legacy v1.
     hr = data.get("harness_root", "") or ""
     hb = target / hr if hr else target
+    _, previous = installed_stamp(target, key="installed")
     # Preflight: only explicitly managed paths may be written.
+    written = []
     for name in data["files"]:
         copy_file(SOURCE / name, hb / name, included_paths=True)
+        written.append(hb / name)
     for name in data["directories"]:
-        copy_tree(SOURCE / name, hb / name, included_paths=True, data=data)
+        written += copy_tree(SOURCE / name, hb / name, included_paths=True,
+                             data=data)
     for name in data["skills"]:
-        copy_tree(SKILLS_SOURCE / name, target / ".agents/skills" / name,
-                  included_paths=True, data=data)
-    # The marker is the manifest plus this installation's content stamp.
-    stamp = dict(data, content_sha=content_sha(data))
+        written += copy_tree(SKILLS_SOURCE / name,
+                             target / ".agents/skills" / name,
+                             included_paths=True, data=data)
+    inventory = sorted(path.relative_to(target).as_posix() for path in written)
+    prune(target, previous or [], [path.relative_to(target).as_posix()
+                                   for path in written])
+    # The marker is the manifest plus this installation's content stamp and
+    # inventory — the inventory is what authorizes the next one's pruning.
+    stamp = dict(data, content_sha=content_sha(data), installed=inventory)
     (hb / ".included-harness.json").write_text(
         json.dumps(stamp, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
     for rel in data["anatomy"]:
@@ -241,6 +278,11 @@ def main() -> int:
         if missing:
             print("incomplete manifest: " + ", ".join(missing), file=sys.stderr); return 1
         print("manifest complete"); return 0
+    if (args.sha or args.check_fresh) and is_vendored():
+        print("command only exists at the source: this is a project's installed "
+              "harness. Run it from the parent PoP, the single source.",
+              file=sys.stderr)
+        return 2
     if args.sha:
         print(content_sha()); return 0
     if not args.target:

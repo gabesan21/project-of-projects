@@ -219,6 +219,38 @@ class ResidualValidationTest(CloseLifecycleTest):
         self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
 
 
+class StandaloneLabelTest(CloseLifecycleTest):
+    """The scope label separates siblings; a standalone clone has no siblings.
+
+    The memory of an `included` repo was written with the label relative to the
+    parent vault (`categories/<cat>/<proj>`), which the clone does not
+    reproduce — demanding equality made the repo unable to close its own tasks.
+    """
+
+    def test_close_accepts_a_label_inherited_from_the_parent_vault(self):
+        self.write_card(TASK_R)
+        (self.root / "memory" / f"{TASK_R}.md").write_text(
+            "---\n"
+            f"task: {TASK_R}\nproject: categories/applications/dark-store\n"
+            "started: 2026-07-20\nfinished: 2026-07-21\ncommit: abc123\npr:\n"
+            "---\n\n# Memory\n", encoding="utf-8")
+        self.write_epoch()
+        result = self.run_cli("pop_roadmap.py", "close", TASK_R)
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+
+    def test_close_refuses_a_memory_without_project(self):
+        self.write_card(TASK_R)
+        (self.root / "memory" / f"{TASK_R}.md").write_text(
+            "---\n"
+            f"task: {TASK_R}\nproject:\nstarted: 2026-07-20\n"
+            "finished: 2026-07-21\ncommit: abc123\npr:\n---\n\n# Memory\n",
+            encoding="utf-8")
+        self.write_epoch()
+        result = self.run_cli("pop_roadmap.py", "close", TASK_R)
+        self.assertEqual(result.returncode, 1)
+        self.assertIn("invalid or missing memory", result.stderr)
+
+
 class WorktreeConsumerTest(CloseLifecycleTest):
     def test_pop_worktree_consumer_rejects_meta_pop_and_reports_main(self):
         self.write_card(TASK_R)

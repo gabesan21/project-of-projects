@@ -108,10 +108,28 @@ class SpecValidationTest(unittest.TestCase):
         self.adopt("specs/one", "specs/two")
         self.assert_invalid("duplicate `id` `duplicate`")
 
-    def test_rejects_mismatched_project(self):
+    def test_rejects_mismatched_project_in_a_project_scope(self):
+        """The label separates siblings, so equality holds where siblings exist."""
+        project = self.root / "categories/agents/gandalf-harness"
+        (project / "pop/kanban").mkdir(parents=True)
+        self.specs = project / "pop/specs"
+        self.specs.mkdir()
         self.write_spec(project="other")
+        self.adopt("contract")
+        self.assert_invalid("differs from scope label `agents/gandalf-harness`")
+
+    def test_accepts_a_label_inherited_from_the_parent_vault_at_the_root(self):
+        """Standalone clone: the scope is the root and the parent's label is not
+        reproducible — demanding equality would break the isolated repo."""
+        self.write_spec(project="applications/qr-payments")
         self.adopt("specs/contract")
-        self.assert_invalid("differs from scope label `pop`")
+        result = self.run_validator()
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+
+    def test_rejects_empty_project_at_the_root(self):
+        self.write_spec(project="")
+        self.adopt("specs/contract")
+        self.assert_invalid("empty `project`")
 
     def test_accepts_project_equal_to_full_scope_label(self):
         project = self.root / "categories/agents/gandalf-harness"

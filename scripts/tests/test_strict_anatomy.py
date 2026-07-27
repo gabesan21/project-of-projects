@@ -423,13 +423,50 @@ class HarnessFreshnessTest(unittest.TestCase):
         self.assertEqual(result.returncode, 1)
         self.assertIn("absent", result.stderr)
 
-    def test_update_prunes_what_left_the_source(self):
-        """Without pruning, a retired template survives forever in the target."""
+    def test_update_prunes_what_the_previous_installation_brought(self):
+        """A template retired at the source does not survive forever in the target."""
         self.install()
         residue = self.target / "pop" / "_templates" / "TASK-OBSOLETE.md"
         residue.write_text("a stage that no longer exists\n", encoding="utf-8")
+        stamp = json.loads(self.marker.read_text(encoding="utf-8"))
+        stamp["installed"].append("pop/_templates/TASK-OBSOLETE.md")
+        self.marker.write_text(json.dumps(stamp), encoding="utf-8")
+
         self.install()
         self.assertFalse(residue.exists())
+
+    def test_pruning_preserves_a_project_file_in_a_managed_folder(self):
+        """A managed folder is not an exclusive folder: the project keeps its own
+        scripts in `pop/scripts/` and the harness update must not delete them."""
+        self.install()
+        own = self.target / "pop" / "scripts" / "db-test.mjs"
+        own.write_text("// the project's verification\n", encoding="utf-8")
+        fixture = self.target / "pop" / "scripts" / "fixtures" / "case.json"
+        fixture.parent.mkdir(parents=True, exist_ok=True)
+        fixture.write_text("{}\n", encoding="utf-8")
+
+        self.install()
+        self.assertTrue(own.is_file())
+        self.assertTrue(fixture.is_file())
+
+    def test_first_installation_prunes_nothing(self):
+        """With no previous inventory, the pruning has no authorization."""
+        (self.target / "pop" / "scripts").mkdir(parents=True)
+        preexisting = self.target / "pop" / "scripts" / "legacy.mjs"
+        preexisting.write_text("// older than the harness\n", encoding="utf-8")
+        self.install()
+        self.assertTrue(preexisting.is_file())
+
+    def test_installed_copy_refuses_to_answer_about_freshness(self):
+        """The child's copy is not the source: it cannot say whether it is current."""
+        self.install()
+        vendored = self.target / "pop" / "scripts" / "pop_install_included.py"
+        for flag in ("--check-fresh", "--sha"):
+            result = subprocess.run(
+                [sys.executable, str(vendored), flag, str(self.target)],
+                capture_output=True, text=True, cwd=self.target)
+            self.assertEqual(result.returncode, 2, flag)
+            self.assertIn("single source", result.stderr)
 
     def test_target_does_not_receive_the_parents_test_suite(self):
         self.install()
