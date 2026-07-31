@@ -31,6 +31,8 @@ Roadmaps show structure and open work; `memory/` preserves chronological proof i
 
 ## Invariants
 
+- **Harness maintenance does not go through the kanban.** Managed harness is fixed at the origin and arrives by reinstallation; the scope's own harness (`AGENTS.md`, sheet, roadmap, specs, notes, skills, `memory/`) is adjusted directly, with no card, branch, worktree or task PR. The kanban gates content; submitting to it the material it consults is asking the process to approve itself. The three classes are in [[WORKFLOW|WORKFLOW]] › "Current scope".
+- The project AGENTS.md ruler **always measures**: in an application the DOX block is discounted and the remaining excess is reported as a warning. An exemption that switches the measurement off turns a cap into invisible debt.
 - No task row is removed without a canonical same-ID memory containing project, dates, commit, and an explicit `pr` key.
 - No close-out effect — memory, spec sync, `close`, folder deletion — happens before gate approval when the gate exists; a circuit breaker or an unapproved gate never starts close-out.
 - A task dependency is satisfied only by the memory ledger; there is no per-stage transitional window.
@@ -44,5 +46,7 @@ Roadmaps show structure and open work; `memory/` preserves chronological proof i
 
 - [x] `pop_roadmap.py`, `pop_worktree.py`, and `pop_delivery.py` provide deterministic operations.
 - [x] Roadmap, route, memory, duplicate, and delivery regressions pass.
+- [x] `weekly-review` and `optimize-memory` run outside the kanban, in parallel waves with disjoint write sets, and the review fixes unambiguous scope-owned harness instead of only proposing.
+- [x] The validator measures every application's AGENTS.md with the DOX block discounted, and reports the excess as a warning.
 - [x] [[.agents/skills/optimize-memory/SKILL|optimize-memory]] preserves irreducible history in one ledger per task.
 - [x] The validator rejects a ledger/entry above the cap, an orphaned entry, an entry with no evidence, and new memory outside a date folder.

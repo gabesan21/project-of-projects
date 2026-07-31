@@ -794,13 +794,41 @@ def check_hash_pins(root, violations):
                         f"update to sha256={actual}")
 
 
-def check_project_agents(root, projects, violations):
+def _dox_block_lines(lines):
+    """Lines of the DOX block, from the heading carrying the marker up to the
+    next heading of equal or higher level (or the end of the file).
+
+    An application embeds the DOX process in its AGENTS.md and only for that
+    reason exceeds the cap (rule 5). Delimiting the block is what allows
+    **discounting** it instead of switching the ruler off: without this,
+    "exempt" became "not measured", and the file grew with nobody complaining —
+    that is how an application's AGENTS.md reached 162 lines of text that was
+    not DOX.
+    """
+    start = next((n for n, line in enumerate(lines)
+                  if line.lstrip().startswith("#") and DOX_MARKER in line), None)
+    if start is None:
+        return 0
+    level = len(lines[start]) - len(lines[start].lstrip("#"))
+    for n in range(start + 1, len(lines)):
+        line = lines[n]
+        if not line.startswith("#"):
+            continue
+        if len(line) - len(line.lstrip("#")) <= level:
+            return n - start
+    return len(lines) - start
+
+
+def check_project_agents(root, projects, violations, warnings):
     """A project's AGENTS.md fits in 60 lines — it is a pointer, not a copy.
 
     The file grows on its own whenever it narrates the flow instead of linking
-    the WORKFLOW, and the narration rots at the first stage change. An
-    application that embeds the DOX process is the only exemption (rule 5). The
-    root AGENTS.md is the vault's, not a project's: out of reach.
+    the WORKFLOW, and the narration rots at the first stage change. **The ruler
+    always measures**: in an application the DOX block is discounted (rule 5)
+    and the remaining excess comes out as a **warning**, not a violation — the
+    debt belongs to whoever hosts the file and is paid in their scope, but it
+    must not be invisible. Outside an application, the cap stays a violation.
+    The root AGENTS.md is the vault's, not a project's: out of reach.
     """
     for project in projects:
         if project == root:
@@ -808,14 +836,15 @@ def check_project_agents(root, projects, violations):
         path = project / "AGENTS.md"
         if not path.is_file():
             continue
-        text = path.read_text(encoding="utf-8")
-        if DOX_MARKER in text:
+        lines = path.read_text(encoding="utf-8").splitlines()
+        dox = _dox_block_lines(lines)
+        total = len(lines) - dox
+        if total <= MAX_PROJECT_AGENTS:
             continue
-        total = len(text.splitlines())
-        if total > MAX_PROJECT_AGENTS:
-            violations.append(
-                f"{path}:1: {total} lines (max. {MAX_PROJECT_AGENTS}) — "
-                f"point at the WORKFLOW instead of narrating the flow")
+        message = (f"{path}:1: {total} lines (max. {MAX_PROJECT_AGENTS}"
+                   f"{f', DOX block of {dox} already discounted' if dox else ''})"
+                   " — point at the WORKFLOW instead of narrating the flow")
+        (warnings if dox else violations).append(message)
 
 
 def check_harness_freshness(root, projects, violations):
@@ -918,7 +947,7 @@ def main():
     check_spec_collections(root, projects, violations)
     check_wikilinks(root, warnings)
     check_hash_pins(root, violations)
-    check_project_agents(root, projects, violations)
+    check_project_agents(root, projects, violations, warnings)
     check_harness_freshness(root, projects, violations)
     if args.standalone:
         check_standalone(root, violations)
