@@ -6,6 +6,7 @@
 
 > The planner is separate from the executor. This file stores the planning result: a brief sufficient for capable agents, without reasoning, pseudocode, implementation snippets or step-by-step edits.
 > **Ceiling: 80 lines, at any `size`** (validated by `pop_validate`). This is the slice everyone reads, so it does not grow with the task — what grows is the number of front files. Not fitting means **modularizing** into `subtasks/`, never compressing to the point of losing a decision. Splitting the task through `depends_on` is the exception, for when the fronts do not share an objective.
+> **A task that is `yolo: true` and (`size: L` or `critical: true`)**: 002 delivers **also** `<id>.defense.md` ([[_templates/TASK-DEFENSE|TASK-DEFENSE]], ≤30 lines) — without it configuration A of act 1 does not run and the task comes back here.
 
 ## Objective and expected result
 

@@ -17,17 +17,17 @@ Every task is a folder that moves through `001→005_closing`. A run continues t
 | 002_planning | separate planner | concise brief, contracts, criteria |
 | 003_human_approval | user; strong critic in yolo only for `critical` | approval or return |
 | 004_processing | executor / execution orchestrator | integrated implementation and aggregate gate |
-| 005_closing | yolo: fresh independent reviewer · non-yolo: orchestrator + human merge | quality gate, delivery, memory, specs, roadmap cleanup |
+| 005_closing | yolo: configuration A (advocate → judge) or B (single reviewer) · non-yolo: orchestrator + human merge | quality gate, delivery, memory, specs, roadmap cleanup |
 
 Cards keep `stage`, `critical`, `yolo`, `blocked`, `awaiting_merge`, return counters, circuit breaker, claim, and minimal telemetry truthful. Agents never perform `(user)` work.
 
 ## Context and models
 
-- 002 always uses a separate planner, which delivers the plan root plus the front files. In yolo, `005_closing` uses exactly one fresh reviewer per round; outside yolo there is no agentic reviewer at all.
+- 002 always uses a separate planner, which delivers the plan root plus the front files. In yolo, `005_closing` runs in **configuration B** (exactly one fresh reviewer per round) or **configuration A** (devil's advocate and then the judge, in fresh contexts separate from each other and from planner/executor); whoever judges last writes the memory in the same session. Outside yolo there is no agentic reviewer at all.
 - A cohesive 004 front gets one direct executor. Only a DAG, multiple skills, or disjoint write sets justify a sub-orchestrator.
 - **Read slicing:** each role reads only its slice. A front executor reads the card's What/Why, the plan's objective and strategy, **its own** front file and that front's skill — never the whole plan nor other fronts.
-- `scripts/models.json` maps `cheap|medium|strong`. Planner: S medium, M/L strong. Executor: S cheap/medium, M/L medium. Independent reviewer (yolo only): S/M medium, L/critical strong.
-- **Yolo gates are always strong**, independent of size: `005_closing` is the single quality gate of every yolo task; 003 exists only for `critical: true`. An executor rises from `cheap` to `medium` on the next round **only after an `execucao` return** — a `lacuna`/`premissa` return is not its failure and does not change its tier.
+- `scripts/models.json` maps `cheap|medium|strong`. Planner: S medium, M/L strong. Executor: S cheap/medium, M/L medium. Independent reviewer, devil's advocate or judge (yolo only): S/M medium, L/critical strong.
+- **Yolo gates are always strong**, independent of size: whoever judges `005_closing` — single reviewer, advocate or judge — is always strong. `005_closing` is the single quality gate of every yolo task; 003 exists only for `critical: true`. An executor rises from `cheap` to `medium` on the next round **only after an `execucao` return** — a `lacuna`/`premissa` return is not its failure and does not change its tier.
 - Recon is delegated only for a specific gap above the ~5K-token floor; zero recon workers is normal.
 
 ## Task folder contents
@@ -37,14 +37,17 @@ Cards keep `stage`, `critical`, `yolo`, `blocked`, `awaiting_merge`, return coun
 ├── <id>.md                 ← card
 ├── <id>.plan.md            ← root of the 002 brief (≤80 lines, always)
 ├── <id>.approval.md        ← 003 rounds
-├── <id>.verify.md          ← the independent reviewer's judgment (yolo only)
+├── <id>.defense.md         ← the plan's contestable decisions (002, only when the adversarial gate fires)
+├── <id>.verify.md          ← the independent reviewer's judgment (yolo only, configuration B)
+├── <id>.r<n>.accusation.md ← the devil's advocate accusation (configuration A only, one per round)
+├── <id>.r<n>.judgment.md   ← the judge's verdict (configuration A only, one per round)
 └── subtasks/               ← one front per file (≤50 lines): an executor's read slice
     └── <id>.g01-<slug>.md
 ```
 
-Mandatory whenever the front goes to a separate context; a single-front task has no `subtasks/`. The caps are enforced by `scripts/pop_validate.py`.
+Mandatory whenever the front goes to a separate context; a single-front task has no `subtasks/`. The caps are enforced by `scripts/pop_validate.py`. The last three are **mutually exclusive by configuration**: in A there is no `.verify.md`, in B there is neither `.accusation.md` nor `.judgment.md`.
 
-Templates: [[_templates/TASK|TASK]] · [[_templates/TASK-PLAN|TASK-PLAN]] · [[_templates/TASK-APPROVAL|TASK-APPROVAL]] · [[_templates/TASK-VERIFY|TASK-VERIFY]] · [[_templates/SUBTASKS|SUBTASKS]] · [[_templates/MEMORY|MEMORY]].
+Templates: [[_templates/TASK|TASK]] · [[_templates/TASK-PLAN|TASK-PLAN]] · [[_templates/TASK-APPROVAL|TASK-APPROVAL]] · [[_templates/TASK-DEFENSE|TASK-DEFENSE]] · [[_templates/TASK-VERIFY|TASK-VERIFY]] · [[_templates/TASK-ACCUSATION|TASK-ACCUSATION]] · [[_templates/TASK-JUDGMENT|TASK-JUDGMENT]] · [[_templates/SUBTASKS|SUBTASKS]] · [[_templates/MEMORY|MEMORY]] · [[_templates/MEMORY-ENTRY|MEMORY-ENTRY]].
 
 ## 001 — birth and release
 
@@ -58,13 +61,14 @@ The separate planner records objective, affected areas, base strategy, fronts/de
 
 - **Size is modularity, not compression.** The plan root stays ≤80 lines at **any** `size` — it is the slice everyone reads. A plan that does not fit **is sliced** into `subtasks/`, one file ≤50 lines per front that goes to a separate context; `size` grows the number of files, not the size of each. Splitting the task by `depends_on` is the exception, for fronts that share no objective. `pop_validate.py` enforces the caps.
 - **The criteria are the contract.** They bind the executor and the `005_closing` gate, and must cover the card's What/Why — not only the chosen strategy. A criterion that misses the request is a plan defect, and the gate returns to 002 for it.
+- **A defense when the adversarial gate fires.** A task with `yolo: true` **and** (`size: L` **or** `critical: true`) delivers, besides the plan, `<id>.defense.md` ([[_templates/TASK-DEFENSE|TASK-DEFENSE]]): a short list of the contestable decisions — the choice adopted, the alternative rejected, why, and what would falsify it — never chain-of-thought. It is what the advocate attacks in act 1; without it configuration A does not run, and the 002→003 gate requires the defense whenever the trigger fires.
 - **A `lacuna` return is an amendment, not replanning.** It appends the missing criterion and, if needed, **one** new front file — no plan rewrite. Criteria and fronts are **append-only** between rounds: renumbering breaks the `.verify.md` and telemetry references. Only `premissa` (the strategy was wrong) justifies real replanning.
 
 ## 003 — approval
 
 Outside yolo, only `- [x] Done` advances; requested changes return to 002. In yolo, this gate **exists only for `critical: true`**: a fresh strong critic checks verifiability, sufficient brief, safe ownership/dependencies, proportional specs/research, and absence of avoidable `(user)` work. Returns 1–2 automatically go to 002; failure 3 sets `circuit_breaker: true`, blocks, and requires human reset. A non-critical yolo task transits **002 → 004 directly, without a round** — yolo trusts the agent's plan and concentrates judgment in `005_closing`.
 
-Only enter 004 once every `depends_on` has its `memory/<id>.md`. There is no per-stage transitional window: a task in `005_closing` may still be awaiting the gate, and the memory is only born after it.
+Only enter 004 once every `depends_on` has its ledger in `memory/<YYYY-MM-DD>/<id>.md`. There is no per-stage transitional window: a task in `005_closing` may still be awaiting the gate, and the memory is only born after it.
 
 ## 004 — implementation
 
@@ -82,9 +86,13 @@ Complex fronts declare `owns`, `may_read`, `must_not_edit`, `depends_on`, expect
 
 One stage, three acts in order. **No act-3 effect happens before gate approval** where the gate exists: memory, spec sync, `close` and folder deletion all run afterwards.
 
-**Act 1 — quality gate.** The judge depends on the mode, and only one of the two ever runs.
+**Act 1 — quality gate.** The orchestrator reads `yolo`, `size` and `critical` in the card frontmatter and picks between three mutually exclusive cases — no new mark fires the gate. Contract: [[specs/adversarial-gate|adversarial gate]] — *always follow it: the invariants, each role's powers and the artifact caps live there, not here*.
 
-- **Yolo — a fresh independent reviewer.** Read in this order: objective, specs/contracts, tests, diff; the execution report is support, not truth. First answer whether the **original request** — the card's What/Why — was met, before the plan's criteria; without a 003 approval the brief is strategy, not contract, so a plan deviation that serves the request is not a failure and plan adherence that misses it is blocking. Choose `differential` or `full` and record reason/surface/tests: **a previous return does not imply full review** — only `premissa` invalidates what was already verified, and `full` is reserved for it and for `critical: true`; after `lacuna` or an execution failure the differential covers the **delta** (the criteria and fronts that re-entered) and audits the rest by evidence. Verify behavior, edges, tests, complexity, coupling, naming, errors, security, docs, and the specs/DOX touched; in code, follow `clean-code-review`. Every finding carries evidence, impact and severity (**blocking**, **suggestion** or **nit**), and there is exactly one reviewer per round. Inconclusive evidence is rerun.
+- **Configuration A — the adversarial pair**, when `yolo: true` and (`size: L` or `critical: true`). In fresh contexts and in this order: the **devil's advocate** (skill `devils-advocate`) accuses the execution and the defense's decisions in `<id>.r<n>.accusation.md`; then the **judge** (skill `adversarial-judge`), in a separate context, rules on each accusation, first answers whether the card's original request was met, and issues verdict and route in `<id>.r<n>.judgment.md`. That round runs no independent reviewer, and it is the judge who writes the memory on approval. A missing defense: act 1 does not run and the task returns to 002 to produce it.
+- **Transition — a card older than the gate.** The gate is in force since **2026-07-27**: a card whose `created:` predates that date went through 002 when the defense did not yet exist, so a missing defense does **not** send it back to 002 — it runs in **configuration B** and the orchestrator records this clause in the card Log. Only `created:` (immutable) counts; no new field.
+- **An invalid accusation is not a verdict.** An item with no severity, evidence or remedy — or an artifact above the cap — is not judged: the judge reports to the orchestrator and does **not** write `<id>.r<n>.judgment.md`, and the **orchestrator** relaunches the advocate in the same round. **A reissue is not a new round:** it rewrites that same round's `<id>.r<n>.accusation.md` — `n` does not advance and no already-judged artifact is touched. It is not a route and consumes no counter; record it in the card Log. A second invalid accusation in a row → `blocked: true`.
+- **One round, one pair of files.** Every act-1 round writes its own: `<id>.r<n>.accusation.md` and `<id>.r<n>.judgment.md`, starting at `r1`. A new round **never** overwrites or deletes the previous one, the highest `n` is the one that decides, and the caps apply per round. Form: [[specs/adversarial-gate|adversarial gate]] › Interfaces.
+- **Configuration B — a single reviewer** for the remaining `yolo: true` tasks, in a fresh context. Read in this order: objective, specs/contracts, tests, diff; the execution report is support, not truth. First answer whether the **original request** — the card's What/Why — was met, before the plan's criteria; without a 003 approval the brief is strategy, not contract, so a plan deviation that serves the request is not a failure and plan adherence that misses it is blocking. Choose `differential` or `full` and record reason/surface/tests: **a previous return does not imply full review** — only `premissa` invalidates what was already verified, and `full` is reserved for it and for `critical: true`; after `lacuna` or an execution failure the differential covers the **delta** (the criteria and fronts that re-entered) and audits the rest by evidence. Verify behavior, edges, tests, complexity, coupling, naming, errors, security, docs, and the specs/DOX touched; in code, follow `clean-code-review`. Every finding carries evidence, impact and severity (**blocking**, **suggestion** or **nit**), and there is exactly one reviewer per round. Inconclusive evidence is rerun.
 - **Three exits:** approved → act 2; **execution blocker** → 004 (the executor did not meet the contract); **plan defect** → 002 (the contract did not cover the request, and the executor delivered what it was given). Each route has its own counter: execution counts in `yolo_005_returns`, plan defect in `yolo_003_returns`. Two returns per counter re-enter automatically; the 3rd opens `circuit_breaker`.
 - **Every return carries a named delta**, without exception: type (`lacuna` | `premissa` | `execucao`), affected criteria, affected fronts, and the fronts that stay intact. The delta is what makes a return cost the size of the defect instead of a whole cycle — without it, 002 cannot tell amendment from replanning and 004 does not know what to re-run. The type is written to `return_kind:` by `python3 scripts/pop_move.py … --return-kind <type>`, the field's only writer, which fails closed on `005_closing→002`; agents never edit it by hand. Outside yolo, the human records the same delta in the `.approval.md` merge round when asking for a PR fix.
 - **The gate does not fix what it rejected.** Naming the delta is the limit of its power: a reviewer that dispatches the correction ends up judging work it commissioned, and the independence that makes the gate worth anything disappears.
@@ -94,17 +102,18 @@ One stage, three acts in order. **No act-3 effect happens before gate approval**
 
 **Act 3 — close-out.** Idempotent: validate state before each effect, skip what is already done, and abort preserving card/roadmap on technical failure.
 
-1. Write canonical `memory/<id>.md` with identity, dates, commit, explicit `pr`, result, specs, decisions/deviations, and final minimal telemetry. Invalid memory aborts the close. In yolo the reviewer itself writes it, in the same session in which it approved — it has just read the diff.
+1. Write the task memory under `memory/<YYYY-MM-DD>/`, where the folder is the completion date (equal to `finished`): the **ledger** `<id>.md` ([[_templates/MEMORY|MEMORY]], ≤1200 chars) with identity, dates, commit, explicit `pr`, delivery, verification, contract impact and the index of the entries; and one **entry** `<id>.<nn>-<slug>.md` ([[_templates/MEMORY-ENTRY|MEMORY-ENTRY]], ≤800 chars) per thing done — changed areas, telemetry, every durable decision, every deviation — numbered in chronological order and each carrying **at least one evidence wikilink** (the spec changed, the file touched). An entry the ledger does not index is orphaned; invalid memory aborts the close. In yolo whoever approved writes it (the single reviewer in B, the judge in A), in the same session — they have just read the diff.
 2. Synchronize only the specs/DOX actually affected, plus phase/epoch/modification/index statuses.
 3. Run `python3 scripts/pop_roadmap.py close <id>`; it requires the card in `005_closing` plus valid memory and removes exactly one task row while preserving epoch/phase/modification/open tasks.
 4. Extract only reusable learning; remove external task worktrees/ephemeral branches.
+   - **Harvesting the judgment.** A decision **contested and upheld** in the `.judgment.md` becomes a durable record only when **all three** tests pass: ruled on the merits · **recurrence** (the rationale would decide a future task that knows nothing of this one; if it falls together with this diff, it is circumstance) · **novel** in any live spec or note (if one already exists and diverges, fix the existing one instead of creating another). Destination: a durable contract, invariant or interface → a line in a spec; the reason behind a choice → a note in `notes/decisions/`. **The default is not to record:** if a test fails, the decision dies in the task memory, whose entries already carry decisions/deviations — and a judgment with no harvest generates **no** "no harvest" record.
 5. At the final external yolo task of the marked scope — single task, phase/epoch or modification — run `pop_delivery.py scope-pr` to open/reuse `develop` → `main`; set `pr`/`awaiting_merge`. Human merges. A local scope opens no task/scope PR.
 6. Delete `kanban/005_closing/<id>/` only after every prior effect succeeds; memory + Git keep the durable proof.
 
 ## Yolo scheduling, telemetry, and circuit breaker
 
 - A yolo mark may come from the roadmap/modifications or from the human saying “start the flow in yolo”. With no card, `new-task` materializes and releases it while recording the conversational source; yolo is never a waiver.
-- `yolo: true` keeps the same state machine with a **single quality gate in `005_closing`**. Outside yolo the agentic reviewer does not exist — the gate is the human PR — so the independent reviewer is a yolo-only figure.
+- `yolo: true` keeps the same state machine with a **single quality gate in `005_closing`** (configuration A or B, per `size`/`critical`, changing no route, counter or circuit breaker). Outside yolo that gate does not exist — the gate is the human PR — so the independent reviewer, the advocate and the judge are yolo-only figures.
 - **Two returns per route, always with a delta:** an execution blocker returns to 004 (`yolo_005_returns`, type `execucao`); a plan defect returns to 002 (`yolo_003_returns`, type `lacuna` or `premissa`). The 3rd failure of the same route opens the circuit breaker. Only the delta's fronts re-enter.
 - `pop_yolo.py wave` selects up to three eligible tasks with satisfied dependencies and isolated projects by default; overlap serializes.
 - Collect every stage context before transition; never end with a stage agent running or merely promise agent-owned continuation.
@@ -125,7 +134,7 @@ One stage, three acts in order. **No act-3 effect happens before gate approval**
 
 Only a literal human order such as “do not use the kanban” or “do this outside PoP” waives the stages. The waiver is specific: no other rule or protection is waived by inference.
 
-1. Before writing, record the authorizing command and scope in `memory/D-YYYYMMDD-<slug>.md`, using [[_templates/MEMORY|MEMORY]]; the `D-` ID identifies a deviation without a card.
+1. Before writing, record the authorizing command and scope in the ledger `memory/<YYYY-MM-DD>/D-YYYYMMDD-<slug>.md`, using [[_templates/MEMORY|MEMORY]]; the `D-` ID identifies a deviation without a card and fills `authorization`.
 2. Preserve repository, safety, ownership, and merge rules that were not explicitly superseded.
-3. Before finishing, complete the memory with commit/PR, result, verification, and deviations; record the specs and DOX impact assessment and update only the contracts actually affected.
+3. Before finishing, complete the ledger with commit/PR, result and verification, and open one entry per thing done and per deviation; record the specs and DOX impact assessment and update only the contracts actually affected.
 4. Without unequivocal authorization or a route to that durable evidence, do not edit: materialize a normal task.

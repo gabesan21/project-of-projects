@@ -21,8 +21,24 @@ Generates an overview **of the current scope** and proposes actions. Changes not
    - **Outdated specs:** the `sync-specs` skill's audit (tasks in done whose specs weren't updated).
    - **DOX audit:** in an application with a DOX tree ([[_templates/DOX|template]]), obsolete contracts (purpose/structure/flow changed without an update), dead links and blown caps (~60 lines, ~3 laterals, <7 references per contract).
    - **Note health:** orphan notes (no inbound wikilinks in the scope) and contradictions between notes/decisions and specs — reply ≤15 lines: candidates to link, merge or mark with `> Contradicts:`.
-   - **Memory, roadmap and modifications health:** completed-task residue reported by `pop_validate`; memories over 2000 characters or repetitive/narrative candidates for [[.agents/skills/optimize-memory/SKILL|optimize-memory]]. Report only — never compact or delete during review.
+   - **Memory, roadmap and modifications health:** completed-task residue reported by `pop_validate`; memory still flat outside a date folder, a ledger over 1200 or an entry over 800 characters, an entry with no evidence — candidates for [[.agents/skills/optimize-memory/SKILL|optimize-memory]]. Report only — never compact or delete during review.
    - **Stalled epochs:** "Abandon/pause if" conditions met in the epoch files; Epoch 1 (Organization) still open — since when and what is missing to release the gate.
+   - **Dated debt of the adversarial gate:** the "Transition — a card older than the gate" clause of act 1 of `005_closing` ([[WORKFLOW|WORKFLOW]]) and the `GATE_ADVERSARIAL_SINCE` constant that implements it in the validator exist **only** for cards that went through 002 before the gate came into force — they are debt, not a permanent rule. Measure with a command, not by impression:
+     ```sh
+     CUT=$(grep -hoE 'GATE_ADVERSARIAL_SINCE = "[0-9]{4}-[0-9]{2}-[0-9]{2}"' \
+       scripts/pop_validate.py pop/scripts/pop_validate.py 2>/dev/null \
+       | grep -oE '[0-9]{4}-[0-9]{2}-[0-9]{2}' | head -1)
+     case "$CUT" in [0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]) ;; *) CUT= ;; esac
+     if [ -z "$CUT" ]; then
+       echo 'ERROR: cut-off date not found — the debt CANNOT be removed' >&2
+       false
+     else
+       grep -rH '^created:' kanban pop/kanban 2>/dev/null \
+         | awk -F'created: ' -v c="$CUT" 'NF>1 && $2 < c {sub(/:$/,"",$1); print $1}'
+     fi
+     ```
+     The command covers both anatomies (harness at the root itself and in `pop/`) and **fails closed**: with no readable constant it prints the error and exits with a non-zero status, never reaching the `awk`.
+     **Removal trigger:** empty output **and** a zero exit status — an error is never a trigger, and empty output with a non-zero status means the measurement did not happen. With the command successful, empty output means no pre-cut-off card in any kanban stage and no in-flight task with a `created:` earlier than the cut-off. Then the front proposes the **joint** removal: the clause in [[WORKFLOW|WORKFLOW]], the caveat in the gate spec, the constant and the exemption in the validator, and the tests that cover them. A partial removal is worse than none — the proposal is always of the whole set. While a pre-cut-off card exists, the front only reports how many and which, and proposes nothing.
    - **Swollen modifications:** a modification with more than ~3 open tasks or open for too long → proposal of promotion to a roadmap phase/epoch via `plan-roadmap` (open tasks conclude as `M-`; only the not-yet-tasked work migrates — frontier in [[AGENTS|AGENTS]]).
    - **Orphaned yolo:** external `develop` scopes stalled without their final automatic `develop` → `main` PR. A local scope is exempt because it delivers directly to `main`.
 3. **Consolidate:** the main agent only assembles the report from the scripts and the subagents' answers. Write it in the current scope's `pop/notes/` (`notes/` when the harness lives at the root itself), with:

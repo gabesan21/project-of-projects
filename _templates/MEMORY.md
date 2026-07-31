@@ -10,18 +10,25 @@ authorization: <only for D-YYYYMMDD-<slug>: human command that waived the kanban
 
 # <id>-<slug> — <short title>
 
-> Durable ledger written and validated before removing the task from the roadmap and deleting `kanban/005_closing/<id>/`. Total ≤2000 characters. Record facts and pointers instead of retelling planning or execution; use [[.agents/skills/optimize-memory/SKILL|optimize-memory]] if it grows without losing chronology or critical decisions. A literal human waiver of the kanban uses `task: D-YYYYMMDD-<slug>`, fills `authorization`, and has no card or roadmap row.
+> The task **ledger**: the file that proves it finished. It lives in `memory/<YYYY-MM-DD>/<id>-<slug>.md`, and the **folder is the completion date — equal to `finished`**. Ceiling: **1200 characters**.
+> The ledger does not tell what was done; it identifies, attests and **indexes**. What was done lives in the **entries** alongside it, `memory/<YYYY-MM-DD>/<id>-<slug>.<nn>-<entry-slug>.md` ([[_templates/MEMORY-ENTRY|MEMORY-ENTRY]]) — one thing done per file, ≤800 characters, each with an evidence wikilink. That granularity is what allows optimizing later with [[.agents/skills/optimize-memory/SKILL|optimize-memory]] without rereading the whole memory.
+> Changed areas, telemetry, durable decisions and deviations are **not** bullets here: they are entries.
+> A human deviation that literally waives the kanban uses `task: D-YYYYMMDD-<slug>`, fills `authorization`, and has no card or roadmap row — but it has a ledger and entries like any other.
 
-- **Delivery:** <observable result>.
-- **Changed areas:** `<subtree/file>` — <one line>.
+- **Delivery:** <one sentence: what came to exist or changed>.
 - **Verification:** <aggregate gate and result>.
-- **Final telemetry:** <stage contexts; 003/005 returns; differential|full; final tests—no reasoning>.
-- **Durable decisions:** none | <decision and short rationale>.
-- **Relevant deviations:** none | <authorized difference from brief>.
 - **Contract impact:** specs: <assessed; updated when affected> · DOX: <assessed; updated when affected>.
+
+## Entries
+
+> One line per entry, in chronological order, each saying what that file tells. An entry not linked here is orphaned and fails validation.
+
+- [[<id>-<slug>.01-<entry-slug>]] — <what was done, one line>.
+- [[<id>-<slug>.02-<entry-slug>]] — <what was done, one line>.
 
 ## Links
 
-- **Affected spec:** [[categories/<category>/<project>/pop/specs/<spec>|<spec>]] — *follow for the changed contract*.
-- **Learning:** [[categories/<category>/<project>/pop/notes/learnings/<note>|<note>]] — *follow when reusable*.
-- **PR/commit:** <link/hash> — *follow to inspect the final diff*.
+> Every link carries a trigger: when it is worth following. Evidence of a change belongs to the entries; whole-task pointers live here.
+
+- **Origin:** [[categories/<category>/<project>/pop/roadmap/<n>-<slug>|Phase <n>.<m>]] — *follow for the context that asked for the task*.
+- **PR/commit:** <link or hash> — *follow to inspect the final diff*.

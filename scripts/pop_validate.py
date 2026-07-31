@@ -16,6 +16,44 @@ MAX_NOTE_LINES = 150
 MAX_PLAN_LINES = 80      # plan root (`<id>.plan.md`), regardless of size
 MAX_FRONT_LINES = 50     # front file in `subtasks/`: one executor's slice
 MAX_PROJECT_AGENTS = 60  # a project's AGENTS.md: a pointer, not a copy of the flow
+# Caps of the three adversarial-gate artifacts (see [[specs/adversarial-gate]],
+# table "Interfaces"). The key is the suffix of the **task** artifact, never a
+# template name: `_templates/TASK-DEFENSE.md` remains an ordinary 150-line note.
+# The cap applies **per round**: the `.r<n>` infix sits before the suffix, so
+# matching by `endswith` already reaches `<id>.r2.accusation.md`.
+GATE_ARTIFACT_LIMITS = {
+    ".defense.md": 30,      # the plan's contestable decisions
+    ".accusation.md": 50,   # the devil's advocate objections
+    ".judgment.md": 40,     # the judge's judgment and route
+}
+# Memory caps, in **characters**: memory is a ledger and entries, not a note,
+# and what makes it optimizable by an agent is the file size, not the line
+# count. The ledger is the proof (frontmatter, delivery, verification, index);
+# an entry is one thing done, with linked evidence (see [[_templates/MEMORY]]
+# and [[_templates/MEMORY-ENTRY]]). Memory is measured by `check_memory` —
+# `note_limit` does not reach `memory/`.
+MAX_MEMORY_LEDGER = 1200
+MAX_MEMORY_ENTRY = 800
+# Date on which the `memory/<YYYY-MM-DD>/` layout became mandatory. Flat memory
+# older than it is tolerated legacy — that is what keeps `included` clones
+# valid, whose memories this vault does not rewrite.
+MEMORY_LAYOUT_SINCE = "2026-07-27"
+MEMORY_DATE_DIR = pop_roadmap.MEMORY_DATE_DIR
+# Entry: `<id>.<nn>-<slug>.md` in the same folder as the ledger `<id>.md`. The
+# `.` reuses the kanban artifact convention (`<id>.plan.md`).
+MEMORY_ENTRY_SUFFIX = re.compile(r"^\.(\d{2}-[a-z0-9][a-z0-9-]*)$")
+VERIFY_ARTIFACT = ".verify.md"
+GATE_PAIR_ARTIFACTS = (".accusation.md", ".judgment.md")
+# Round infix of the act-1 artifacts (`<id>.r<n>.<artifact>.md`, from `r1`):
+# what decides the configuration is the artifact **family**, never the round,
+# so every check matches the name with and without the infix.
+ROUND_INFIX = re.compile(r"\.r\d+$")
+# Date on which the adversarial gate came into force (see [[WORKFLOW]], act 1
+# of `005_closing`, "Transition — a card older than the gate"). A card with an
+# earlier `created:` went through 002 when the defense did not yet exist: even
+# under the trigger, it runs in configuration B and its `.verify.md` is what is
+# expected.
+GATE_ADVERSARIAL_SINCE = "2026-07-27"
 # An application embeds the DOX process and only for that exceeds the cap (rule 5).
 DOX_MARKER = "DOX process"
 EXEMPT_NAMES = {"AGENTS.md", "WORKFLOW.md", "README.md"}
@@ -45,7 +83,10 @@ LINK_SKIP_PARTS = {"external-repository", ".obsidian", ".git", "worktrees",
 # Suffixes of the task's own stage artifacts (created only as it advances in
 # the kanban): a freshly created card links `.plan/.approval/.verify` that are
 # not born yet — an expected navigation link, not a real break (see [[WORKFLOW]]).
-STAGE_ARTIFACT_SUFFIXES = (".plan", ".approval", ".verify")
+# The act-1 artifacts carry a round infix (`<id>.r<n>.accusation`), which
+# `_stage_artifact_base` strips from both sides of the comparison.
+STAGE_ARTIFACT_SUFFIXES = (".plan", ".approval", ".verify",
+                           ".defense", ".accusation", ".judgment")
 EXTERNAL_PROJECT_LINK = re.compile(r"\[\[categories/[^/]+/[^/]+/")
 
 
@@ -307,11 +348,16 @@ def note_limit(path):
     slice everyone reads and the front file is the slice one executor reads. A
     plan that does not fit **modularizes** into `subtasks/`; compressing it or
     splitting the task is the exception (see section 002 of the WORKFLOW).
+    The defense, the accusation and the judgment follow the same logic, with
+    the caps the adversarial-gate spec sets.
     """
     if path.name in EXEMPT_NAMES:
         return None
     if path.name.endswith(".excalidraw.md"):
         return None  # Excalidraw diagram: embedded JSON, not a note.
+    for suffix, limit in GATE_ARTIFACT_LIMITS.items():
+        if path.name.endswith(suffix):
+            return limit
     if path.name.endswith(".plan.md"):
         return MAX_PLAN_LINES
     if path.parent.name == "subtasks":
@@ -394,6 +440,97 @@ def check_cards(root, projects, violations):
                     violations.append(f"{telemetry}: telemetry invalid")
 
 
+def gate_adversarial_applies(meta):
+    """Trigger of the advocate + judge pair, derivable from the card frontmatter alone.
+
+    `yolo: true` **and** (`size: L` **or** `critical: true`) — no new mark fires
+    the gate (see [[specs/adversarial-gate]]).
+    """
+    return meta.get("yolo") is True and (str(meta.get("size")) == "L"
+                                         or meta.get("critical") is True)
+
+
+def gate_adversarial_predates(meta):
+    """Card planned before the gate came into force — transition clause.
+
+    A `created:` earlier than `GATE_ADVERSARIAL_SINCE` means 002 finished when
+    the defense did not yet exist: act 1 runs in configuration B and the
+    `.verify.md` is the correct artifact, even with the trigger on. It uses only
+    an existing, immutable field; a missing or invalid `created:` grants no
+    exemption (and is already a violation on its own).
+    """
+    created = _valid_iso_date(meta.get("created"))
+    return created is not None and created.isoformat() < GATE_ADVERSARIAL_SINCE
+
+
+def gate_artifacts_of(task_dir):
+    """This task's act-1 artifacts, as (path, family) pairs.
+
+    It scans the folder instead of matching the literal name `<id><family>`,
+    because the pair's artifact is born per round (`<id>.r<n>.accusation.md`,
+    from `r1`) and the `.verify.md` may appear with the same infix. What decides
+    the configuration is the family; the round only tells the attempts apart.
+    """
+    found = []
+    for path in sorted(task_dir.iterdir()):
+        if not path.is_file():
+            continue
+        for family in (VERIFY_ARTIFACT, *GATE_PAIR_ARTIFACTS):
+            if not path.name.endswith(family):
+                continue
+            stem = path.name[: -len(family)]
+            if ROUND_INFIX.sub("", stem) == task_dir.name:
+                found.append((path, family))
+            break
+    return found
+
+
+def check_gate_artifacts(root, projects, violations):
+    """(k) exclusivity between the two configurations of act 1 of 005_closing.
+
+    Where the trigger fires, act 1 is judged by the advocate + judge pair and
+    no `.verify.md` exists; where it does not, the single reviewer applies and
+    neither `.accusation.md` nor `.judgment.md` is born. Never all three —
+    hence a `.verify` coexisting with a pair artifact being a violation in
+    either direction: whichever the trigger, one of the two is outside the live
+    configuration. The rule is per family, so it applies the same to every
+    round (`<id>.r<n>.<artifact>.md`).
+
+    **Absence is never a violation:** almost no task has any of the three, and
+    a task outside yolo never will. The rule is about coexistence and coherence
+    with the trigger, never about presence.
+
+    **Transition:** a card with `created:` earlier than
+    `GATE_ADVERSARIAL_SINCE` runs in configuration B even under the trigger —
+    the same clause act 1 of `005_closing` states. The exemption is **narrow**:
+    it only takes the `.verify.md` off the forbidden list, and the pair's
+    artifact stays forbidden in that card. Skipping the whole check would let
+    coexistence through precisely in the riskiest class.
+    """
+    for project in projects:
+        for _, task_dir, card in poplib.iter_cards(project):
+            meta = poplib.read_card(card)
+            if not gate_adversarial_applies(meta):
+                forbidden = GATE_PAIR_ARTIFACTS
+                reason = ("adversarial gate off: act 1 is the single "
+                          "independent reviewer, which produces `.verify.md`")
+            elif gate_adversarial_predates(meta):
+                forbidden = GATE_PAIR_ARTIFACTS
+                reason = ("card older than " + GATE_ADVERSARIAL_SINCE + ": the "
+                          "transition clause exempts only the `.verify.md`, "
+                          "and act 1 runs in configuration B")
+            else:
+                forbidden = (VERIFY_ARTIFACT,)
+                reason = ("adversarial gate on (`yolo: true` and (`size: L` "
+                          "or `critical: true`)): act 1 is the advocate + "
+                          "judge pair, with no independent reviewer")
+            for path, family in gate_artifacts_of(task_dir):
+                if family in forbidden:
+                    violations.append(
+                        f"{path}:1: `{family}` outside this task's act-1 "
+                        f"configuration — {reason}")
+
+
 def check_release(root, projects, warnings):
     for project in projects:
         for stage, task_dir, card in poplib.iter_cards(project):
@@ -416,6 +553,128 @@ def check_worktrees(root, projects, warnings):
             if not (harness / "kanban" / "004_processing" / wt.name).is_dir():
                 warnings.append(f"{wt}: worktree without a matching task in "
                                 f"004_processing")
+
+
+MEMORY_TASK_ID = re.compile(
+    r"^(?:\d+\.\d+\.\d+-[a-z0-9][a-z0-9-]*"
+    r"|M-\d+\.\d+-[a-z0-9][a-z0-9-]*"
+    r"|D-\d{8}-[a-z0-9][a-z0-9-]*)$")
+
+
+def _memory_entry_of(stem, ledger_stems):
+    """(task, entry) if `stem` is an entry of a present ledger, else None.
+
+    Matching against the ledgers that exist — instead of slicing the name by
+    regex — is what resolves `8.1.10-foo`: the whole id matches as a ledger
+    before any attempt to read `.10-foo` as an entry number.
+    """
+    for task in ledger_stems:
+        if not stem.startswith(f"{task}."):
+            continue
+        match = MEMORY_ENTRY_SUFFIX.match(stem[len(task):])
+        if match:
+            return task, match.group(1)
+    return None
+
+
+def _check_memory_folder(folder, violations):
+    """One date folder: one ledger per task and its subordinate entries."""
+    files = [p for p in sorted(folder.iterdir()) if p.suffix == ".md"]
+    for path in sorted(folder.iterdir()):
+        if path.is_dir():
+            violations.append(
+                f"{path}: a memory date folder has no subfolder; ledger and "
+                "entries sit side by side")
+    ledgers = {p.stem: p for p in files if MEMORY_TASK_ID.match(p.stem)}
+    ledger_text = {}
+    for task, path in sorted(ledgers.items()):
+        text = path.read_text(encoding="utf-8")
+        ledger_text[task] = text
+        meta, _ = poplib.parse_frontmatter(text)
+        if meta.get("task") != task:
+            violations.append(
+                f"{path}:1: `task` `{meta.get('task')}` differs from the file "
+                f"name `{task}`")
+        for field in pop_roadmap.REQUIRED_MEMORY:
+            if meta.get(field) in (None, ""):
+                violations.append(f"{path}:1: ledger without `{field}`")
+        if str(meta.get("finished") or "") != folder.name:
+            violations.append(
+                f"{path}:1: `finished` `{meta.get('finished')}` differs from "
+                f"the folder `{folder.name}`; the folder is the completion date")
+        if len(text) > MAX_MEMORY_LEDGER:
+            violations.append(
+                f"{path}:1: ledger with {len(text)} characters "
+                f"(max. {MAX_MEMORY_LEDGER}) — move content into entries")
+
+    for path in files:
+        if path.stem in ledgers:
+            continue
+        parsed = _memory_entry_of(path.stem, ledgers)
+        if parsed is None:
+            violations.append(
+                f"{path}:1: name outside the memory layout; use `<id>.md` "
+                "(ledger) or `<id>.<nn>-<slug>.md` (entry) with the ledger in "
+                "the same folder")
+            continue
+        task, entry = parsed
+        text = path.read_text(encoding="utf-8")
+        meta, _ = poplib.parse_frontmatter(text)
+        if meta.get("task") != task:
+            violations.append(
+                f"{path}:1: `task` `{meta.get('task')}` differs from the "
+                f"ledger `{task}`")
+        if meta.get("entry") != entry:
+            violations.append(
+                f"{path}:1: `entry` `{meta.get('entry')}` differs from the "
+                f"file name `{entry}`")
+        if len(text) > MAX_MEMORY_ENTRY:
+            violations.append(
+                f"{path}:1: entry with {len(text)} characters "
+                f"(max. {MAX_MEMORY_ENTRY}) — it is almost always two entries")
+        if not WIKILINK.search(text):
+            violations.append(
+                f"{path}:1: entry without an evidence wikilink; point at the "
+                "spec or the file that attests the change")
+        if f"[[{path.stem}" not in ledger_text.get(task, ""):
+            violations.append(
+                f"{path}:1: orphaned entry — not indexed under `## Entries` of "
+                f"the ledger `{task}.md`")
+
+
+def check_memory(root, projects, violations):
+    """(m) `memory/` in the granular layout: date folder, ledger and entries.
+
+    Flat memory in `memory/<id>.md` is tolerated legacy while `finished` is
+    earlier than `MEMORY_LAYOUT_SINCE`, and the layout requirement only reaches
+    the **current scope** (`scope == root`). A nested scope validates its own
+    memory when it runs its own `pop_validate`: demanding the layout of an
+    `included` clone here would be telling this vault to rewrite memory that is
+    not its own — and the ruler would be born failing work in flight in there.
+    The content of the date folders, when they exist, is validated in any scope:
+    there the layout has already been adopted and what is checked is coherence,
+    not migration.
+    """
+    for scope in projects:
+        base = poplib.harness_root(scope) / "memory"
+        if not base.is_dir():
+            continue
+        for child in sorted(base.iterdir()):
+            if child.is_dir():
+                if _valid_iso_date(child.name) is None:
+                    violations.append(
+                        f"{child}: a `memory/` folder must be a "
+                        "`YYYY-MM-DD` date (the task's completion date)")
+                    continue
+                _check_memory_folder(child, violations)
+            elif child.suffix == ".md" and scope == root:
+                meta, _ = poplib.parse_frontmatter(
+                    child.read_text(encoding="utf-8"))
+                if str(meta.get("finished") or "") >= MEMORY_LAYOUT_SINCE:
+                    violations.append(
+                        f"{child}:1: memory loose in `memory/`; since "
+                        f"{MEMORY_LAYOUT_SINCE} the ledger lives in "
+                        "`memory/<YYYY-MM-DD>/<id>.md`")
 
 
 def check_roadmap_residuals(root, violations):
@@ -459,6 +718,25 @@ def check_strict_anatomy(root, violations):
                 _scan_legacy_markers(sub, root, violations)
 
 
+def _stage_artifact_base(stem):
+    """The task id behind a stage-artifact stem.
+
+    It strips the artifact suffix and, behind it, the round infix — `<id>`,
+    `<id>.verify` and `<id>.r2.accusation` all reduce to the same `<id>`.
+    """
+    for suffix in STAGE_ARTIFACT_SUFFIXES:
+        if stem.endswith(suffix):
+            stem = stem[: -len(suffix)]
+            break
+    return ROUND_INFIX.sub("", stem)
+
+
+def _is_stage_artifact_of(name, base):
+    """`name` is a stage artifact of task `base`, with or without a round."""
+    return (any(name.endswith(suffix) for suffix in STAGE_ARTIFACT_SUFFIXES)
+            and _stage_artifact_base(name) == base)
+
+
 def check_wikilinks(root, warnings):
     targets = set()
     for path in root.rglob("*"):
@@ -484,12 +762,8 @@ def check_wikilinks(root, warnings):
                 name = low.rsplit("/", 1)[-1]
                 if {low, f"{low}.md", name} & targets:
                     continue
-                src_stem = path.stem.lower()
-                for suf in STAGE_ARTIFACT_SUFFIXES:
-                    if src_stem.endswith(suf):
-                        src_stem = src_stem[: -len(suf)]
-                        break
-                if name in {f"{src_stem}{suf}" for suf in STAGE_ARTIFACT_SUFFIXES}:
+                src_task = _stage_artifact_base(path.stem.lower())
+                if _is_stage_artifact_of(name, src_task):
                     continue
                 warnings.append(f"{path}:{n}: broken wikilink [[{target}]]")
 
@@ -635,8 +909,10 @@ def main():
     check_category_indexes(root, categories, violations)
     check_note_sizes(root, projects, violations)
     check_cards(root, projects, violations)
+    check_gate_artifacts(root, projects, violations)
     check_release(root, projects, warnings)
     check_worktrees(root, projects, warnings)
+    check_memory(root, projects, violations)
     check_roadmap_residuals(root, violations)
     check_strict_anatomy(root, violations)
     check_spec_collections(root, projects, violations)

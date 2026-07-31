@@ -54,4 +54,4 @@
 - **Untouched fronts:** `<Fxx>` — approved, they stay integrated; do **not** re-execute.
 - **Expected action:** <one line: what 002 amends or what 004 fixes>.
 
-> On approval, write `memory/<id>.md` in the same session — you have just read the diff. Integration, PR and merge remain the orchestrator's and the human's job.
+> On approval, write the memory in the same session — you have just read the diff: the ledger `memory/<YYYY-MM-DD>/<id>.md` plus one entry `<id>.<nn>-<slug>.md` per thing done, with linked evidence ([[_templates/MEMORY|MEMORY]] · [[_templates/MEMORY-ENTRY|MEMORY-ENTRY]]). Integration, PR and merge remain the orchestrator's and the human's job.

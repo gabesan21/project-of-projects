@@ -3,6 +3,7 @@
 Entry point for current public harness contracts. Execution history belongs in `memory/`.
 
 - [[specs/spec-architecture|Spec architecture]] — *follow when creating, organizing, validating, or superseding specs*.
+- [[specs/adversarial-gate|Adversarial gate]] — *follow when judging act 1 of `005_closing` for a yolo `L` or `critical` task, or when touching the devil's-advocate and judge roles*.
 - [[specs/included-standalone|Fully standalone included harness]] — *follow when packaging or validating an isolated included repository*.
 - [[specs/harness-lifecycle|Harness lifecycle]] — *follow when closing tasks, pruning roadmaps, optimizing memories, or routing Git delivery*.
 - [[specs/multi-agent-orchestration|Multi-agent orchestration]] — *follow when planning fronts, delegating execution, scheduling yolo waves, or reviewing ownership*.
