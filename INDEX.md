@@ -9,6 +9,7 @@ ProjectOfProjects/
 ├── INBOX.md         → [[INBOX|what awaits human decision]]
 ├── WORKFLOW.md      → [[WORKFLOW|task flow on the kanban]]
 ├── TYPES.md         → [[TYPES|project types: default, included, multi-repo, full-multi-repo]]
+├── coding-dockers/  → [[coding-dockers/INDEX|optional local coding-agent sandboxes; only this index is tracked]]
 ├── drafts/          → the human's project drafts: new/ and import/ ([[_templates/NEW_PROJECT|NEW_PROJECT]] · [[_templates/IMPORT_PROJECT|IMPORT_PROJECT]])
 ├── open_questions/  → open questions for the human, outside any task — the open ones show up in the [[INBOX|INBOX]]
 └── categories/      → every project category

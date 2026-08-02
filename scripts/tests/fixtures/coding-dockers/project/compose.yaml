@@ -1,0 +1,3 @@
+services:
+  probe:
+    image: hello-world:latest

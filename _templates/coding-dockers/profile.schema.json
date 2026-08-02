@@ -1,0 +1,74 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://project-of-projects.local/schemas/coding-docker-profile-v2.json",
+  "title": "Coding docker profile",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "input_sha256",
+    "project",
+    "scope",
+    "agent",
+    "stack",
+    "binds"
+  ],
+  "properties": {
+    "schema_version": { "const": 2 },
+    "input_sha256": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+    "project": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "absolute_path"],
+      "properties": {
+        "name": { "$ref": "#/$defs/slug" },
+        "absolute_path": { "$ref": "#/$defs/absolutePath" }
+      }
+    },
+    "scope": { "$ref": "#/$defs/slug" },
+    "agent": {
+      "enum": ["claude-code", "codex", "opencode", "pi", "kimi-code"]
+    },
+    "stack": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["node", "yarn", "pnpm", "php", "composer", "python", "go", "rust", "docker", "additional_packages"],
+      "properties": {
+        "node": { "type": "boolean" },
+        "yarn": { "type": "boolean" },
+        "pnpm": { "type": "boolean" },
+        "php": { "type": "boolean" },
+        "composer": { "type": "boolean" },
+        "python": { "type": "boolean" },
+        "go": { "type": "boolean" },
+        "rust": { "type": "boolean" },
+        "docker": { "type": "boolean" },
+        "additional_packages": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": { "type": "string", "pattern": "^[a-z0-9][a-z0-9+.-]*$" }
+        }
+      }
+    },
+    "binds": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": { "$ref": "#/$defs/bind" }
+    }
+  },
+  "$defs": {
+    "slug": { "type": "string", "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$" },
+    "absolutePath": { "type": "string", "pattern": "^/[^\\u0000-\\u001f]*$" },
+    "bind": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["source", "target", "kind", "read_only"],
+      "properties": {
+        "source": { "$ref": "#/$defs/absolutePath" },
+        "target": { "$ref": "#/$defs/absolutePath" },
+        "kind": { "enum": ["file", "directory"] },
+        "read_only": { "type": "boolean" }
+      }
+    }
+  }
+}

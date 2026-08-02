@@ -1,0 +1,14 @@
+{
+  "schema_version": 1,
+  "slug": "codex",
+  "runtime": { "kind": "node", "required": true },
+  "state": { "host_path": "~/.codex", "container_path": "/home/coder/.codex", "kind": "directory" },
+  "install": {
+    "status": "complete",
+    "argv": ["npm", "install", "--global", "@openai/codex"]
+  },
+  "open": {
+    "status": "complete",
+    "argv": ["codex"]
+  }
+}

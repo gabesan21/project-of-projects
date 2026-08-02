@@ -110,6 +110,7 @@ project-of-projects/
 | `sync-specs` | Keeps specs faithful to reality as tasks progress. |
 | `weekly-review` | Vault-wide review: what waits on you, what stalled, proposals. |
 | `optimize-memory` | Compacts memories without losing identity, chronology, commits/PRs or critical decisions. |
+| `coding-sandbox` | On explicit request, proposes and creates a confirmed local coding docker that opens one agent's plain interactive TUI in one project. |
 
 These are the workflow highlights — the full table in `AGENTS.md` covers all skills, including the `clean-code-change`/`clean-code-review` pair (code projects), the `ui-change`/`ui-review` pair (frontend projects) and a vendored batch of 16 frontend/UI/UX skills (design direction, React/Next.js practices, shadcn/ui, color, design tokens, and UX/accessibility audits), each credited with upstream and license.
 
@@ -124,7 +125,10 @@ python3 scripts/pop_task.py agents/my-project 1.1.1-user-table --title "User tab
 python3 scripts/pop_move.py 1.1.1-user-table 002_planning --reason "plan started"     # validated stage transition
 python3 scripts/pop_worktree.py add 1.1.1-user-table   # create/remove the task's worktree + branch
 python3 scripts/pop_check_scope.py --base HEAD~1 --allow 'src/**' --deny 'src/generated/**'  # validate front ownership
+python3 scripts/pop_sandbox.py new applications/my-project codex  # proposal only; exact hash confirmation writes the local profile
 ```
+
+Coding dockers are an optional, human-operated flow separate from headless `delegate-coding`. A generated `start.sh` opens exactly one of `claude`, `codex`, `opencode`, `pi`, or `kimi` without extra flags, mounts only the selected project plus the documented local Git/GitHub/agent state, and keeps project Docker resources in its own internal daemon. See [[coding-dockers/INDEX|Local coding dockers]] for setup, lifecycle, and the manual acceptance checklist.
 
 ## The vault is the harness source
 

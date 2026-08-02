@@ -131,6 +131,7 @@ The central procedures are **skills** in the open Agent Skills format (`SKILL.md
 | `weekly-review` | Review of the current scope **outside the kanban**, in parallel waves: it measures, **fixes the harness** wherever the call is unambiguous, and proposes the rest. The fronts for whoever hosts projects live in `origin-scope.md`, which is not installed. |
 | `optimize-memory` | Convert legacy memory into date folder + ledger + entries, and trim whatever exceeds the cap — **outside the kanban**, in parallel waves per file, without merging tasks or losing chronology, commits/PRs or critical decisions. |
 | `excalidraw-diagram` *(optional, external)* | `.excalidraw` diagrams that argue visually — for specs, plans and notes (pairs with the Obsidian Excalidraw plugin). By [coleam00](https://github.com/coleam00/excalidraw-diagram-skill) — clone it into `.agents/skills/excalidraw-diagram/`. |
+| `coding-sandbox` | Only by explicit request: inspect, propose, and, after exact confirmation, create an interactive local coding docker; never replaces `delegate-coding`. |
 | `delegate-coding` | Hub of the coding-skill family: contract for delegating coding work to a headless CLI (always yolo, pre-existing auth with abort on error) and tool choice. Integration into the PoP workflow is a future decision. |
 | `run-cursor-agent` | Invoke the headless Cursor CLI (`cursor-agent -p --force`) as the executor of a delegated coding task. |
 | `run-opencode` | Invoke headless opencode (`opencode run`) as the executor of a delegated coding task. |

@@ -1,0 +1,16 @@
+{
+  "schema_version": 1,
+  "common_binds": [
+    { "host_path": "~/.git-credentials", "container_path": "/home/coder/.git-credentials", "kind": "file" },
+    { "host_path": "~/.gitconfig", "container_path": "/home/coder/.gitconfig", "kind": "file" },
+    { "host_path": "~/.config/git", "container_path": "/home/coder/.config/git", "kind": "directory" },
+    { "host_path": "~/.config/gh", "container_path": "/home/coder/.config/gh", "kind": "directory" }
+  ],
+  "agents": [
+    { "slug": "claude-code", "recipe": "recipes/claude-code.json" },
+    { "slug": "codex", "recipe": "recipes/codex.json" },
+    { "slug": "opencode", "recipe": "recipes/opencode.json" },
+    { "slug": "pi", "recipe": "recipes/pi.json" },
+    { "slug": "kimi-code", "recipe": "recipes/kimi-code.json" }
+  ]
+}

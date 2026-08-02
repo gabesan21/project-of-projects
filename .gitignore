@@ -15,3 +15,7 @@
 
 # Python bytecode from scripts/
 __pycache__/
+
+# Coding dockers are local artifacts; only the boundary index is versioned.
+/coding-dockers/*
+!/coding-dockers/INDEX.md

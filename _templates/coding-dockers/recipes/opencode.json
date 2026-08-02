@@ -1,0 +1,14 @@
+{
+  "schema_version": 1,
+  "slug": "opencode",
+  "runtime": { "kind": "node", "required": true },
+  "state": { "host_path": "~/.config/opencode", "container_path": "/home/coder/.config/opencode", "kind": "directory" },
+  "install": {
+    "status": "complete",
+    "argv": ["npm", "install", "--global", "opencode-ai"]
+  },
+  "open": {
+    "status": "complete",
+    "argv": ["opencode"]
+  }
+}

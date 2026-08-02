@@ -1,0 +1,14 @@
+{
+  "schema_version": 1,
+  "slug": "pi",
+  "runtime": { "kind": "node", "required": true },
+  "state": { "host_path": "~/.pi", "container_path": "/home/coder/.pi", "kind": "directory" },
+  "install": {
+    "status": "complete",
+    "argv": ["npm", "install", "-g", "--ignore-scripts", "@earendil-works/pi-coding-agent"]
+  },
+  "open": {
+    "status": "complete",
+    "argv": ["pi"]
+  }
+}

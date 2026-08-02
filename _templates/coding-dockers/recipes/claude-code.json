@@ -1,0 +1,14 @@
+{
+  "schema_version": 1,
+  "slug": "claude-code",
+  "runtime": { "kind": "node", "required": true },
+  "state": { "host_path": "~/.claude", "container_path": "/home/coder/.claude", "kind": "directory" },
+  "install": {
+    "status": "complete",
+    "argv": ["npm", "install", "--global", "@anthropic-ai/claude-code"]
+  },
+  "open": {
+    "status": "complete",
+    "argv": ["claude"]
+  }
+}

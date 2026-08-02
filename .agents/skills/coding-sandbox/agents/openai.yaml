@@ -1,0 +1,6 @@
+interface:
+  display_name: "Coding Sandbox"
+  short_description: "Propose and operate confirmed coding dockers"
+  default_prompt: "Use $coding-sandbox to inspect and propose a local sandbox for this project."
+policy:
+  allow_implicit_invocation: false

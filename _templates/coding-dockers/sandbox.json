@@ -1,0 +1,31 @@
+{
+  "schema_version": 2,
+  "status": "incomplete",
+  "identity": {
+    "scope": "unrendered",
+    "agent": "unrendered",
+    "project_name": "unrendered"
+  },
+  "image": "unrendered",
+  "container": "unrendered",
+  "project": {
+    "source": "/unrendered",
+    "target": "/home/coder/unrendered"
+  },
+  "stack": {
+    "node": false,
+    "yarn": false,
+    "pnpm": false,
+    "php": false,
+    "composer": false,
+    "python": false,
+    "go": false,
+    "rust": false,
+    "docker": false,
+    "additional_packages": []
+  },
+  "binds": [],
+  "agent": {
+    "open_argv": []
+  }
+}
