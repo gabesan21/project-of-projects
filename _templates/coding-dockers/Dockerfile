@@ -41,8 +41,7 @@ RUN set -eu; \
         --output "/tmp/${node_archive}" "${node_url}/${node_archive}"; \
       curl --fail --silent --show-error --location \
         --output /tmp/node-shasums "${node_url}/SHASUMS256.txt"; \
-      grep "  ${node_archive}$" /tmp/node-shasums | \
-        sed "s#  ${node_archive}$#  /tmp/${node_archive}#" | sha256sum --check --strict -; \
+      (cd /tmp && grep "  ${node_archive}$" node-shasums | sha256sum --check --strict -); \
       tar --extract --xz --file "/tmp/${node_archive}" \
         --directory /usr/local --strip-components 1; \
       [ "$(node --version)" = "v${node_version}" ]; \

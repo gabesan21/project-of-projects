@@ -3,8 +3,11 @@
 
 from __future__ import annotations
 
+import hashlib
 import json
+import re
 import shutil
+import subprocess
 import sys
 import tempfile
 import unittest
@@ -120,6 +123,41 @@ class PopSandboxProjectStackTest(unittest.TestCase):
             self.assertIn(f'--build-arg "INSTALL_{flag}=', start)
         self.assertNotIn("INSTALL_COMMAND", dockerfile + start)
         self.assertNotIn("eval", dockerfile + start)
+
+    def test_node_checksum_pipeline_validates_tmp_file_and_rejects_tampering(self):
+        dockerfile = (self.root / "_templates" / "coding-dockers" / "Dockerfile").read_text(
+            encoding="utf-8")
+        match = re.search(
+            r'\(cd /tmp && (grep "  \$\{node_archive\}\$" node-shasums \| '
+            r'sha256sum --check --strict -)\);',
+            dockerfile,
+        )
+        self.assertIsNotNone(match)
+        self.assertNotIn('${node_archive}$#', dockerfile)
+
+        checksum_dir = Path(self._tmp.name) / "node-checksum"
+        checksum_dir.mkdir()
+        archive = checksum_dir / "node-v22.19.0-linux-x64.tar.xz"
+        payload = b"official synthetic node archive\n"
+        archive.write_bytes(payload)
+        (checksum_dir / "node-shasums").write_text(
+            f"{hashlib.sha256(payload).hexdigest()}  {archive.name}\n",
+            encoding="utf-8",
+        )
+        command = f'node_archive="{archive.name}"; {match.group(1)}'
+
+        valid = subprocess.run(
+            ["sh", "-eu", "-c", command], cwd=checksum_dir,
+            capture_output=True, text=True, check=False,
+        )
+        self.assertEqual(valid.returncode, 0, valid.stderr)
+
+        archive.write_bytes(b"tampered\n")
+        tampered = subprocess.run(
+            ["sh", "-eu", "-c", command], cwd=checksum_dir,
+            capture_output=True, text=True, check=False,
+        )
+        self.assertNotEqual(tampered.returncode, 0)
 
 
 if __name__ == "__main__":
