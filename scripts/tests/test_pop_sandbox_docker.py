@@ -102,7 +102,7 @@ class PopSandboxDockerExperiment(unittest.TestCase):
                            "--env", "DOCKER_HOST=unix:///run/coding-docker/docker.sock",
                            self.container, *args, check=check, timeout=timeout)
 
-    def test_daemon_proprio_isolamento_compose_lifecycle_e_worktree(self):
+    def test_own_daemon_isolation_compose_lifecycle_and_worktree(self):
         descriptor = json.loads((self.context / "sandbox.json").read_text(encoding="utf-8"))
         self.assertTrue(descriptor["stack"]["docker"])
         self.assertTrue((self.context / "seccomp-docker.json").is_file())

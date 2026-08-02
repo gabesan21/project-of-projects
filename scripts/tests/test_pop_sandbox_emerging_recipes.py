@@ -69,7 +69,7 @@ class EmergingRecipesTest(unittest.TestCase):
             project="applications/demo", agent=agent, package=[], confirm=confirmation
         )
 
-    def test_node_controlado_e_opt_in_atende_kimi(self):
+    def test_pinned_opt_in_node_supports_kimi(self):
         dockerfile = (
             self.root / "_templates" / "coding-dockers" / "Dockerfile"
         ).read_text(encoding="utf-8")
@@ -86,7 +86,7 @@ class EmergingRecipesTest(unittest.TestCase):
         self.assertIn('node_url="https://nodejs.org/dist/v${node_version}"', dockerfile)
         self.assertNotIn("apt-get install -y --no-install-recommends nodejs", dockerfile)
 
-    def test_receitas_usam_npm_atual_e_abrem_tui_pura(self):
+    def test_recipes_use_current_npm_packages_and_open_plain_tui(self):
         base = self.root / "_templates" / "coding-dockers" / "recipes"
         expectations = {
             "pi": {
@@ -110,7 +110,7 @@ class EmergingRecipesTest(unittest.TestCase):
                 self.assertEqual(recipe["open"]["argv"], expected["open"])
                 self.assertNotIn("@mariozechner/pi-coding-agent", json.dumps(recipe))
 
-    def test_proposta_hash_render_e_cinco_binds_rw_diretos(self):
+    def test_proposal_hash_render_and_five_direct_rw_binds(self):
         state_targets = {
             "pi": "/home/coder/.pi",
             "kimi-code": "/home/coder/.kimi-code",
@@ -154,7 +154,7 @@ class EmergingRecipesTest(unittest.TestCase):
                     descriptor["agent"]["open_argv"], rendered_recipe["open"]["argv"]
                 )
 
-    def test_hash_cobre_receita_emergente(self):
+    def test_hash_covers_emerging_recipe(self):
         _, original = sandbox.proposal(
             self.root, "applications/demo", self.project, "kimi-code", []
         )

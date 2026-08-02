@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Testes comportamentais do motor local de coding dockers."""
+"""Behavioral tests for the local coding-docker engine."""
 
 from __future__ import annotations
 
@@ -61,7 +61,7 @@ class PopSandboxTest(unittest.TestCase):
         return argparse.Namespace(project="applications/demo", agent="codex",
                                   package=list(packages), confirm=confirmation)
 
-    def test_proposta_detecta_stack_ordena_pacotes_e_inclui_binds_exatos(self):
+    def test_proposal_detects_stack_sorts_packages_and_includes_exact_binds(self):
         profile, shown = self.propose(packages=("zlib1g-dev", "jq", "jq"))
 
         self.assertEqual(profile["stack"], {
@@ -77,7 +77,7 @@ class PopSandboxTest(unittest.TestCase):
             "/home/coder/.config/git", "/home/coder/.config/gh", "/home/coder/.codex",
         })
 
-    def test_catalogo_tem_exatamente_cinco_slots_e_cada_bind_de_sessao(self):
+    def test_catalog_has_exactly_five_slots_and_each_session_bind(self):
         expected = set(sandbox.AGENTS)
         self.assertEqual(expected, {"claude-code", "codex", "opencode", "pi", "kimi-code"})
         for agent in expected:
@@ -86,7 +86,7 @@ class PopSandboxTest(unittest.TestCase):
             self.assertIn(str(Path("/home/coder") / relative),
                           {item["target"] for item in profile["binds"]})
 
-    def test_claude_inclui_runtime_node_na_proposta_e_no_hash(self):
+    def test_claude_includes_node_runtime_in_proposal_and_hash(self):
         (self.project / "package.json").unlink()
         (self.project / "pnpm-lock.yaml").unlink()
 
@@ -103,7 +103,7 @@ class PopSandboxTest(unittest.TestCase):
         self.assertFalse(changed["stack"]["node"])
         self.assertNotEqual(shown["confirmation_hash"], changed_shown["confirmation_hash"])
 
-    def test_receitas_documentadas_sao_declarativas_e_abrem_tui_sem_flags(self):
+    def test_documented_recipes_are_declarative_and_open_tui_without_flags(self):
         base = self.root / "_templates" / "coding-dockers"
         expected = {
             "claude-code": {
@@ -130,7 +130,7 @@ class PopSandboxTest(unittest.TestCase):
         self.assertIn("${install_argv[@]}", dockerfile)
         self.assertNotIn("eval", dockerfile)
 
-    def test_sem_confirmacao_exibe_proposta_sem_criar_artefatos(self):
+    def test_without_confirmation_shows_proposal_without_creating_artifacts(self):
         output = io.StringIO()
         with contextlib.redirect_stdout(output):
             result = sandbox.command_new(self.new_args(), self.root)
@@ -139,7 +139,7 @@ class PopSandboxTest(unittest.TestCase):
         self.assertIn("confirmation_hash", output.getvalue())
         self.assertFalse((self.root / "coding-dockers" / "demo" / "codex").exists())
 
-    def test_confirmacao_errada_e_receita_incompleta_falham_fechado(self):
+    def test_wrong_confirmation_and_incomplete_recipe_fail_closed(self):
         with self.assertRaisesRegex(sandbox.SandboxError, "confirmation does not exactly match"):
             sandbox.command_new(self.new_args("0" * 64), self.root)
         recipe_path = self.root / "_templates" / "coding-dockers" / "recipes" / "codex.json"
@@ -150,7 +150,7 @@ class PopSandboxTest(unittest.TestCase):
         with self.assertRaisesRegex(sandbox.SandboxError, "codex recipe is incomplete"):
             sandbox.command_new(self.new_args(shown["confirmation_hash"]), self.root)
 
-    def test_confirmacao_materializa_artefatos_e_segunda_execucao_e_idempotente(self):
+    def test_confirmation_materializes_artifacts_and_second_run_is_idempotent(self):
         self.complete_recipe()
         _, shown = self.propose()
         sandbox.command_new(self.new_args(shown["confirmation_hash"]), self.root)
@@ -169,7 +169,7 @@ class PopSandboxTest(unittest.TestCase):
         with self.assertRaisesRegex(sandbox.SandboxError, "sandbox already exists"):
             sandbox.command_new(self.new_args(shown["confirmation_hash"]), self.root)
 
-    def test_check_fresh_detecta_mudanca_em_template(self):
+    def test_check_fresh_detects_template_change(self):
         self.complete_recipe()
         _, shown = self.propose()
         sandbox.command_new(self.new_args(shown["confirmation_hash"]), self.root)
@@ -180,7 +180,7 @@ class PopSandboxTest(unittest.TestCase):
         with self.assertRaisesRegex(sandbox.SandboxError, "stale sandbox"):
             sandbox.check_fresh(self.root, "applications/demo", "codex")
 
-    def test_rm_remove_so_artefatos_quando_daemon_prova_ausencia(self):
+    def test_rm_removes_only_artifacts_when_daemon_proves_absence(self):
         self.complete_recipe()
         _, shown = self.propose()
         sandbox.command_new(self.new_args(shown["confirmation_hash"]), self.root)
@@ -195,7 +195,7 @@ class PopSandboxTest(unittest.TestCase):
         self.assertTrue(all((self.home / relative).exists()
                             for relative, _ in (*sandbox.COMMON_BINDS, sandbox.AGENT_BINDS["codex"])))
 
-    def test_rm_recusa_recurso_remanescente(self):
+    def test_rm_refuses_remaining_resource(self):
         self.complete_recipe()
         _, shown = self.propose()
         sandbox.command_new(self.new_args(shown["confirmation_hash"]), self.root)
@@ -204,7 +204,7 @@ class PopSandboxTest(unittest.TestCase):
             with self.assertRaisesRegex(sandbox.SandboxError, "remaining internal resource"):
                 sandbox.command_rm(self.new_args(), self.root)
 
-    def test_rejeita_traversal_agente_pacote_e_socket(self):
+    def test_rejects_traversal_agent_package_and_socket(self):
         with self.assertRaisesRegex(sandbox.SandboxError, "without an external path or traversal"):
             sandbox.resolve_project(self.root, "../demo")
         with self.assertRaisesRegex(sandbox.SandboxError, "unknown agent"):
@@ -216,7 +216,7 @@ class PopSandboxTest(unittest.TestCase):
             with self.assertRaisesRegex(sandbox.SandboxError, "host socket"):
                 sandbox.validate_binds(profile["binds"])
 
-    def test_catalogo_adulterado_e_rejeitado(self):
+    def test_tampered_catalog_is_rejected(self):
         catalog_path = self.root / "_templates" / "coding-dockers" / "catalog.json"
         catalog = json.loads(catalog_path.read_text(encoding="utf-8"))
         catalog["agents"].append({"slug": "cursor", "recipe": "recipes/cursor.json"})
@@ -224,7 +224,7 @@ class PopSandboxTest(unittest.TestCase):
         with self.assertRaisesRegex(sandbox.SandboxError, "five expected slots"):
             self.propose()
 
-    def test_identidade_e_bootstrap_docker_sao_separados_da_sessao_do_agente(self):
+    def test_identity_and_docker_bootstrap_are_separate_from_agent_session(self):
         dockerfile = (self.root / "_templates" / "coding-dockers" / "Dockerfile").read_text(
             encoding="utf-8"
         )

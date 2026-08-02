@@ -56,7 +56,7 @@ class PopSandboxProjectStackTest(unittest.TestCase):
         return sandbox.proposal(
             self.root, "applications/demo", self.project, "codex", [])
 
-    def test_detecta_stack_first_party_aninhada_e_sail(self):
+    def test_detects_nested_first_party_stack_and_sail(self):
         profile, shown = self.propose()
 
         self.assertEqual(profile["schema_version"], 2)
@@ -68,7 +68,7 @@ class PopSandboxProjectStackTest(unittest.TestCase):
         })
         self.assertEqual(profile["input_sha256"], shown["confirmation_hash"])
 
-    def test_dependencias_caches_harness_e_artefatos_nao_alteram_proposta(self):
+    def test_dependencies_caches_harness_and_artifacts_do_not_change_proposal(self):
         profile, shown = self.propose()
         ignored = (
             ".git", "node_modules", "vendor", "pop", ".opencode", ".cache",
@@ -84,7 +84,7 @@ class PopSandboxProjectStackTest(unittest.TestCase):
         self.assertEqual(profile, unchanged)
         self.assertEqual(shown["confirmation_hash"], unchanged_shown["confirmation_hash"])
 
-    def test_manifest_first_party_novo_altera_proposta_e_hash(self):
+    def test_new_first_party_manifest_changes_proposal_and_hash(self):
         profile, shown = self.propose()
         (self.project / "worker").mkdir()
         (self.project / "worker" / "go.mod").write_text(
@@ -95,7 +95,7 @@ class PopSandboxProjectStackTest(unittest.TestCase):
         self.assertTrue(changed["stack"]["go"])
         self.assertNotEqual(shown["confirmation_hash"], changed_shown["confirmation_hash"])
 
-    def test_manifest_symlink_nao_atravessa_fronteira_do_projeto(self):
+    def test_manifest_symlink_does_not_cross_project_boundary(self):
         outside = Path(self._tmp.name) / "outside-package.json"
         outside.write_text("{}\n", encoding="utf-8")
         clean = self.project / "clean"
@@ -105,7 +105,7 @@ class PopSandboxProjectStackTest(unittest.TestCase):
         stack = sandbox.detect_stack(clean)
         self.assertFalse(stack["node"])
 
-    def test_schema_e_imagem_declaram_toda_stack_sem_shell_livre(self):
+    def test_schema_and_image_declare_full_stack_without_free_form_shell(self):
         schema = json.loads((self.root / "_templates" / "coding-dockers"
                              / "profile.schema.json").read_text(encoding="utf-8"))
         required = set(schema["properties"]["stack"]["required"])

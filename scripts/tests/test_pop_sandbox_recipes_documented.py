@@ -69,7 +69,7 @@ class DocumentedRecipesTest(unittest.TestCase):
             project="applications/demo", agent=agent, package=[], confirm=confirmation
         )
 
-    def test_guard_rejeita_os_cinco_executaveis_com_qualquer_subcomando(self):
+    def test_guard_rejects_all_five_executables_with_any_subcommand(self):
         attempts = {
             "claude": "--version",
             "codex": "auth",
@@ -82,7 +82,7 @@ class DocumentedRecipesTest(unittest.TestCase):
                 with self.assertRaisesRegex(AssertionError, executable):
                     sandbox.subprocess.run([executable, argument])
 
-    def test_receitas_propoem_hash_render_e_binds_sem_iniciar_agente(self):
+    def test_recipes_propose_hash_render_and_binds_without_starting_agent(self):
         expectations = {
             "codex": {
                 "state": "/home/coder/.codex",
@@ -128,7 +128,7 @@ class DocumentedRecipesTest(unittest.TestCase):
                 self.assertEqual(rendered_recipe["open"]["argv"], expected["open"])
                 self.assertEqual(descriptor["binds"], profile["binds"])
 
-    def test_hash_cobre_receita_sem_assumir_estado_dos_outros_slots(self):
+    def test_hash_covers_recipe_without_assuming_other_slot_state(self):
         _, original = sandbox.proposal(
             self.root, "applications/demo", self.project, "codex", []
         )
@@ -141,7 +141,7 @@ class DocumentedRecipesTest(unittest.TestCase):
         )
         self.assertNotEqual(original["confirmation_hash"], changed["confirmation_hash"])
 
-    def test_lifecycle_consume_argv_e_preserva_binds_por_contrato(self):
+    def test_lifecycle_consumes_argv_and_preserves_binds_by_contract(self):
         base = self.root / "_templates" / "coding-dockers"
         start = (base / "start.sh").read_text(encoding="utf-8")
         stop = (base / "stop.sh").read_text(encoding="utf-8")
