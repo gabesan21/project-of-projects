@@ -130,6 +130,16 @@ class PopSandboxTest(unittest.TestCase):
         self.assertIn("${install_argv[@]}", dockerfile)
         self.assertNotIn("eval", dockerfile)
 
+    def test_common_base_installs_neovim_and_sets_it_as_editor(self):
+        dockerfile = (
+            self.root / "_templates" / "coding-dockers" / "Dockerfile"
+        ).read_text(encoding="utf-8")
+
+        self.assertIn("less neovim openssh-client", dockerfile)
+        self.assertIn("ENV EDITOR=nvim", dockerfile)
+        self.assertIn("ENV VISUAL=nvim", dockerfile)
+        self.assertNotIn("core.editor", dockerfile)
+
     def test_without_confirmation_shows_proposal_without_creating_artifacts(self):
         output = io.StringIO()
         with contextlib.redirect_stdout(output):

@@ -15,13 +15,16 @@ ARG SANDBOX_GID
 RUN set -eu; \
     apt-get update; \
     apt-get install -y --no-install-recommends \
-      ca-certificates curl fd-find git gh jq less openssh-client procps ripgrep tini tmux util-linux; \
+      ca-certificates curl fd-find git gh jq less neovim openssh-client procps ripgrep tini tmux util-linux; \
     ln -s /usr/bin/fdfind /usr/local/bin/fd; \
     git_version="$(git version | awk '{print $3}')"; \
     dpkg --compare-versions "$git_version" ge 2.48 || { \
       echo "Git >= 2.48 is required for relative worktrees" >&2; exit 64; \
     }; \
     rm -rf /var/lib/apt/lists/*
+
+ENV EDITOR=nvim
+ENV VISUAL=nvim
 
 RUN set -eu; \
     case "$INSTALL_NODE:$INSTALL_YARN:$INSTALL_PNPM:$INSTALL_PHP:$INSTALL_COMPOSER:$INSTALL_PYTHON:$INSTALL_GO:$INSTALL_RUST:$INSTALL_DOCKER" in \

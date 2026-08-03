@@ -33,7 +33,7 @@ Operating a coding agent directly at the root of the PoP or another scope remain
 ## Invariants
 
 - The supported catalog is exactly `claude-code`, `codex`, `opencode`, `pi`, and `kimi-code`; Cursor and Hermes are not part of this delivery.
-- Each sandbox installs exactly one coding agent, its runtime, the project's confirmed stack, and a common base with Git, GitHub CLI, shell, certificates, SSH client, `curl`, `jq`, `ripgrep`, `fd`, `less`, `tmux`, and proper process initialization.
+- Each sandbox installs exactly one coding agent, its runtime, the project's confirmed stack, and a common base with Git, GitHub CLI, shell, certificates, SSH client, `curl`, `jq`, `ripgrep`, `fd`, `less`, Neovim, `tmux`, and proper process initialization. The image declares `EDITOR=nvim` and `VISUAL=nvim` without writing `core.editor` or changing the mounted `~/.gitconfig`.
 - Node/npm, Yarn, pnpm, PHP/Composer, Python, Go, Rust, Docker, and other project toolchains are installed inside the sandbox only when the confirmed profile requires them; runtime execution never uses host toolchains. Node comes from a pinned and verified official release, currently `22.19.0`.
 - The only mounted project content is the target directory at `~/<project>`. Parents, siblings, the PoP root when it is not the target, `/`, `/proc`, `/sys`, and host namespaces are not exposed.
 - The sandbox never mounts `/var/run/docker.sock` or another host Docker socket and never runs with `--privileged`; project Docker support conforms only after real proof of its own daemon under this boundary.
@@ -47,6 +47,7 @@ Operating a coding agent directly at the root of the PoP or another scope remain
 - **Profile:** local document containing `schema_version`, project, agent, confirmed stack, and persistent binds. Detection produces only a proposal; human confirmation is a precondition for writing.
 - **Skill:** `coding-sandbox` operates only when the user explicitly requests a coding docker; it presents a proposal and hash before generating a profile and never integrates with `delegate-coding`.
 - **Lifecycle:** `start.sh` ensures an active environment and opens the plain TUI (`claude`, `codex`, `opencode`, `pi`, or `kimi`) without extra arguments; `stop.sh` preserves the environment; `clean.sh` requires confirmation and removes the internal environment.
+- **Base updates:** an existing image retains its previous base; to receive a change such as Neovim, run `clean.sh` and then `start.sh` to rebuild it.
 - **Compatibility:** Arch Linux or Debian-based Linux host; each recipe supplies a reproducible installation of its CLI and runtime inside the image.
 
 ### Identity and session binds

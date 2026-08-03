@@ -7,6 +7,8 @@ This directory receives local Linux sandboxes per project × agent, created only
 
 Do not use this flow for headless delegation: `delegate-coding` has a different contract. Each `start.sh` opens only the canonical TUI, without flags, prompts, headless mode, or yolo.
 
+The common base includes Neovim and sets `nvim` in `EDITOR` and `VISUAL` without changing the mounted Git configuration. An existing image does not receive base changes when merely restarted: run `clean.sh` and then `start.sh` to rebuild it.
+
 ## Prerequisites and proposal
 
 - Arch Linux or Debian-based Linux host, working Docker Engine, and the `bash`, `jq`, and GNU coreutils tools.
