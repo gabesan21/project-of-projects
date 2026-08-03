@@ -9,6 +9,7 @@
 > **Ceiling: 40 lines per round** (validated by `pop_validate`). Rule on what was accused; do not redo the whole review.
 > **You name the delta, you do not fix the defect** — neither apply the correction nor dispatch it to anyone: a gate that commissions its own fix stops being a gate. The correction belongs to the executor relaunched by the orchestrator.
 > Answer **first** whether the original request — the card's What/Why — was met; only then rule on the accusations. Plan adherence that does not meet the request is never the executor's failure.
+> **An environment failure never sustains a blocker.** An objection whose damage depends on infrastructure beyond the agent's reach (sandbox, flakiness) is dismissed as blocking: the item becomes a qualified pass and joins the verdict's human checklist.
 
 ## Original request
 
@@ -25,9 +26,10 @@
 
 ## Verdict
 
-- **Decision:** approved → act 2 | execution blocker → 004_processing | plan defect → 002_planning | circuit breaker.
+- **Decision:** approved → act 2 | **directed repair** (pinpoint delta — not a route and no counter; the orchestrator dispatches the patch and you check it in a ≤10-line addendum this round; max 2 per round) | execution blocker → 004_processing | plan defect → 002_planning | circuit breaker.
 - **Blocking objections upheld:** none | <short list>.
 - **Suggestions/nits accepted:** <they do not block; record only if useful>.
+- **Human checklist:** none | <`verify: user` criteria and qualified passes (environment), with the manual step and the expected pass>.
 - **Returns:** execution 0 | 1 | 2 of 2 · plan 0 | 1 | 2 of 2 — the 3rd of the same route opens the circuit breaker.
 
 ## Return delta

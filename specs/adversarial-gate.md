@@ -7,7 +7,7 @@ status: active
 implementation: implemented
 origin: "8.1"
 created: 2026-07-27
-updated: 2026-07-27
+updated: 2026-08-03
 supersedes: []
 superseded_by:
 ---
@@ -40,7 +40,7 @@ Act 1 remains **one stage with an internal fork**, never two flows: the same inp
 ### Act-1 sequence — configuration B (single reviewer)
 
 1. The orchestrator checks the trigger and selects the configuration.
-2. **Independent reviewer**, fresh context, strong tier: checks original request, criteria, specs, diff and quality; produces the `.verify.md`.
+2. **Independent reviewer**, fresh context, medium tier (WORKFLOW matrix): checks original request, criteria, specs, diff and quality; produces the `.verify.md`.
 3. Approved → act 2. Rejected → delta and route, as before.
 
 ### Exits and owner of the next action
@@ -61,7 +61,11 @@ Act 1 remains **one stage with an internal fork**, never two flows: the same inp
 - The counters are exactly the two existing ones — `yolo_005_returns` (execution) and `yolo_003_returns` (plan) — with two returns per route and `circuit_breaker` on the 3rd failure of the same route. A new counter would be a new loop.
 - The defense is a short list of contestable decisions, **never** chain-of-thought, pseudocode or a transcript of reasoning.
 - "No material objection" is a valid and successful result of the advocate; an advocate that must always accuse is noise, not a gate.
-- Every return, in any configuration, carries a classified delta (`lacuna` | `premissa` | `execucao`); the re-entry covers only the delta and the re-review is differential over it.
+- Every return, in any configuration, carries a classified delta (`lacuna` | `premissa` | `execucao`); the re-entry covers only the delta, the re-review is differential over it and **expensive evidence is reused** — a capture matrix, a long battery or a costly run only regenerates the slice affected by the delta.
+- **Directed repair:** an execution blocker with a pinpoint delta (named `file:line`, objective remedy, no strategy change) is not a route — the orchestrator dispatches a medium executor with only the delta and whoever judged checks the repair in the same round, in a ≤10-line addendum within the cap; it consumes no counter. At most two directed repairs per round; the third becomes a route.
+- **An environment failure never returns:** a criterion blocked by sandbox/infra or flaky evidence gets a qualified pass with alternative evidence and joins the delivery's human verification checklist; a return demands a reproducible product defect. A `verify: user` criterion is not judged by the gate.
+- **The gate does not expand the scope:** a finding outside the card's What/Why becomes a traceable follow-up, never a new criterion or front of the task; a `lacuna` fits once per task — the second closes the task and the rest is born as its own task.
+- **Progress breaker:** a return whose delta repeats the previous one's theme with no new fact opens the circuit breaker early, before the 3rd failure.
 
 ## Interfaces
 
@@ -80,7 +84,7 @@ Three kanban artifacts, each specified by **who writes it · where it is born ·
 
 ## Errors and limits
 
-- **A missing defense in a task that satisfies the trigger:** act 1 does not run in configuration A; the task returns to 002 to produce the defense — **except** under the transition clause stated in act 1 of [[WORKFLOW|WORKFLOW]], which makes a pre-cut-off card run in configuration B with no return.
+- **A missing defense in a task that satisfies the trigger:** a mechanical amendment — the orchestrator dispatches a planner to produce it on the spot, with no route, no counter and no folder move, and act 1 runs next; a 005→002 cycle over a missing process artifact is not a gate. Pre-cut-off cards follow the transition clause of act 1 of [[WORKFLOW|WORKFLOW]] (they run in configuration B).
 - **An accusation above the cap, or an item without severity/evidence/remedy:** an invalid artifact; the judge neither rules nor writes the `.judgment.md`, and the **orchestrator** relaunches the advocate to reissue in the same round, recording it in the card Log. It is not a route and consumes no counter; a second invalid accusation in a row becomes `blocked: true`.
 - **A judge that rejects without a delta:** `pop_move` refuses the route — with no type there is no way to decide between amendment and replanning.
 - **A judge that proposes or applies a correction:** a violation of independence; the correction belongs to the executor relaunched by the orchestrator.

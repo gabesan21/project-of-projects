@@ -79,6 +79,6 @@ One sentence: why now, and what it unblocks.
 
 > One row per completed/returned stage. Record observable cost, never reasoning, prompts, or discarded attempts.
 
-| Stage | Contexts | Returns | Tests/strategy | Result |
-|-------|----------|---------|----------------|--------|
-| 002 | planner: 1 | 0 | n/a | plan created |
+| Stage | Contexts | Returns | Tests/strategy | Duration | Result |
+|-------|----------|---------|----------------|----------|--------|
+| 002 | planner: 1 | 0 | n/a | <e.g. 20min> | plan created |

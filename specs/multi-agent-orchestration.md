@@ -7,7 +7,7 @@ status: active
 implementation: implemented
 origin: "4.2"
 created: 2026-07-20
-updated: 2026-07-27
+updated: 2026-08-03
 supersedes: []
 superseded_by:
 ---
@@ -23,7 +23,7 @@ Planning, execution, and review use distinct contexts. Cards persist a sufficien
 - 002 always uses a separate planner; the `005_closing` gate runs in **one** of two configurations per round, never both: **configuration B** — exactly one fresh independent reviewer — for non-critical yolo `size: S`/`M`; **configuration A** — the devil's advocate and, after them, the judge — when `yolo: true` and (`size: L` or `critical: true`), replacing the single reviewer in that round. Outside yolo neither exists: the gate is the human PR, and with no PR (root local PoP) there is no verification gate.
 - The plan root fits in 80 lines at any `size`; every front destined for a separate context gets its own file of at most 50 lines in `subtasks/`.
 - A cohesive 004 front receives a direct executor. DAGs, multiple skills, or disjoint write sets receive a sub-orchestrator with explicit contracts.
-- In yolo, the `005_closing` gate is the **single quality gate**: the live configuration's judge — the single reviewer in B, the judge in A — is strong in a fresh session, first checks whether the original request was met and, on approval, writes the memory in the same session; 003 with a strong critic exists only for `critical: true`. The gate has three exits: approved, execution blocker (→004), and plan defect (→002). Each route permits two automatic returns; failure three on the same route opens a circuit breaker requiring human intervention.
+- In yolo, the `005_closing` gate is the **single quality gate**: the live configuration's judge — the single reviewer in B (medium), the judge in A (strong) — runs in a fresh session, first checks whether the original request was met and, on approval, writes the memory in the same session; 003 with a strong critic exists only for `critical: true`. The gate has three exits plus the **directed repair** (a pinpoint delta checked in the same round, with no counter): approved, execution blocker (→004), and plan defect (→002). Each route permits two automatic returns; failure three on the same route opens a circuit breaker requiring human intervention — early when the delta repeats the previous one's theme with no new fact. An environment failure never returns (qualified pass + human verification checklist), and the gate does not expand the task's scope.
 - Every return names a delta — type, affected criteria, fronts re-entering, and untouched fronts — classified in `return_kind` (`lacuna` | `premissa` | `execucao`) by `pop_move`. Re-entry into 004 executes only the delta's fronts; re-review is differential over it, and `full` is reserved for `critical: true` and a `premissa` return.
 - A `lacuna` return amends the plan additively: criteria and fronts are append-only between rounds, because their IDs are referenced by verification and telemetry.
 - Yolo schedules waves of at most three tasks with satisfied dependencies and isolated repositories/write sets; collisions serialize.

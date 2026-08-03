@@ -30,7 +30,7 @@ Apply the four questions. The first "no" makes the item **dismissed**, and the r
 1. **Does the source sustain the claim?** Open the `file:line` or the cited run and check what it shows, not what the prose says it shows. A source that is nonexistent, stale, or does not sustain the claim → dismissed.
 2. **Does the harm exist in the integrated state?** A defect already fixed in a later commit, or one that only occurs on a path the code does not have, is dismissed for nonexistence.
 3. **Was what the objection demands asked for** by the card, the plan, a spec or a live contract? A requirement born in the advocate is dismissed — the gate measures the delivery against what was agreed.
-4. **Is the severity calibrated?** Blocking demands demonstrated harm, not a future conditional. A real objection with an inflated label is **upheld with the severity lowered** — record the change in the reason; it is not a dismissal.
+4. **Is the severity calibrated?** Blocking demands demonstrated harm, not a future conditional. A real objection with an inflated label is **upheld with the severity lowered** — record the change in the reason; it is not a dismissal. Harm that depends on infrastructure beyond the agent's reach (sandbox, flakiness) **never sustains a blocker**: it becomes a qualified pass and joins the verdict's human checklist.
 
 Only a **blocking objection upheld** changes the route. Suggestions and nits accepted go in the verdict's own line and do not hold the delivery.
 
@@ -53,6 +53,6 @@ It is a **well-formed accusation** and is ruled on like any other, as the table'
 
 ## Verdict, route and delta
 
-Issue **exactly one** of the template's three exits: approved → act 2; execution blocker → `004_processing` (`yolo_005_returns`); plan defect → `002_planning` (`yolo_003_returns`) when the plan's criteria did not cover the request and the executor delivered what it was given. Two returns per route; the 3rd of the **same** route calls for `circuit_breaker: true` and a human.
+Before any route: a **pinpoint** blocking objection upheld (named `file:line`, objective remedy, no strategy change) calls for a **directed repair** — record the delta, the orchestrator dispatches the patch and you check it in a ≤10-line addendum this same round; not a route, no counter (max 2 per round; the 3rd becomes a route). For the rest, issue **exactly one** of the template's three exits: approved → act 2; execution blocker → `004_processing` (`yolo_005_returns`); plan defect → `002_planning` (`yolo_003_returns`) when the plan's criteria did not cover the request and the executor delivered what it was given. Two returns per route; the 3rd of the **same** route calls for `circuit_breaker: true` and a human — and a delta that repeats the previous one's theme with no new fact opens the breaker early.
 
 When it is not an approval, fill the "Return delta" section **in the form** of [[_templates/TASK-VERIFY|TASK-VERIFY]] › "Return delta", which is the source of the types (`lacuna` | `premissa` | `execucao`) and the fields: follow that template instead of reproducing it, so a change there applies here automatically. Rejecting without a delta makes `pop_move` refuse the route — and the delta is what makes the return cost the size of the defect, also naming the **untouched fronts that must not be re-executed**.

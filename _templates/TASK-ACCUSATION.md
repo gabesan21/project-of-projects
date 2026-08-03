@@ -10,6 +10,7 @@
 > **You accuse; the judge decides.** Do not choose a route, do not approve, do not reject and do not write the task memory — an accusation is not a verdict. Nor do you fix what you pointed at.
 > Walk both **axes** and keep them apart: **execution** (the plan's criteria re-run and the quality of the diff) and **decision** (attacking the choices declared in the [[<id>-<slug>.defense|defense]]).
 > Every item carries severity, evidence and a remedy. An item without all three is an invalid artifact and is reissued before the judge rules.
+> **An environment failure is not an objection.** A criterion blocked by sandbox/infra or flaky evidence records `qualified pass (environment)` in the criteria table and goes to the human checklist — it never becomes an accusation item. A `verify: user` criterion is not re-run: record it as outside the agent's surface.
 
 ## Execution axis — criteria re-run
 

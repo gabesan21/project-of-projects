@@ -8,6 +8,7 @@ import poplib
 
 WIP_LIMIT = 3
 STALE_DAYS = 14
+IDLE_HOURS = 2  # watchdog: a 004 task with no write in its folder for longer
 
 
 def _stale_since(meta):
@@ -19,10 +20,27 @@ def _stale_since(meta):
     return (datetime.date.today() - updated).days
 
 
+def _idle_hours(task_dir):
+    """Hours since the most recent write in the task folder, or None."""
+    newest = None
+    for path in task_dir.rglob("*"):
+        try:
+            mtime = path.stat().st_mtime
+        except OSError:
+            continue
+        if newest is None or mtime > newest:
+            newest = mtime
+    if newest is None:
+        return None
+    delta = datetime.datetime.now().timestamp() - newest
+    return delta / 3600.0
+
+
 def collect(project):
     counts = {stage: 0 for stage in poplib.STAGES}
     attention = {"release": [], "approval": [], "merge": [],
-                 "blocked": [], "circuit": [], "stale": [], "claimed": []}
+                 "blocked": [], "circuit": [], "stale": [], "idle": [],
+                 "claimed": []}
     for stage, task_dir, card in poplib.iter_cards(project):
         counts[stage] += 1
         meta = poplib.read_card(card)
@@ -42,6 +60,11 @@ def collect(project):
             r005 = meta.get("yolo_005_returns") or 0
             attention["circuit"].append(
                 f"{tid} — returns 003={r003}, 005={r005}")
+        if stage == "004_processing" and meta.get("blocked") is not True:
+            hours = _idle_hours(task_dir)
+            if hours is not None and hours > IDLE_HOURS:
+                attention["idle"].append(
+                    f"{tid} — in 004 with no write for {hours:.1f}h")
         # A task waiting for merge already has its own list; don't duplicate it.
         if meta.get("awaiting_merge") is not True:
             days = _stale_since(meta)
@@ -98,7 +121,8 @@ def main():
         return 0
 
     merged = {"release": [], "approval": [], "merge": [],
-              "blocked": [], "circuit": [], "stale": [], "claimed": []}
+              "blocked": [], "circuit": [], "stale": [], "idle": [],
+              "claimed": []}
     print(f"Vault: {root}")
     for project in projects:
         label = poplib.project_label(root, project)
@@ -116,6 +140,8 @@ def main():
     print_list("Yolo circuit breakers (human intervention)", merged["circuit"])
     print_list(f"Stale (not updated for >{STALE_DAYS} days, outside the ones "
                f"waiting for merge)", merged["stale"])
+    print_list(f"004 watchdog (no write for >{IDLE_HOURS}h — possible dead "
+               f"window; justify in the Log or mark blocked)", merged["idle"])
     print_list("In progress (active claim — do not take these tasks)",
                merged["claimed"])
     if not any(merged.values()):

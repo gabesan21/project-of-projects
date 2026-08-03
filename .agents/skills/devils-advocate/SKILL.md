@@ -34,7 +34,7 @@ An item that passes all six is material — and only material becomes a row. A d
 
 **Execution first, decision second — always**, and kept apart in the artifact. Attacking the choice before knowing whether it was even executed correctly produces objections against code that does not exist.
 
-1. **Execution axis.** Re-run every plan criterion and record result and evidence; then walk the integrated diff **once**, including files outside the fronts' `owns`. **Stop:** every criterion has a recorded result and the diff has been walked once. No second pass hunting for more — reread only the snippet of an item already opened.
+1. **Execution axis.** Re-run every `verify: agent` plan criterion and record result and evidence; a `verify: user` criterion is not re-run (outside the agent's surface), and an environment failure (sandbox, flakiness) records `qualified pass (environment)` without becoming an objection — it goes to the human checklist. Then walk the integrated diff **once**, including files outside the fronts' `owns`. **Stop:** every criterion has a recorded result and the diff has been walked once. No second pass hunting for more — reread only the snippet of an item already opened.
 2. **Decision axis.** One pass over the defense's decisions, **in the order it lists them**. A decision absent from the defense is not yours, unless it contradicts the card's request. **Stop:** the end of the defense's list.
 3. **Budget.** The 50 lines are a ceiling, not a quota to fill. Found a blocker on one axis? Stop picking nits there — the remedy already returns the task, and volume does not make the accusation stronger.
 

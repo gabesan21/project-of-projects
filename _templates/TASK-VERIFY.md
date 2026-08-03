@@ -5,7 +5,8 @@
 - **Stage:** 005_closing (act 1) · **Owner:** independent reviewer
 
 > **Artefact exclusive to `yolo: true`.** Outside yolo there is no agentic reviewer: the gate is the human PR and this file is never created.
-> One fresh-context agent verifies behavior and quality, always **strong**, and selects `differential|full`: `full` for critical tasks or a `premissa` return; after a `lacuna` or an execution failure, the differential covers the **delta**. Inconclusive evidence is re-run.
+> One fresh-context agent verifies behavior and quality, **medium** tier (WORKFLOW matrix), and selects `differential|full`: `full` for critical tasks or a `premissa` return; after a `lacuna` or an execution failure, the differential covers the **delta**. Inconclusive evidence is re-run.
+> **An environment failure never returns.** A criterion blocked by sandbox/infra or flaky evidence gets a `qualified pass (environment)` with the alternative evidence available and joins the verdict's human checklist; a return demands a reproducible product defect. A `verify: user` criterion is not judged here — it goes straight to the checklist.
 > This is the single quality gate (003 exists only for `critical: true`). Answer **first** whether the original request — the card's What/Why — was met; only then validate specs and the plan's criteria.
 > **Three exits, not two:** approved; **execution blocker** → 004, when the executor did not meet the criteria it received; **plan defect** → 002, when the criteria did not cover the card's request and the executor delivered what it was given. Plan adherence that misses the request is never the executor's failure.
 > **You name the delta, you do not fix the defect.** Dispatching the correction would turn you into whoever commissioned the work you judge.
@@ -20,7 +21,7 @@
 
 | # | Criterion | Mode | Verification run | Result | Evidence |
 |---|---|---|---|---|---|
-| 1 | <plan criterion> | re-run \| evidence | `<run>` or <audited artifact> | passed \| failed | <observed versus expected> |
+| 1 | <plan criterion> | re-run \| evidence | `<run>` or <audited artifact> | passed \| failed \| qualified pass (environment) | <observed versus expected> |
 
 ### Implementation quality
 
@@ -37,10 +38,11 @@
 
 ## Verdict
 
-- **Decision:** approved → delivery and close-out | execution blocker → 004_processing | plan defect → 002_planning | circuit breaker.
+- **Decision:** approved → delivery and close-out | **directed repair** (pinpoint delta — not a route and no counter; the orchestrator dispatches the patch and you check it in a ≤10-line addendum this round; max 2 per round) | execution blocker → 004_processing | plan defect → 002_planning | circuit breaker.
 - **Blocking findings:** none | <short list>.
 - **Plan defect:** none | <criterion that did not cover the card's request>.
 - **Suggestions/nits:** <non-blocking; record only when useful>.
+- **Human checklist:** none | <`verify: user` criteria and qualified passes (environment), with the manual step and the expected pass — the orchestrator carries them into the PR/final approval>.
 - **Summary:** <brief comparison of initial objective and implemented result>.
 
 ## Delta of the return

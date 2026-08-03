@@ -18,6 +18,7 @@
 ## Execution contract
 
 - Deliver only this front's scope and criteria.
+- **Know when to stop:** at most 2 attempts to make an `agent` criterion pass when the failure is environmental (sandbox, permissions, flakiness); on the second, record `ambiente`, report the reclassification to `verify: user` and move on. Never build new infrastructure just to verify.
 - Missing/incompatible dependency or input → respond `BLOCKED` with evidence.
 - Do not implement, simulate or repair dependencies autonomously.
 - Do not edit paths outside `Owns`; return new needs to the orchestrator.

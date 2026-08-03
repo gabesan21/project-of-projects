@@ -61,11 +61,12 @@ A few paragraphs covering the base approach, execution-constraining decisions an
 ## Acceptance criteria
 
 > Observable criteria, compared at the `005_closing` gate. They are **the contract**: they bind the executor and the gate, and they must cover the card's What/Why — a criterion that does not cover the request is a plan defect and comes back here. Prefer the aggregate gate. A runtime surface requires at least one `re-run`.
+> **Every criterion declares who verifies it** (`agent` | `user`). `agent` only when the verification runs within the agent's reach — consult the scope's `notes/references/verification-limits.md` before assigning; a verification depending on infrastructure beyond that reach is born `user` and goes to the delivery's human verification checklist, blocking no gate. Demanding an impossible verification from the agent is a plan defect.
 > **Append-only between rounds:** a `lacuna` return adds a row and keeps existing IDs — renumbering a criterion or a front breaks the references in `.verify.md` and in telemetry, and forces the re-review to start from scratch.
 
-| # | Criterion | Verification | Pass looks like | 005 mode |
-|---|---|---|---|---|
-| 1 | <behavior or contract> | `<command>` or read <artifact> | <objective observation> | re-run \| evidence |
+| # | Criterion | Verifier | Verification | Pass looks like | 005 mode |
+|---|---|---|---|---|---|
+| 1 | <behavior or contract> | agent \| user | `<command>` or read <artifact> | <objective observation> | re-run \| evidence \| human |
 
 ## Specs and contracts
 
