@@ -3,16 +3,18 @@ id: adversarial-gate
 project: pop
 domain: harness
 kind: contract
-status: active
+status: superseded
 implementation: implemented
 origin: "8.1"
 created: 2026-07-27
-updated: 2026-08-03
+updated: 2026-08-04
 supersedes: []
-superseded_by:
+superseded_by: judge-dredd
 ---
 
 # Spec — Adversarial gate
+
+> **Superseded on 2026-08-04 by [[specs/judge-dredd|Judge Dredd]]:** the advocate + judge pair and the single reviewer were merged into a single judge; this document remains only as the history of the contract in force from 2026-07-27 to 2026-08-04.
 
 ## Contract
 

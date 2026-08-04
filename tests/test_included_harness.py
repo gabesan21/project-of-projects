@@ -63,9 +63,9 @@ class StandaloneNegativeTest(unittest.TestCase):
             target = Path(raw) / "included"; target.mkdir()
             (target / "AGENTS.md").write_text("# Fixture\n")
             self.assertEqual(run("python3", str(INSTALL), str(target)).returncode, 0)
-            (target / ".agents/skills/yolo-critic/SKILL.md").unlink()
+            (target / ".agents/skills/judge-dredd/SKILL.md").unlink()
             self.assertNotEqual(run("python3", "pop/scripts/pop_validate.py", "--standalone", cwd=target).returncode, 0)
-            shutil.copy2(ROOT / ".agents/skills/yolo-critic/SKILL.md", target / ".agents/skills/yolo-critic/SKILL.md")
+            shutil.copy2(ROOT / ".agents/skills/judge-dredd/SKILL.md", target / ".agents/skills/judge-dredd/SKILL.md")
             (target / "pop/PROJECT.md").write_text("[[categories/applications/outside/PROJECT]]")
             self.assertNotEqual(run("python3", "pop/scripts/pop_validate.py", "--standalone", cwd=target).returncode, 0)
 

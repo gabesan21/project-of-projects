@@ -40,7 +40,7 @@ Every change to the project goes through the kanban in `pop/kanban/`, with tasks
 
 ## Skills
 
-- **PoP workflow:** `.agents/skills/` — `new-task`, `advance-task`, `yolo-critic`, `plan-roadmap`, `write-spec`, `sync-specs`, `optimize-memory`.
+- **PoP workflow:** `.agents/skills/` — `new-task`, `advance-task`, `judge-dredd`, `plan-roadmap`, `write-spec`, `sync-specs`, `optimize-memory`.
 - **Project domain:** `pop/skills/` — listed in the profile [[categories/<category>/<project>/pop/PROJECT|PROJECT]].
 
 ### Clean code (code projects only)

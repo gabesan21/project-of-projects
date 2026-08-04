@@ -1,7 +1,7 @@
 {
   "_meta": {
     "updated": "2026-07-20",
-    "usage": "models by tier (cheap | medium | strong) — WORKFLOW chooses the tier by role, size and risk for planner, execution orchestrator, specialists and independent reviewer",
+    "usage": "models by tier (cheap | medium | strong) — WORKFLOW chooses the tier by role, size and risk for planner, execution orchestrator, specialists and the Judge Dredd (yolo's single judge)",
     "note": "values are revisable; check availability at execution time with the tool's listing command (one-off lookup allowed: `cursor-agent models`, `opencode models`)"
   },
   "session": {

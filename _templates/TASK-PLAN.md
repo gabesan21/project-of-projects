@@ -6,7 +6,6 @@
 
 > The planner is separate from the executor. This file stores the planning result: a brief sufficient for capable agents, without reasoning, pseudocode, implementation snippets or step-by-step edits.
 > **Ceiling: 80 lines, at any `size`** (validated by `pop_validate`). This is the slice everyone reads, so it does not grow with the task — what grows is the number of front files. Not fitting means **modularizing** into `subtasks/`, never compressing to the point of losing a decision. Splitting the task through `depends_on` is the exception, for when the fronts do not share an objective.
-> **A task that is `yolo: true` and (`size: L` or `critical: true`)**: 002 delivers **also** `<id>.defense.md` ([[_templates/TASK-DEFENSE|TASK-DEFENSE]], ≤30 lines) — without it configuration A of act 1 does not run and the task comes back here.
 
 ## Objective and expected result
 
@@ -51,7 +50,7 @@ A few paragraphs covering the base approach, execution-constraining decisions an
 
 1. **Wave 1:** F01.
 2. **Wave 2:** F02 and F03 in parallel after F01.
-3. **Integration:** orchestrator validates ownership, integrates results and runs the aggregate gate.
+3. **Integration:** orchestrator validates ownership, integrates results and checks the `agent` inspection criteria.
 
 ## Risks and abort conditions
 
@@ -60,13 +59,13 @@ A few paragraphs covering the base approach, execution-constraining decisions an
 
 ## Acceptance criteria
 
-> Observable criteria, compared at the `005_closing` gate. They are **the contract**: they bind the executor and the gate, and they must cover the card's What/Why — a criterion that does not cover the request is a plan defect and comes back here. Prefer the aggregate gate. A runtime surface requires at least one `re-run`.
-> **Every criterion declares who verifies it** (`agent` | `user`). `agent` only when the verification runs within the agent's reach — consult the scope's `notes/references/verification-limits.md` before assigning; a verification depending on infrastructure beyond that reach is born `user` and goes to the delivery's human verification checklist, blocking no gate. Demanding an impossible verification from the agent is a plan defect.
+> Observable criteria, compared at the `005_closing` gate. They are **the contract**: they bind the executor and the gate, and they must cover the card's What/Why — a criterion that does not cover the request is a plan defect and comes back here.
+> **Every criterion declares who verifies it** (`agent` | `phase` | `user`). **The task runs no tests at all:** a criterion that requires executing a test (unit, integration, e2e, battery) is **`phase`** — it accumulates in the phase checklist and runs exactly once, in the `phase-verification` task (section "Phase verification" of the [[WORKFLOW|WORKFLOW]]); only that task's plan declares a re-run as an `agent` criterion. `agent` is reserved for cheap, deterministic inspection within the agent's reach — consult the scope's `notes/references/verification-limits.md` before assigning; a verification depending on infrastructure beyond that reach is born `user` and goes to the delivery's human verification checklist, blocking no gate. Demanding an impossible verification from the agent is a plan defect.
 > **Append-only between rounds:** a `lacuna` return adds a row and keeps existing IDs — renumbering a criterion or a front breaks the references in `.verify.md` and in telemetry, and forces the re-review to start from scratch.
 
 | # | Criterion | Verifier | Verification | Pass looks like | 005 mode |
 |---|---|---|---|---|---|
-| 1 | <behavior or contract> | agent \| user | `<command>` or read <artifact> | <objective observation> | re-run \| evidence \| human |
+| 1 | <behavior or contract> | agent \| phase \| user | read <artifact> or `<test in the phase-verification task>` | <objective observation> | evidence \| phase \| human |
 
 ## Specs and contracts
 

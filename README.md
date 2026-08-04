@@ -105,7 +105,7 @@ project-of-projects/
 | `plan-roadmap` | Builds/evolves a roadmap by interview (epochs → phases → candidate tasks). |
 | `new-task` | Quick interview that materializes a task into the kanban. |
 | `advance-task` | Moves a task through the flow 001→`005_closing`, respecting human gates. |
-| `yolo-critic` | Independent yolo reviewer: single quality gate in `005_closing` (003 only for `critical` tasks). |
+| `judge-dredd` | Judge Dredd, yolo's single judge: `005_closing` gate of every yolo task, judged by reading (003 only for `critical` tasks). |
 | `write-spec` | Creates/rewrites a standardized spec. |
 | `sync-specs` | Keeps specs faithful to reality as tasks progress. |
 | `weekly-review` | Vault-wide review: what waits on you, what stalled, proposals. |

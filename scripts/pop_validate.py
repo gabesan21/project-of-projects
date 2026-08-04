@@ -16,15 +16,18 @@ MAX_NOTE_LINES = 150
 MAX_PLAN_LINES = 80      # plan root (`<id>.plan.md`), regardless of size
 MAX_FRONT_LINES = 50     # front file in `subtasks/`: one executor's slice
 MAX_PROJECT_AGENTS = 60  # a project's AGENTS.md: a pointer, not a copy of the flow
-# Caps of the three adversarial-gate artifacts (see [[specs/adversarial-gate]],
-# table "Interfaces"). The key is the suffix of the **task** artifact, never a
-# template name: `_templates/TASK-DEFENSE.md` remains an ordinary 150-line note.
-# The cap applies **per round**: the `.r<n>` infix sits before the suffix, so
-# matching by `endswith` already reaches `<id>.r2.accusation.md`.
+# Caps of the quality-gate artifacts (see [[specs/judge-dredd]], table
+# "Interfaces"). The key is the suffix of the **task** artifact, never a
+# template name: `_templates/TASK-VERIFY.md` remains an ordinary 150-line note.
+# The three artifacts of the adversarial gate retired on 2026-08-04 keep their
+# caps because cards older than the cutoff may carry them as history; the
+# `.r<n>` infix sits before the suffix, so `endswith` already reaches each
+# round.
 GATE_ARTIFACT_LIMITS = {
-    ".defense.md": 30,      # the plan's contestable decisions
-    ".accusation.md": 50,   # the devil's advocate objections
-    ".judgment.md": 40,     # the judge's judgment and route
+    ".verify.md": 80,       # Judge Dredd's judgment, all rounds
+    ".defense.md": 30,      # history: the plan's contestable decisions
+    ".accusation.md": 50,   # history: the devil's advocate objections
+    ".judgment.md": 40,     # history: the judge's judgment and route
 }
 # Memory caps, in **characters**: memory is a ledger and entries, not a note,
 # and what makes it optimizable by an agent is the file size, not the line
@@ -43,17 +46,18 @@ MEMORY_DATE_DIR = pop_roadmap.MEMORY_DATE_DIR
 # `.` reuses the kanban artifact convention (`<id>.plan.md`).
 MEMORY_ENTRY_SUFFIX = re.compile(r"^\.(\d{2}-[a-z0-9][a-z0-9-]*)$")
 VERIFY_ARTIFACT = ".verify.md"
-GATE_PAIR_ARTIFACTS = (".accusation.md", ".judgment.md")
-# Round infix of the act-1 artifacts (`<id>.r<n>.<artifact>.md`, from `r1`):
-# what decides the configuration is the artifact **family**, never the round,
-# so every check matches the name with and without the infix.
+# Artifacts of the adversarial gate retired on 2026-08-04: they are not born
+# in a card created on or after the cutoff; in an older card they are
+# tolerated history.
+RETIRED_GATE_ARTIFACTS = (".defense.md", ".accusation.md", ".judgment.md")
+# Round infix of the act-1 artifacts (`<id>.r<n>.<artifact>.md`): what decides
+# the family is the suffix, never the round, so every check matches the name
+# with and without the infix.
 ROUND_INFIX = re.compile(r"\.r\d+$")
-# Date on which the adversarial gate came into force (see [[WORKFLOW]], act 1
-# of `005_closing`, "Transition — a card older than the gate"). A card with an
-# earlier `created:` went through 002 when the defense did not yet exist: even
-# under the trigger, it runs in configuration B and its `.verify.md` is what is
-# expected.
-GATE_ADVERSARIAL_SINCE = "2026-07-27"
+# Date on which the Judge Dredd (single judge) replaced the adversarial gate
+# (see [[WORKFLOW]], act 1 of `005_closing`, "Transition"). A card with an
+# earlier `created:` may carry defense/accusation/judgment as history.
+JUDGE_DREDD_SINCE = "2026-08-04"
 # An application embeds the DOX process and only for that exceeds the cap (rule 5).
 DOX_MARKER = "DOX process"
 EXEMPT_NAMES = {"AGENTS.md", "WORKFLOW.md", "README.md"}
@@ -348,8 +352,9 @@ def note_limit(path):
     slice everyone reads and the front file is the slice one executor reads. A
     plan that does not fit **modularizes** into `subtasks/`; compressing it or
     splitting the task is the exception (see section 002 of the WORKFLOW).
-    The defense, the accusation and the judgment follow the same logic, with
-    the caps the adversarial-gate spec sets.
+    Judge Dredd's judgment and the historical artifacts of the retired
+    adversarial gate follow the same logic, with the caps the
+    [[specs/judge-dredd]] spec sets.
     """
     if path.name in EXEMPT_NAMES:
         return None
@@ -440,42 +445,32 @@ def check_cards(root, projects, violations):
                     violations.append(f"{telemetry}: telemetry invalid")
 
 
-def gate_adversarial_applies(meta):
-    """Trigger of the advocate + judge pair, derivable from the card frontmatter alone.
+def gate_pair_tolerated(meta):
+    """Card older than the Judge Dredd cutoff — transition clause.
 
-    `yolo: true` **and** (`size: L` **or** `critical: true`) — no new mark fires
-    the gate (see [[specs/adversarial-gate]]).
-    """
-    return meta.get("yolo") is True and (str(meta.get("size")) == "L"
-                                         or meta.get("critical") is True)
-
-
-def gate_adversarial_predates(meta):
-    """Card planned before the gate came into force — transition clause.
-
-    A `created:` earlier than `GATE_ADVERSARIAL_SINCE` means 002 finished when
-    the defense did not yet exist: act 1 runs in configuration B and the
-    `.verify.md` is the correct artifact, even with the trigger on. It uses only
-    an existing, immutable field; a missing or invalid `created:` grants no
-    exemption (and is already a violation on its own).
+    A `created:` earlier than `JUDGE_DREDD_SINCE` means the task may have gone
+    through the retired adversarial gate, so defense/accusation/judgment are
+    tolerated history. It uses only an existing, immutable field; a missing or
+    invalid `created:` grants no exemption (and is already a violation on its
+    own).
     """
     created = _valid_iso_date(meta.get("created"))
-    return created is not None and created.isoformat() < GATE_ADVERSARIAL_SINCE
+    return created is not None and created.isoformat() < JUDGE_DREDD_SINCE
 
 
 def gate_artifacts_of(task_dir):
     """This task's act-1 artifacts, as (path, family) pairs.
 
     It scans the folder instead of matching the literal name `<id><family>`,
-    because the pair's artifact is born per round (`<id>.r<n>.accusation.md`,
-    from `r1`) and the `.verify.md` may appear with the same infix. What decides
-    the configuration is the family; the round only tells the attempts apart.
+    because the artifacts may be born per round (`<id>.r<n>.accusation.md`).
+    What decides the family is the suffix; the round only tells the attempts
+    apart.
     """
     found = []
     for path in sorted(task_dir.iterdir()):
         if not path.is_file():
             continue
-        for family in (VERIFY_ARTIFACT, *GATE_PAIR_ARTIFACTS):
+        for family in (VERIFY_ARTIFACT, *RETIRED_GATE_ARTIFACTS):
             if not path.name.endswith(family):
                 continue
             stem = path.name[: -len(family)]
@@ -486,49 +481,30 @@ def gate_artifacts_of(task_dir):
 
 
 def check_gate_artifacts(root, projects, violations):
-    """(k) exclusivity between the two configurations of act 1 of 005_closing.
+    """(k) artifacts of the retired adversarial gate in act 1 of 005_closing.
 
-    Where the trigger fires, act 1 is judged by the advocate + judge pair and
-    no `.verify.md` exists; where it does not, the single reviewer applies and
-    neither `.accusation.md` nor `.judgment.md` is born. Never all three —
-    hence a `.verify` coexisting with a pair artifact being a violation in
-    either direction: whichever the trigger, one of the two is outside the live
-    configuration. The rule is per family, so it applies the same to every
-    round (`<id>.r<n>.<artifact>.md`).
+    Since `JUDGE_DREDD_SINCE`, act 1 is judged by the Judge Dredd, the single
+    judge who writes `.verify.md` for every yolo task. `.defense.md`,
+    `.accusation.md` and `.judgment.md` are no longer born: in a card created
+    on or after the cutoff, any of them is a violation; in an older card they
+    are tolerated history. The rule is per family, so it applies the same to
+    every round (`<id>.r<n>.<artifact>.md`).
 
-    **Absence is never a violation:** almost no task has any of the three, and
-    a task outside yolo never will. The rule is about coexistence and coherence
-    with the trigger, never about presence.
-
-    **Transition:** a card with `created:` earlier than
-    `GATE_ADVERSARIAL_SINCE` runs in configuration B even under the trigger —
-    the same clause act 1 of `005_closing` states. The exemption is **narrow**:
-    it only takes the `.verify.md` off the forbidden list, and the pair's
-    artifact stays forbidden in that card. Skipping the whole check would let
-    coexistence through precisely in the riskiest class.
+    **Absence is never a violation** — the rule is about the undue presence of
+    a retired artifact, never a demand for the `.verify.md`.
     """
     for project in projects:
         for _, task_dir, card in poplib.iter_cards(project):
             meta = poplib.read_card(card)
-            if not gate_adversarial_applies(meta):
-                forbidden = GATE_PAIR_ARTIFACTS
-                reason = ("adversarial gate off: act 1 is the single "
-                          "independent reviewer, which produces `.verify.md`")
-            elif gate_adversarial_predates(meta):
-                forbidden = GATE_PAIR_ARTIFACTS
-                reason = ("card older than " + GATE_ADVERSARIAL_SINCE + ": the "
-                          "transition clause exempts only the `.verify.md`, "
-                          "and act 1 runs in configuration B")
-            else:
-                forbidden = (VERIFY_ARTIFACT,)
-                reason = ("adversarial gate on (`yolo: true` and (`size: L` "
-                          "or `critical: true`)): act 1 is the advocate + "
-                          "judge pair, with no independent reviewer")
+            if gate_pair_tolerated(meta):
+                continue
             for path, family in gate_artifacts_of(task_dir):
-                if family in forbidden:
+                if family in RETIRED_GATE_ARTIFACTS:
                     violations.append(
-                        f"{path}:1: `{family}` outside this task's act-1 "
-                        f"configuration — {reason}")
+                        f"{path}:1: `{family}` retired — since "
+                        f"{JUDGE_DREDD_SINCE} act 1 is the Judge Dredd, who "
+                        f"writes `.verify.md`; a card created on or after the "
+                        f"cutoff produces no adversarial-gate artifacts")
 
 
 def check_release(root, projects, warnings):

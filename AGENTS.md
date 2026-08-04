@@ -123,9 +123,7 @@ The central procedures are **skills** in the open Agent Skills format (`SKILL.md
 | `plan-roadmap` | Build/evolve the roadmap by interview (epochs → phases → candidate tasks). |
 | `new-task` | Quick interview that materializes a roadmap or modification task in `kanban/001_initial_task`; also handles change requests with no active card. |
 | `advance-task` | Move a task through the 001→005_closing flow, respecting the human gates. |
-| `yolo-critic` | Yolo critic in configuration B (non-critical `S`/`M`, medium tier): single gate in `005_closing` (strong 003 only for `critical`); directed repair for pinpoint deltas; circuit breaker — [[WORKFLOW\|WORKFLOW]]. |
-| `devils-advocate` | Devil's advocate of the adversarial gate (configuration A: yolo `L` or `critical`): accuses along two axes, with a materiality test and named discards. |
-| `adversarial-judge` | Judge of the adversarial gate: rules on each accusation through a merit test, checks the original request, and issues verdict, route and delta — without becoming a second reviewer. |
+| `judge-dredd` | Judge Dredd, yolo's single judge: `005_closing` gate of every yolo task (medium tier `S`/`M`, strong `L`/`critical`; 003 only for `critical`), judges by reading with a materiality test, decides route and delta; directed repair; circuit breaker — [[WORKFLOW\|WORKFLOW]]. |
 | `write-spec` | Create/rewrite a standardized spec, with questions per project type. |
 | `sync-specs` | Mandatory flow: keep specs faithful to reality as tasks advance. |
 | `ingest-research` | Ingests a delivered research result: immutable raw source in `raw/`, synthesis with triggered links and a contradiction check against specs/notes. |

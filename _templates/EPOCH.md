@@ -31,6 +31,9 @@
 |------|-----------------------|--------|
 | `<n>.1.1-<slug>` | What it delivers. · size: M | not started |
 | [[<n>.1.2-<slug>]] | What it delivers (linked: already exists in the kanban). | 002_planning |
+| `<n>.1.3-phase-verification` | Writes/runs the phase's suite (`verify: phase` criteria) and fixes what it catches. · size: M | not started |
+
+> **Every phase ends with the `phase-verification` task** (`depends_on` all the others): it is the only one in which tests run — section "Phase verification" of the [[WORKFLOW|WORKFLOW]].
 
 ## Phase <n>.2 — <phase name>
 
