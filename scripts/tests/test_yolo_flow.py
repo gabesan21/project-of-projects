@@ -39,6 +39,24 @@ class YoloFlowTest(unittest.TestCase):
         path.write_text(text, encoding="utf-8")
         return path
 
+    def verify(self, task, stage, *markers):
+        """Writes the task's `.verify.md` with the given machine markers."""
+        folder = self.root / "kanban" / stage / task
+        path = folder / f"{task}.verify.md"
+        path.write_text("# Judgment\n\n" + "\n".join(markers) + "\n",
+                        encoding="utf-8")
+        return path
+
+    @staticmethod
+    def verdict(rnd, decision):
+        return f"<!-- pop-verdict round={rnd} decision={decision} -->"
+
+    @staticmethod
+    def delta(rnd, kind, pontual="false", paths=""):
+        extra = f" paths={paths}" if paths else ""
+        return (f"<!-- pop-delta round={rnd} kind={kind} "
+                f"pontual={pontual}{extra} -->")
+
     def test_two_returns_and_third_triggers_circuit_breaker(self):
         task = "1.1.1-loop-yolo"
         self.card(task)
@@ -64,6 +82,8 @@ class YoloFlowTest(unittest.TestCase):
         # the execution one (the executor delivered what it was given).
         task = "1.1.3-plan-defect"
         self.card(task, stage="005_closing")
+        self.verify(task, "005_closing", self.verdict(1, "lacuna"),
+                    self.delta(1, "lacuna"))
         result = self.run_cli("pop_move.py", task, "002_planning",
                               "--reason", "plan defect",
                               "--return-kind", "lacuna")
@@ -96,6 +116,8 @@ class YoloFlowTest(unittest.TestCase):
     def test_execution_return_counts_in_the_execution_counter(self):
         task = "1.1.4-returns-execution"
         self.card(task, stage="005_closing")
+        self.verify(task, "005_closing", self.verdict(1, "execucao"),
+                    self.delta(1, "execucao"))
         result = self.run_cli("pop_move.py", task, "004_processing",
                               "--reason", "blocking execution issue")
         self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
@@ -105,9 +127,57 @@ class YoloFlowTest(unittest.TestCase):
         self.assertNotIn("yolo_003_returns: 1", text)
         self.assertIn("return_kind: execucao", text)
 
+    def test_return_from_005_without_verify_is_refused(self):
+        # A judge that rejects without an artifact does not return.
+        task = "1.1.8-no-verify"
+        self.card(task, stage="005_closing")
+        result = self.run_cli("pop_move.py", task, "004_processing")
+        self.assertEqual(result.returncode, 1)
+        self.assertIn("NO JUDGMENT", result.stdout)
+        self.assertTrue((self.root / "kanban/005_closing" / task).is_dir())
+
+    def test_approval_is_terminal_no_re_judgment(self):
+        # The field bug: re-judging an approval verdict.
+        task = "1.1.9-approved-terminal"
+        self.card(task, stage="005_closing")
+        self.verify(task, "005_closing", self.verdict(1, "aprovada"))
+        result = self.run_cli("pop_move.py", task, "004_processing")
+        self.assertEqual(result.returncode, 1)
+        self.assertIn("APPROVAL IS TERMINAL", result.stdout)
+        self.assertTrue((self.root / "kanban/005_closing" / task).is_dir())
+
+    def test_pinpoint_delta_does_not_pay_the_full_route(self):
+        task = "1.1.10-pinpoint-delta"
+        self.card(task, stage="005_closing")
+        self.verify(task, "005_closing", self.verdict(1, "execucao"),
+                    self.delta(1, "execucao", pontual="true"))
+        result = self.run_cli("pop_move.py", task, "004_processing")
+        self.assertEqual(result.returncode, 1)
+        self.assertIn("PINPOINT DELTA", result.stdout)
+
+    def test_verdict_incompatible_with_the_route_is_refused(self):
+        task = "1.1.11-incompatible-verdict"
+        self.card(task, stage="005_closing")
+        self.verify(task, "005_closing", self.verdict(1, "execucao"),
+                    self.delta(1, "execucao"))
+        result = self.run_cli("pop_move.py", task, "002_planning",
+                              "--return-kind", "lacuna")
+        self.assertEqual(result.returncode, 1)
+        self.assertIn("INCOMPATIBLE VERDICT", result.stdout)
+
+    def test_return_without_delta_is_refused(self):
+        task = "1.1.12-no-delta"
+        self.card(task, stage="005_closing")
+        self.verify(task, "005_closing", self.verdict(1, "execucao"))
+        result = self.run_cli("pop_move.py", task, "004_processing")
+        self.assertEqual(result.returncode, 1)
+        self.assertIn("RETURN WITHOUT DELTA", result.stdout)
+
     def test_telemetry_records_the_cause_of_the_return(self):
         task = "1.1.7-cause-telemetry"
         self.card(task, stage="005_closing")
+        self.verify(task, "005_closing", self.verdict(1, "premissa"),
+                    self.delta(1, "premissa"))
         self.assertEqual(self.run_cli(
             "pop_move.py", task, "002_planning",
             "--return-kind", "premissa").returncode, 0)
@@ -199,6 +269,64 @@ class YoloFlowTest(unittest.TestCase):
         self.assertEqual(result.returncode, 1)
         self.assertTrue(
             (self.root / "kanban/002_planning" / task).is_dir())
+
+
+class YoloReentryTest(unittest.TestCase):
+    """Pre-flight of the 004→005 reentry: the diff since `return_base` must
+    touch some delta path — re-presenting the same problem is refused."""
+
+    def setUp(self):
+        self.tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(self.tmp.cleanup)
+        self.root = Path(self.tmp.name) / "vault"
+        for stage in STAGES:
+            (self.root / "kanban" / stage).mkdir(parents=True)
+        self.git("init", "-b", "main")
+        self.git("config", "user.email", "test@example.com")
+        self.git("config", "user.name", "Test")
+        (self.root / "src").mkdir()
+        (self.root / "src/target.ts").write_text("v1\n")
+        self.task = "1.1.1-reentry"
+        folder = self.root / "kanban/005_closing" / self.task
+        folder.mkdir(parents=True)
+        (folder / f"{self.task}.md").write_text(
+            "---\nid: 1.1.1\nproject: pop\nstage: 005_closing\n"
+            "critical: false\nyolo: true\nblocked: false\ndepends_on: []\n"
+            "created: 2026-08-05\nupdated: 2026-08-05\n---\n\n# Task\n\n"
+            "## Log\n", encoding="utf-8")
+        (folder / f"{self.task}.verify.md").write_text(
+            "# Judgment\n\n"
+            "<!-- pop-verdict round=1 decision=execucao -->\n"
+            "<!-- pop-delta round=1 kind=execucao pontual=false "
+            "paths=src/target.ts -->\n", encoding="utf-8")
+        self.git("add", ".")
+        self.git("commit", "-m", "base")
+
+    def git(self, *args):
+        result = subprocess.run(["git", "-C", str(self.root), *args],
+                                capture_output=True, text=True)
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        return result
+
+    def run_cli(self, script, *args):
+        return subprocess.run(
+            [sys.executable, str(SCRIPTS / script), *args,
+             "--vault", str(self.root)], capture_output=True, text=True)
+
+    def test_reentry_without_work_on_the_delta_is_refused(self):
+        result = self.run_cli("pop_move.py", self.task, "004_processing")
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        card = (self.root / "kanban/004_processing" / self.task
+                / f"{self.task}.md").read_text()
+        self.assertIn("return_base:", card)
+
+        result = self.run_cli("pop_move.py", self.task, "005_closing")
+        self.assertEqual(result.returncode, 1, result.stdout + result.stderr)
+        self.assertIn("REENTRY WITHOUT WORK ON THE DELTA", result.stdout)
+
+        (self.root / "src/target.ts").write_text("v2\n")
+        result = self.run_cli("pop_move.py", self.task, "005_closing")
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
 
 
 class YoloDeliveryTest(unittest.TestCase):

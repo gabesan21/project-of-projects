@@ -2,6 +2,7 @@
 
 import argparse
 import shutil
+import subprocess
 import sys
 
 import poplib
@@ -65,6 +66,118 @@ def resolve_return_kind(src, dst, requested):
                       "returns leaving 005_closing are classified (use "
                       "--force for exceptions).")
     return None, None
+
+
+def git_head(project):
+    """HEAD of the repo containing the project, or None without git."""
+    try:
+        out = subprocess.run(["git", "-C", str(project), "rev-parse", "HEAD"],
+                             capture_output=True, text=True, check=True)
+    except (OSError, subprocess.CalledProcessError):
+        return None
+    return out.stdout.strip() or None
+
+
+def git_changed_paths(project, base):
+    """Files changed since `base` (worktree included), or None without git."""
+    try:
+        out = subprocess.run(
+            ["git", "-C", str(project), "diff", "--name-only", base],
+            capture_output=True, text=True, check=True)
+    except (OSError, subprocess.CalledProcessError):
+        return None
+    return [line.strip() for line in out.stdout.splitlines() if line.strip()]
+
+
+def verify_gate_error(task_dir, task_id, dst, return_kind):
+    """Refusal of a 005→004/002 return based on the `.verify.md` markers.
+
+    The round's verdict is the gate's executable contract: without it the
+    return is the orchestrator's guess. The locks cut off the bugs observed
+    in the field: re-judging an approval, the full route for a pinpoint delta
+    and a return without a delta.
+    """
+    verify = task_dir / f"{task_id}.verify.md"
+    if not verify.is_file():
+        return ("NO JUDGMENT: a return leaving 005_closing requires "
+                f"`{verify.name}` with the round's verdict — a judge that "
+                "rejects without an artifact does not return (use --force "
+                "for exceptions).")
+    verdicts, deltas = poplib.parse_verify_markers(
+        verify.read_text(encoding="utf-8"))
+    if not verdicts:
+        return ("NO VERDICT MARKER: end the round in the "
+                f"`{verify.name}` with `<!-- pop-verdict round=<n> "
+                "decision=... -->` (and `<!-- pop-delta ... -->` when "
+                "returning) before moving (use --force for exceptions).")
+    last = verdicts[-1]
+    decision = last.get("decision")
+    if decision == "aprovada":
+        return ("APPROVAL IS TERMINAL: the last pop-verdict in the "
+                f"`{verify.name}` approves the task — there is no "
+                "re-judgment nor independent review over an approval; "
+                "proceed to delivery/close-out (use --force for exceptions).")
+    if decision == "reparo-dirigido":
+        return ("DIRECTED REPAIR IN PROGRESS: a pinpoint delta does not "
+                "become a route — dispatch the patch and collect the "
+                "judge's addendum; only an addendum that returns authorizes "
+                "moving (use --force for exceptions).")
+    expected = "execucao" if dst == "004_processing" else return_kind
+    if decision != expected:
+        return (f"INCOMPATIBLE VERDICT: the last pop-verdict declares "
+                f"`{decision}`, but the requested route is `{expected}` — "
+                "route and verdict go together (use --force for exceptions).")
+    delta = deltas.get(last.get("round"))
+    if not delta:
+        return ("RETURN WITHOUT DELTA: the verdict returns but the "
+                f"`<!-- pop-delta round={last.get('round')} ... -->` is "
+                f"missing from the `{verify.name}` — without a delta, 002 "
+                "does not know whether to amend or replan and 004 does not "
+                "know what to re-execute (use --force for exceptions).")
+    if decision == "execucao" and delta.get("pontual") == "true":
+        return ("PINPOINT DELTA: a `pontual=true` blocker follows the "
+                "default directed-repair route (no pop_move, no counter); "
+                "the full route is for a diffuse defect — with the round's "
+                "2 repairs exhausted, repeat with --force and the reason in "
+                "--reason.")
+    return None
+
+
+def reentry_gate_error(project, task_dir, task_id, meta):
+    """Refusal of a 004→005 reentry with no work on the delta's paths.
+
+    It only acts when the evidence is complete (a delta with `paths`,
+    `return_base` and git available) — fail-open otherwise: the lock exists
+    to cut off re-presenting the same problem to the judge, not to block
+    legacy flow.
+    """
+    base = str(meta.get("return_base") or "").strip()
+    if not base or meta.get("return_kind") not in poplib.RETURN_KINDS:
+        return None
+    verify = task_dir / f"{task_id}.verify.md"
+    if not verify.is_file():
+        return None
+    _verdicts, deltas = poplib.parse_verify_markers(
+        verify.read_text(encoding="utf-8"))
+    if not deltas:
+        return None
+    last_delta = list(deltas.values())[-1]
+    paths = poplib.marker_paths(last_delta)
+    if not paths:
+        return None
+    changed = git_changed_paths(project, base)
+    if changed is None:
+        return None
+    for path in paths:
+        for touched in changed:
+            if (touched == path or touched.endswith("/" + path)
+                    or path.endswith("/" + touched)):
+                return None
+    return ("REENTRY WITHOUT WORK ON THE DELTA: no delta path "
+            f"({', '.join(paths)}) changed since `return_base` {base[:12]} — "
+            "re-presenting the same problem to the judge burns a round for "
+            "nothing; execute the delta before moving (use --force for "
+            "exceptions).")
 
 
 def update_card(card, new_stage, reason, fields=None):
@@ -183,9 +296,28 @@ def main():
         print(kind_error)
         return 1
 
+    if meta.get("yolo") is True and not args.force:
+        if src == "005_closing" and args.stage in ("004_processing",
+                                                   "002_planning"):
+            gate_error = verify_gate_error(task_dir, args.task_id,
+                                           args.stage, return_kind)
+            if gate_error:
+                print(gate_error)
+                return 1
+        if (src, args.stage) == ("004_processing", "005_closing"):
+            gate_error = reentry_gate_error(project, task_dir,
+                                            args.task_id, meta)
+            if gate_error:
+                print(gate_error)
+                return 1
+
     fields = {}
     if return_kind:
         fields["return_kind"] = return_kind
+        if src == "005_closing":
+            head = git_head(project)
+            if head:
+                fields["return_base"] = head
     if meta.get("yolo") is True and return_gate:
         key = f"yolo_{return_gate}_returns"
         try:

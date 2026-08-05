@@ -131,6 +131,63 @@ class JudgeDreddTest(unittest.TestCase):
         template.write_text("line\n" * 150, encoding="utf-8")
         self.assert_valid()
 
+    # --- verdict markers ----------------------------------------------
+
+    def write_verify(self, folder, *markers):
+        (folder / f"{folder.name}.verify.md").write_text(
+            "# Judgment\n\n" + "\n".join(markers) + "\n", encoding="utf-8")
+
+    def test_verify_without_markers_is_tolerated_legacy(self):
+        folder = self.make_task("1.1.20-verify-legacy")
+        self.write_verify(folder, "## Round 1", "- **Decision:** approved.")
+        self.assert_valid()
+
+    def test_verify_with_coherent_markers_is_valid(self):
+        folder = self.make_task("1.1.21-verify-coherent")
+        self.write_verify(
+            folder,
+            "<!-- pop-verdict round=1 decision=execucao -->",
+            "<!-- pop-delta round=1 kind=execucao pontual=false "
+            "paths=src/a.ts -->",
+            "<!-- pop-verdict round=2 decision=aprovada -->")
+        self.assert_valid()
+
+    def test_duplicated_round_is_a_violation(self):
+        # One judge per round: re-judging the same round is the bug that
+        # inflated the counters in the field.
+        folder = self.make_task("1.1.22-duplicated-round")
+        self.write_verify(
+            folder,
+            "<!-- pop-verdict round=1 decision=execucao -->",
+            "<!-- pop-delta round=1 kind=execucao pontual=false -->",
+            "<!-- pop-verdict round=1 decision=execucao -->")
+        self.assert_invalid("one judge per round")
+
+    def test_verdict_after_approval_is_a_violation(self):
+        folder = self.make_task("1.1.23-after-approval")
+        self.write_verify(
+            folder,
+            "<!-- pop-verdict round=1 decision=aprovada -->",
+            "<!-- pop-verdict round=2 decision=execucao -->",
+            "<!-- pop-delta round=2 kind=execucao pontual=false -->")
+        self.assert_invalid("approval is terminal")
+
+    def test_return_without_the_rounds_delta_is_a_violation(self):
+        folder = self.make_task("1.1.24-no-delta")
+        self.write_verify(
+            folder, "<!-- pop-verdict round=1 decision=execucao -->")
+        self.assert_invalid("without `pop-delta round=1`")
+
+    def test_invalid_decision_and_kind_are_violations(self):
+        folder = self.make_task("1.1.25-enums")
+        self.write_verify(
+            folder,
+            "<!-- pop-verdict round=1 decision=rejected -->",
+            "<!-- pop-delta round=1 kind=defect pontual=maybe -->")
+        result = self.assert_invalid("invalid decision")
+        self.assertIn("invalid kind", result.stdout)
+        self.assertIn("invalid pontual", result.stdout)
+
     # --- retired artifacts --------------------------------------------
 
     def test_absence_of_artifacts_is_never_a_violation(self):

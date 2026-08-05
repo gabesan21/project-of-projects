@@ -7,7 +7,7 @@ status: active
 implementation: implemented
 origin: "D-20260804"
 created: 2026-08-04
-updated: 2026-08-04
+updated: 2026-08-05
 supersedes: [adversarial-gate]
 superseded_by:
 ---
@@ -27,6 +27,10 @@ In a `yolo: true` task, act 1 of `005_closing` is judged by **a single judge**: 
 - Given a `critical: true` task, the strong Judge Dredd also judges the 003 gate (adversarial reading of the plan), in a session distinct from the 005 one.
 - The judge first answers whether the card's **original request** was met; every finding passes the **materiality test** (verifiable source, nameable damage, a requested demand, not automatable, not already tracked) before entering the artifact.
 - On approval, the judge writes the memory in the same session; on a return, he names the delta (`lacuna` | `premissa` | `execucao`) in the form of [[_templates/TASK-VERIFY|TASK-VERIFY]] and the orchestrator carries it with `pop_move --return-kind`.
+- **Every round ends with machine markers** in the `.verify.md`: `<!-- pop-verdict round=<n> decision=aprovada|reparo-dirigido|execucao|lacuna|premissa -->` and, on a return, `<!-- pop-delta round=<n> kind=<type> pontual=true|false paths=<a,b> frentes=<Fxx,...> intactas=<Fxx,...> -->`. They are the gate's executable contract: `pop_move` refuses a return without a coherent verdict/delta and a `004→005` reentry whose diff since `return_base` touches no `paths`; `pop_validate` flags a duplicated round, a verdict after an approval and a return without a delta.
+- **Approval is terminal:** an `aprovada` round ends the gate — no re-judgment, independent review or addendum reverts an approval; doubt about an approval belongs to the human.
+- **Frozen surface in the differential round:** an approved front stays approved; an assert/test introduced by the repair does not invalidate it retroactively — a new-test × approved-implementation conflict is a defect of the delta (directed repair) or a follow-up. Only `premissa` invalidates previous verification.
+- **Single exception to "no re-run" — the test×code dispute:** a finding grounded in a predicted test failure requires running **only the disputed test file** as evidence; never the suite. A run made impossible by the environment → qualified pass.
 - A plan criterion that requires executing a test is born `verify: phase` and is not judged at the task's gate: it accumulates in the phase checklist and runs in the `phase-verification` task, the only one whose plan declares a re-run as an `agent` criterion.
 
 ## Invariants
@@ -35,7 +39,7 @@ In a `yolo: true` task, act 1 of `005_closing` is judged by **a single judge**: 
 - The judge is a context distinct from planner and executors; no judge executes the solution he judges.
 - The trigger is derivable from the frontmatter alone (`yolo`, `size`, `critical`); no new mark fires the gate.
 - Counters: `yolo_005_returns` (execution) and `yolo_003_returns` (plan); two returns per route, `circuit_breaker` on the 3rd — early when the delta repeats the theme with no new fact.
-- **Directed repair:** a pinpoint blocker is not a route — a patch dispatched by the orchestrator, checked in a ≤10-line addendum in the same round; max 2 per round.
+- **Directed repair is the default route of a pinpoint blocker** (`pontual=true` in the delta): a patch dispatched by the orchestrator, checked in a ≤10-line addendum in the same round, with no counter and without moving the folder; max 2 per round — the 3rd proves a diffuse defect and the judge reclassifies the delta. `pop_move` refuses the full route for a pinpoint delta.
 - **An environment failure never returns** (qualified pass + human checklist); a `verify: user` criterion is not judged by the gate.
 - **The gate does not expand the scope:** a finding outside the request becomes a follow-up; `lacuna` fits once per task.
 - Every return carries a classified delta; the re-entry covers only the delta and expensive evidence is reused.
@@ -53,7 +57,10 @@ In a `yolo: true` task, act 1 of `005_closing` is judged by **a single judge**: 
 
 ## Errors and limits
 
-- **A judge who rejects without a delta:** `pop_move` refuses the route.
+- **A judge who rejects without a delta:** `pop_move` refuses the route (implemented: it requires a `.verify.md` with a `pop-verdict` + `pop-delta` coherent with the route).
+- **A return over an `aprovada` verdict:** `pop_move` refuses — approval is terminal.
+- **A reentry with no work on the delta:** `pop_move` refuses `004→005` when the diff since `return_base` touches none of the delta's `paths`.
+- **A gate that does not converge within the wall-clock budget** (S ~1h, M ~2h, L/critical ~3h of `005_closing`+repairs): the orchestrator does not launch another round — `blocked: true` with a diagnosis.
 - **A judge who proposes or applies a correction:** a violation of independence; the correction belongs to the executor relaunched by the orchestrator.
 - **3rd failure of the same route:** `circuit_breaker: true`.
 - **The `phase-verification` task:** an execution defect of an already-closed task of the phase is a fix inside it; a structural defect (a wrong durable contract, an unmet request) becomes a modification/new task — a deleted folder is never reopened.

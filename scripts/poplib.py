@@ -29,6 +29,39 @@ RETURN_KINDS = ("lacuna", "premissa", "execucao")
 
 RELEASE_MARK = re.compile(r"^\s*[-*]\s*\[[xX]\]\s*Ready to plan")
 
+# Judge Dredd machine markers in the `.verify.md` (see [[specs/judge-dredd]]).
+# Every round ends with a `pop-verdict`; a return adds the same round's
+# `pop-delta`. They are what `pop_move` and `pop_validate` read — the prose is
+# for humans, the marker is the executable contract. `key=value` fields with
+# no spaces; comma-separated lists (`paths=src/a.ts,tests/b.spec.ts`).
+VERDICT_MARKER = re.compile(r"<!--\s*pop-verdict\s+([^>]*?)-->")
+DELTA_MARKER = re.compile(r"<!--\s*pop-delta\s+([^>]*?)-->")
+MARKER_FIELD = re.compile(r"([\w-]+)=([^\s>]+)")
+# `aprovada` ends the gate (terminal); `reparo-dirigido` is not a route (the
+# folder does not move); the three RETURN_KINDS are the return routes.
+VERDICT_DECISIONS = ("aprovada", "reparo-dirigido") + RETURN_KINDS
+
+
+def parse_verify_markers(text: str):
+    """(verdicts, deltas) from a `.verify.md`'s machine markers.
+
+    Verdicts come in file order (the last round decides); deltas are indexed
+    by the declared `round`. Fields are raw strings — validating the enums is
+    the caller's job.
+    """
+    verdicts = [dict(MARKER_FIELD.findall(m.group(1)))
+                for m in VERDICT_MARKER.finditer(text)]
+    deltas = {}
+    for m in DELTA_MARKER.finditer(text):
+        fields = dict(MARKER_FIELD.findall(m.group(1)))
+        deltas[fields.get("round")] = fields
+    return verdicts, deltas
+
+
+def marker_paths(delta: dict) -> list:
+    """List of paths from a pop-delta's `paths` field (empty when absent)."""
+    return [p for p in (delta.get("paths") or "").split(",") if p]
+
 def vault_root(override: Optional[str] = None) -> Path:
     """Root of the current scope.
 

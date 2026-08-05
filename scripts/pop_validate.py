@@ -507,6 +507,63 @@ def check_gate_artifacts(root, projects, violations):
                         f"cutoff produces no adversarial-gate artifacts")
 
 
+def check_verify_markers(root, projects, violations):
+    """(l) Judge Dredd verdict markers in the `.verify.md`.
+
+    A `.verify.md` that uses machine markers (`pop-verdict`/`pop-delta`, see
+    [[specs/judge-dredd]]) must be coherent: **one judge per round**
+    (a duplicated round is the re-judgment that blew the breaker in the
+    field), **approval is terminal** (no verdict after `aprovada`) and
+    **every return carries its own round's pop-delta**. A file without
+    markers is tolerated legacy — demanding their presence is `pop_move`'s
+    job, at return time; here only what exists is validated.
+    """
+    for project in projects:
+        for _stage, task_dir, _card in poplib.iter_cards(project):
+            verify = task_dir / f"{task_dir.name}{VERIFY_ARTIFACT}"
+            if not verify.is_file():
+                continue
+            verdicts, deltas = poplib.parse_verify_markers(
+                verify.read_text(encoding="utf-8"))
+            seen, approved = set(), False
+            for fields in verdicts:
+                rnd = fields.get("round")
+                decision = fields.get("decision")
+                if approved:
+                    violations.append(
+                        f"{verify}:1: pop-verdict after `aprovada` — "
+                        "approval is terminal; re-judgment does not exist")
+                if decision not in poplib.VERDICT_DECISIONS:
+                    violations.append(
+                        f"{verify}:1: pop-verdict with invalid decision "
+                        f"`{decision}` (use "
+                        f"{' | '.join(poplib.VERDICT_DECISIONS)})")
+                if rnd in seen:
+                    violations.append(
+                        f"{verify}:1: duplicated pop-verdict for round "
+                        f"`{rnd}` — one judge per round")
+                seen.add(rnd)
+                if decision == "aprovada":
+                    approved = True
+                elif (decision in poplib.RETURN_KINDS
+                        and rnd not in deltas):
+                    violations.append(
+                        f"{verify}:1: return `{decision}` without "
+                        f"`pop-delta round={rnd}` — every return carries a "
+                        "named delta")
+            for rnd, fields in deltas.items():
+                kind = fields.get("kind")
+                if kind not in poplib.RETURN_KINDS:
+                    violations.append(
+                        f"{verify}:1: pop-delta round={rnd} with invalid "
+                        f"kind `{kind}` (use "
+                        f"{' | '.join(poplib.RETURN_KINDS)})")
+                if fields.get("pontual") not in (None, "true", "false"):
+                    violations.append(
+                        f"{verify}:1: pop-delta round={rnd} with invalid "
+                        f"pontual `{fields.get('pontual')}` (use true|false)")
+
+
 def check_release(root, projects, warnings):
     for project in projects:
         for stage, task_dir, card in poplib.iter_cards(project):
@@ -915,6 +972,7 @@ def main():
     check_note_sizes(root, projects, violations)
     check_cards(root, projects, violations)
     check_gate_artifacts(root, projects, violations)
+    check_verify_markers(root, projects, violations)
     check_release(root, projects, warnings)
     check_worktrees(root, projects, warnings)
     check_memory(root, projects, violations)
