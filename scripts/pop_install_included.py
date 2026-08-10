@@ -10,12 +10,10 @@ of them. So that "update" is verifiable, every installation stamps the source's
 behind. Without the stamp there is no way to tell a current clone from a clone
 stuck on an old version of the flow.
 
-Manifest v2 (`harness_root: "pop"`): files/directories/anatomy/keep_files are
-relative to harness_root and go into `target/pop/`; the `.included-harness.json`
-also lives in `pop/` (it is the marker that `poplib.vault_root` and
-`pop_validate --standalone` use to detect the new anatomy). Skills,
-AGENTS.md and CLAUDE.md always sit at the root of the target. Manifest v1 (no
-`harness_root`) keeps the legacy layout at the root — zero regression.
+Manifest v3 (`harness_root: "pop"`): files/directories/anatomy/keep_files are
+relative to harness_root and go into `target/pop/`; `root_files`, skills,
+AGENTS.md and CLAUDE.md stay at the target root. `.included-harness.json` lives
+in `pop/`. Manifest v1 (no `harness_root`) keeps the legacy root layout.
 """
 from __future__ import annotations
 
@@ -37,6 +35,12 @@ EXTERNAL_LINK = re.compile(r"\[\[categories/[^/]+/[^/]+/([^\]|#]+)([^\]]*)\]\]")
 DEFAULT_EXCLUDE = ("__pycache__", "tests", ".pytest_cache")
 
 
+def root_source(name: str) -> Path:
+    """Resolve a root artifact both at the origin and in an installed copy."""
+    base = SOURCE.parent if (SOURCE / ".included-harness.json").is_file() else SOURCE
+    return base / name
+
+
 def manifest():
     return json.loads(MANIFEST.read_text(encoding="utf-8"))
 
@@ -54,7 +58,18 @@ def excluded(data, relative: Path, label: str = "") -> bool:
     names = set(data.get("exclude", DEFAULT_EXCLUDE))
     if names.intersection(relative.parts):
         return True
-    return bool(label) and label in set(data.get("exclude_files", ()))
+    if not label:
+        return False
+    if label in set(data.get("exclude_files", ())):
+        return True
+    return any(label == prefix or label.startswith(prefix + "/")
+               for prefix in data.get("exclude_prefixes", ()))
+
+
+def installed_manifest(data: dict) -> dict:
+    """Return the target-facing manifest without origin-only exclusions."""
+    return {key: value for key, value in data.items()
+            if key != "exclude_prefixes"}
 
 
 def managed_sources(data):
@@ -73,6 +88,8 @@ def managed_sources(data):
             label = f"{name}/{relative.as_posix()}"
             if path.is_file() and not excluded(data, relative, label):
                 yield label, path
+    for name in data.get("root_files", []):
+        yield f"root/{name}", root_source(name)
     for name in data["skills"]:
         base = SKILLS_SOURCE / name
         for path in sorted(base.rglob("*")):
@@ -137,7 +154,11 @@ def copy_file(source: Path, dest: Path, *, overwrite: bool = True,
         return
     dest.parent.mkdir(parents=True, exist_ok=True)
     if source.suffix in {".md", ".py", ".json"}:
-        text = source.read_text(encoding="utf-8")
+        if source.resolve() == MANIFEST.resolve():
+            text = json.dumps(installed_manifest(manifest()), indent=2,
+                              ensure_ascii=False) + "\n"
+        else:
+            text = source.read_text(encoding="utf-8")
         dest.write_text(localize(text, included_paths=(included_paths and source.suffix == ".md")),
                         encoding="utf-8")
     else:
@@ -280,9 +301,25 @@ def audit() -> list[str]:
         if not (SOURCE / name).is_file(): missing.append(name)
     for name in data["directories"]:
         if not (SOURCE / name).is_dir(): missing.append(name)
+    for name in data.get("root_files", []):
+        if not root_source(name).is_file(): missing.append(f"root:{name}")
     for name in data["skills"]:
         if not (SKILLS_SOURCE / name / "SKILL.md").is_file(): missing.append(f"skill:{name}")
     return missing
+
+
+def preflight_root_files(target: Path, data: dict, previous: list[str]) -> None:
+    """Refuse unmanaged root-file collisions before writing anything."""
+    managed_before = set(previous)
+    collisions = []
+    for name in data.get("root_files", []):
+        destination = target / name
+        if destination.is_symlink():
+            collisions.append(name)
+        elif destination.exists() and name not in managed_before:
+            collisions.append(name)
+    if collisions:
+        raise RuntimeError("collision with unmanaged root_file: " + ", ".join(collisions))
 
 
 def install(target: Path) -> None:
@@ -301,6 +338,7 @@ def install(target: Path) -> None:
     hr = data.get("harness_root", "") or ""
     hb = target / hr if hr else target
     _, previous = installed_stamp(target, key="installed")
+    preflight_root_files(target, data, previous or [])
     # Preflight: only explicitly managed paths may be written.
     written = []
     for name in data["files"]:
@@ -309,6 +347,10 @@ def install(target: Path) -> None:
     for name in data["directories"]:
         written += copy_tree(SOURCE / name, hb / name, included_paths=True,
                              data=data, label_prefix=f"{name}/")
+    for name in data.get("root_files", []):
+        destination = target / name
+        copy_file(root_source(name), destination, included_paths=True)
+        written.append(destination)
     for name in data["skills"]:
         written += copy_tree(SKILLS_SOURCE / name,
                              target / ".agents/skills" / name,
@@ -319,7 +361,8 @@ def install(target: Path) -> None:
                                    for path in written])
     # The marker is the manifest plus this installation's content stamp and
     # inventory — the inventory is what authorizes the next one's pruning.
-    stamp = dict(data, content_sha=content_sha(data), installed=inventory)
+    stamp = dict(installed_manifest(data), content_sha=content_sha(data),
+                 installed=inventory)
     (hb / ".included-harness.json").write_text(
         json.dumps(stamp, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
     for rel in data["anatomy"]:

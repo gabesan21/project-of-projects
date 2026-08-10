@@ -39,7 +39,7 @@ Working with AI agents across many projects tends to scatter context everywhere.
 - 🪶 **Frugal context by design** — execution adapts from one executor to sequential specialists or isolated parallel waves, while stdlib-only Python CLIs replace token-hungry sweeps and validate ownership.
 - 🧠 **Durable memory** — every finished task leaves a ≤2000-char memory record, so history survives cleanup.
 - 📦 **One harness, distributed** — the vault is the single source of the workflow; standalone repos receive a *managed*, version-stamped copy they never patch locally ([details](#the-vault-is-the-harness-source)).
-- 🔌 **Agent-agnostic** — skills live in `.agents/skills/` as plain `SKILL.md` files (the open Agent Skills format). No tool-specific folders; works with Claude Code, Cursor, Codex, opencode and anything that reads `AGENTS.md`.
+- 🔌 **Portable semantics, native harnesses** — skills and specialist contracts have tool-neutral sources in `.agents/`; validated projections use each coding agent's official folders and capabilities.
 
 ## How it works
 
@@ -60,7 +60,7 @@ flowchart LR
 <p align="center"><sub>🟧 orange = a human gate — each agent run flows until the next one &nbsp;·&nbsp; ⬛ dark = an agent executes</sub></p>
 
 - **One run = up to the next human gate:** an agent invocation chains the agent-owned stages and only stops where a decision is yours — the release in 001, plan approval in 003, a `(user)` item, a block, the merge round in `005_closing`. No gate is ever skipped; you stay in the loop.
-- **Separated roles:** the main agent handles cards, gates and transitions; a separate **planner** writes a brief (002) and an **execution orchestrator** chooses one executor or specialist fronts (004). In yolo, one independent **reviewer** in a fresh session is the quality gate of `005_closing`; outside yolo there is no agentic reviewer at all — **reviewing the PR is the verification**.
+- **Separated roles:** the native main session follows `AGENTS.md`, delegates first, and retains routing, gates, transitions and integration. Six specialists cover planning, recon, complex execution coordination, one-front execution, yolo judgment and phase verification. Outside yolo there is no agentic reviewer — **reviewing the PR is the verification**.
 - **Each role reads only its slice:** the plan root stays ≤80 lines at any size and every front destined for a separate context gets its own ≤50-line file in `subtasks/` — an executor receives the card's what/why, the objective, its own front and that front's skill. Never the whole plan.
 - **Parallelism with ownership:** fronts run concurrently only when logically independent and writing to independent sets. Each declares `owns`, `must_not_edit` and dependencies; missing inputs are reported, never implemented opportunistically.
 - **001 ends with your release:** the card is yours to edit until you check `- [x] Ready to plan` — agents (and automation) can't move an unfinished task into planning.
@@ -73,12 +73,43 @@ flowchart LR
 
 Everything waiting on you shows up in **`INBOX.md`**, generated automatically via Dataview — the one file to open every day.
 
+## Native agent roles
+
+PoP keeps role meaning separate from runtime syntax. The six authoring sources live in `.agents/agents/`; each says when the role runs, which paths it acquires itself, what it may read or write, what it returns, and what it must never do. The main session is deliberately **not** another custom agent: `AGENTS.md` makes it delegation-first and leaves it responsible for routing, gates, transitions, scope validation and integration.
+
+| Role | Responsibility |
+|------|----------------|
+| `pop-planner` | Builds the 002 execution brief without implementing it. |
+| `pop-recon` | Answers one bounded factual question with path/line evidence. |
+| `pop-execution-orchestrator` | Coordinates DAGs, dependencies and isolated waves; does not implement or integrate. |
+| `pop-executor` | Implements exactly one authorized front or delta. |
+| `pop-judge-dredd` | Independently judges critical-yolo 003 and every yolo 005 round. |
+| `pop-phase-verifier` | Runs the accumulated phase checklist and fixes only within that phase. |
+
+The repository ships local, materialized projections for the runtimes that expose an equivalent native-agent surface:
+
+| Coding agent | Native files | Model policy |
+|--------------|--------------|--------------|
+| Claude Code | `.claude/agents/*.md` | Planner/Judge `opus` high; other specialists `sonnet` medium; web and nesting denied. |
+| Codex | `.codex/agents/*.toml` | Planner/Judge `gpt-5.6-sol` high; other specialists `gpt-5.6-terra` medium. |
+| Kimi Code | `.kimi-code/agents/*.md`, `.kimi-code/config.toml` | Planner/Judge primary K3; other specialists secondary K2.7 (`kimi-code/kimi-for-coding`). |
+| OpenCode | `.opencode/agents/*.md`, `opencode.json` | Planner/Judge `kimi-for-coding/k3-256k`; other roles use selected OpenRouter Qwen/DeepSeek models. |
+| Pi | — | No adapter: Pi does not currently provide an equivalent native custom-agent contract. |
+
+OpenCode model IDs include the **OpenCode provider ID**. Kimi subscription models use `kimi-for-coding/<model>`; OpenRouter models use `openrouter/<organization>/<model>`—for example `openrouter/qwen/qwen3-coder-next`. Model choices live in these native files, so PoP has no central `models.json`.
+
+All builders and validation are local: they parse schemas, preserve canonical bodies, compare hashes/deterministic bytes and detect collisions. They never run a coding agent, prompt a model, contact a provider, inspect authentication or use the network. See [Multi-agent orchestration](specs/multi-agent-orchestration.md) for the complete contract.
+
 ## Repository structure
 
 ```
 project-of-projects/
 ├── AGENTS.md            ← vault rules — the contract every agent reads first (CLAUDE.md → symlink)
-├── .agents/skills/      ← the core skills (SKILL.md, agent-agnostic)
+├── .agents/             ← tool-neutral specialist sources and core skills
+├── .claude/agents/      ← generated Claude Code specialists
+├── .codex/agents/       ← generated Codex custom-agent TOMLs
+├── .kimi-code/          ← generated Kimi agents plus primary/secondary config
+├── .opencode/agents/    ← generated OpenCode subagents (`opencode.json` at root)
 ├── INDEX.md             ← all projects at a glance + aggregated repositories
 ├── INBOX.md             ← everything waiting for a human decision (Dataview)
 ├── WORKFLOW.md          ← the kanban state machine
@@ -106,6 +137,7 @@ project-of-projects/
 | `new-task` | Quick interview that materializes a task into the kanban. |
 | `advance-task` | Moves a task through the flow 001→`005_closing`, respecting human gates. |
 | `judge-dredd` | Judge Dredd, yolo's single judge: `005_closing` gate of every yolo task, judged by reading (003 only for `critical` tasks). |
+| `create-agent-*` | Maintains canonical specialist sources and locally generates/validates Claude Code, Codex, Kimi Code and OpenCode projections. |
 | `write-spec` | Creates/rewrites a standardized spec. |
 | `sync-specs` | Keeps specs faithful to reality as tasks progress. |
 | `weekly-review` | Vault-wide review: what waits on you, what stalled, proposals. |
@@ -153,7 +185,7 @@ Fixing a harness is therefore always a **reinstall**, never an edit to the local
    cd my-vault
    ```
 2. **Open it in Obsidian** — open the folder as a vault. It comes **pre-configured**: `.obsidian/` is versioned (plugins below plus the [Obsidianite](https://github.com/bennyxguo/Obsidian-Obsidianite) theme, MIT), so the Dataview-powered `INBOX.md` works out of the box; only your per-session `workspace.json` stays gitignored.
-3. **Point your agent at it** — open the folder with your AI coding agent. It reads `AGENTS.md` (Claude Code reads it via the `CLAUDE.md` symlink) and learns the whole system from there.
+3. **Point your agent at it** — open the folder with Claude Code, Codex, Kimi Code, OpenCode, Pi or another coding agent. It reads `AGENTS.md` (Claude Code reads it via the `CLAUDE.md` symlink); supported native runtimes also discover the six already-materialized specialists in their own folders. Pi simply follows the main `AGENTS.md` contract without custom agents.
    - **Claude Code — native skill discovery** *(optional but recommended)*: skills live in `.agents/skills/` to stay agent-agnostic, and Claude Code looks for them in `.claude/skills/`. Symlink one into the other — the same trick as `CLAUDE.md → AGENTS.md` — so Claude Code discovers all skills natively (and picks up new ones automatically):
      ```sh
      mkdir -p .claude && ln -s ../.agents/skills .claude/skills

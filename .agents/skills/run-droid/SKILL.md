@@ -51,7 +51,7 @@ droid exec --skip-permissions-unsafe -o json "..." | jq -r '.session_id'   # ses
 - `-m/--model <id>`: `claude-sonnet-4-6`, `claude-opus-4-8`, `gpt-5.5`, `gpt-5.3-codex`, `gemini-3.1-pro-preview`, open models (`glm-5.2`, `kimi-k2.7-code`…) — each with its own billing multiplier (`-fast` variants cost more).
 - `-r/--reasoning-effort <level>` overrides the model's default (the default varies per model).
 - BYOK: `customModels` in `~/.factory/settings.json`, referenced as `custom:<displayName>-0`.
-- **Which model:** the task's effort tier in `scripts/models.json` (`droid` entry) — role × size matrix in the Orchestration of [[WORKFLOW|WORKFLOW]].
+- **Which model:** the explicit human invocation or the coding-agent harness chooses it; task size does not select a model and PoP has no central model catalog.
 
 ## MCP
 

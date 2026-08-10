@@ -51,7 +51,7 @@ Tiebreaker: use the **installed** tool (`command -v cursor-agent opencode codex 
 
 ## Model by effort
 
-Choose the model by task tier, not habit: consult `scripts/models.json` (`cheap | medium | strong`) with the role × size matrix in [[WORKFLOW|WORKFLOW]]. The executor receives objective, context, specs, skill, ownership and criteria sufficient for autonomy; it does not need persisted reasoning or planner micro-instructions.
+Use the model fixed by the selected coding-agent harness or explicit human invocation; task size does not select a model. The executor receives objective, context, specs, skill, ownership and criteria sufficient for autonomy; it does not need persisted reasoning or planner micro-instructions.
 
 ## Skills in this family
 

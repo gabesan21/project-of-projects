@@ -78,4 +78,3 @@ A few paragraphs covering the base approach, execution-constraining decisions an
 
 - **Shape:** single executor | sequential specialists | parallel specialists | hybrid waves.
 - **Rationale:** <skills, dependencies and write boundaries that determine the shape>.
-- **Model/tier by role:** <only when the choice matters>.

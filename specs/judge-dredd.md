@@ -22,7 +22,7 @@ In a `yolo: true` task, act 1 of `005_closing` is judged by **a single judge**: 
 
 ## Expected behavior
 
-- Given any `yolo: true` task at act 1 of `005_closing`, **exactly one** Judge Dredd runs in a fresh context, tier per the WORKFLOW matrix (medium in `size: S`/`M`, strong in `L` or `critical: true`). `size`/`critical` change tier and depth (`differential|full`), never the number of judges.
+- Given any `yolo: true` task at act 1 of `005_closing`, **exactly one** `pop-judge-dredd` runs in a fresh context with its fixed native profile. `size`/`critical` change only depth (`differential|full`), never model, effort, role, or judge count.
 - Given a `yolo: false` task, there is no agentic reviewer: the gate is the human PR; with no PR (local scope) there is no verification gate.
 - Given a `critical: true` task, the strong Judge Dredd also judges the 003 gate (adversarial reading of the plan), in a session distinct from the 005 one.
 - The judge first answers whether the card's **original request** was met; every finding passes the **materiality test** (verifiable source, nameable damage, a requested demand, not automatable, not already tracked) before entering the artifact.
