@@ -11,7 +11,7 @@ The PoP is a **repository aggregator**: each project declares a `type` in its ow
 | `default` | folder in the vault (`categories/<category>/<project>/`) | versioned in the PoP | optional — declared **only in the project's AGENTS.md** |
 | `included` | the **external repo itself** (the vault folder is the gitignored clone) | committed **in the repo** | optional — if any, it goes into **Aggregated repositories** in the root [[INDEX|INDEX]] |
 | `multi-repo` | folder in the vault with **one clone per repo at the root** (gitignored) | versioned in the PoP, single kanban | **required** — all in the project's AGENTS.md **and** in the root INDEX |
-| `full-multi-repo` | like multi-repo, but each clone brings its **own `pop/`** `included`-style | parent: only general ROADMAP + cross-repo kanban | **required** — all in the project's AGENTS.md **and** in the root INDEX |
+| `full-multi-repo` | like multi-repo, but each clone brings its **own `pop/`** `included`-style | parent: only general ROADMAP, **no kanban** — tasks live in the repos | **required** — all in the project's AGENTS.md **and** in the root INDEX |
 
 **Reserved names:** no repo/content folder at a project's root may be called `pop` (collides with the harness) or `project` (collides with legacy-anatomy discovery during the transition).
 
@@ -40,10 +40,10 @@ Like `default`, but the folder root contains **multiple repositories**, one subd
 
 Like `multi-repo` in the main folder, but each repo cloned at the root carries its **own embedded harness** (a full `included` installation in `<repo>/pop/`, committed in the repo): individual kanban, specs, memory, notes, skills, researches and ROADMAP. The set becomes a **logical monorepo**: whoever works on a single repo (e.g. a frontend dev) uses that repo's `pop/`, standalone; whoever works on the whole uses the main folder in the PoP.
 
-- **Main folder (in the PoP):** AGENTS.md, and in the parent's `pop/`: sheet, general ROADMAP + `roadmap/` (macro epochs whose phases point, with a trigger, to the individual ROADMAPs or to cross tasks), `kanban/` **for cross-repo tasks only**, `worktrees/` of those tasks, transversal `researches/` and `notes/`. **No `specs/` and no `memory/`** — they always live in the repos.
-- **Each repo:** full `included` anatomy; the repo's AGENTS.md declares `type: included` (the standalone truth) + a **"Part of"** section linking the parent project, the general ROADMAP and the cross kanban.
+- **Main folder (in the PoP):** AGENTS.md, and in the parent's `pop/`: sheet, general ROADMAP + `roadmap/` (macro epochs whose phases point, with a trigger, to the individual ROADMAPs), transversal `researches/` and `notes/`. **No `kanban/`, no `specs/` and no `memory/`** — tasks, specs and memory always live in the repos; there is no central kanban.
+- **Each repo:** full `included` anatomy; the repo's AGENTS.md declares `type: included` (the standalone truth) + a **"Part of"** section linking the parent project and the general ROADMAP.
 - **Single-repo task** → the repo's own kanban, worktree in `pop/worktrees/<id>/` inside the repo (the repo is its own git).
-- **Cross-repo task** → central kanban; one worktree per affected repo in `pop/worktrees/<id>/<repo>/` in the parent (as in `multi-repo`); on completion (`005_closing`), write the task memory — ledger `pop/memory/<YYYY-MM-DD>/<id>.md` and its entries — in **each affected repo** and sync the specs **in the repos** — the central card links those memories.
+- **Cross-repo task** → sliced per repo: each slice lives in the affected repo's kanban, with the slug carrying the repo name (e.g. `1.2.1-front-login-page`), and the parent's general ROADMAP links the sibling tasks with a trigger. Each repo records its own memory and syncs its own specs when completing its slice.
 - **Contract specs between repos** (e.g. front↔back API) live in the repo that "owns" the contract; the others link to it.
 - **Task slugs carry the repo name** (e.g. `1.2.1-front-login-page`): ids are unique across the whole vault and the scripts locate tasks by id.
 - Clones gitignored in the project's `.gitignore`; `pop/worktrees/` gitignored in each repo's `.gitignore`.
@@ -52,7 +52,7 @@ Like `multi-repo` in the main folder, but each repo cloned at the root carries i
 
 | Step | default | included | multi-repo | full-multi-repo |
 |------|---------|----------|------------|-----------------|
-| `AGENTS.md` + `.agents/skills/` (root) + `pop/` (full harness) | in the PoP | inside the repo (or in the PoP, without a repo) | in the PoP | reduced `pop/` in the parent (no specs/memory) + full `included` inside each repo |
+| `AGENTS.md` + `.agents/skills/` (root) + `pop/` (full harness) | in the PoP | inside the repo (or in the PoP, without a repo) | in the PoP | reduced `pop/` in the parent (no kanban, specs or memory) + full `included` inside each repo |
 | `.agents/skills/` | real copies of the core skills | real copies of the core skills | real copies of the core skills | copies in the main folder **and** in each repo |
 | Clone(s) | optional, at the project root (if any) | `categories/<category>/<project>/` | `<repo>/` at the project root, for each | `<repo>/` at the project root, for each |
 | Project `.gitignore` | `pop/worktrees/` + clone | `pop/worktrees/` | `pop/worktrees/` + clones | `pop/worktrees/` + clones (each repo ignores its own `pop/worktrees/`) |

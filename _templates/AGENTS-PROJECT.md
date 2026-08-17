@@ -17,7 +17,7 @@ Single source: what lives in the harness is never copied here, because duplicati
 
 - narration of the kanban stages (names, order, what each one does) — only [[WORKFLOW|WORKFLOW]];
 - the context protocol and any reading/search heuristic — [[WORKFLOW|WORKFLOW]] and the skills;
-- general flow rules (kanban mandatory, memory/lean roadmap, sovereignty of the human command) — the "Transversal rules" section of [[WORKFLOW|WORKFLOW]], which the installer delivers alongside the harness;
+- general flow rules (optional kanban with tracking always, memory/lean roadmap, sovereignty of the human command) — the "Transversal rules" section of [[WORKFLOW|WORKFLOW]], which the installer delivers alongside the harness;
 - any copyable excerpt of [[WORKFLOW|WORKFLOW]] — link it with a trigger instead of reproducing it.
 
 Only what belongs to **this project** goes here: language, repos and PR branch, skills and verification commands, DOX. **Cap: ~60 lines** — the only exception is the DOX section of applications.
@@ -32,7 +32,7 @@ _No external repository: the work lives in the repository that hosts this harnes
 
 ## Workflow
 
-Every change to the project goes through the kanban in `pop/kanban/`, with tasks coming from the roadmap (`<n>.<m>.<t>-<slug>`) or from modifications (`M-<n>.<t>-<slug>`).
+Content changes enter through triage: direct fix, the **no-kanban route** (the coding agent's plan mode, mandatory `D-` memory) or the kanban in `pop/kanban/` — recommended for large changes and the default for yolo and for roadmap (`<n>.<m>.<t>-<slug>`) or modifications (`M-<n>.<t>-<slug>`) items.
 
 - A change request with no card triggers `new-task` → `advance-task`; “start the flow in yolo” materializes/releases the task and follows the entire yolo route, never direct execution.
 - **Delivery:** the task PR targets the **PR branch declared** in the repositories table above; the merge is always the human's.
@@ -70,4 +70,4 @@ Every change to the project goes through the kanban in `pop/kanban/`, with tasks
 - Content in the language declared above; wikilinks for internal references; files ≤~150 lines; dates YYYY-MM-DD.
 - **Never** check `- [ ] Done` or execute `(user)` items — those belong exclusively to the human.
 - **Never** merge a task PR — merging is the human's job (or commanded by them in the merge round).
-- **General flow rules** — kanban mandatory to touch the project, memory + lean roadmap at close-out, sovereignty of the human command with no implicit waiver: the "Transversal rules" section of the [[WORKFLOW|WORKFLOW]] installed alongside this harness. *Never an AGENTS.md inherited from an ancestor directory.* *Read it before acting outside a task or before reading a request as a waiver of the flow.*
+- **General flow rules** — optional kanban with tracking always, memory + lean roadmap at close-out, sovereignty of the human command with no implicit waiver: the "Transversal rules" section of the [[WORKFLOW|WORKFLOW]] installed alongside this harness. *Never an AGENTS.md inherited from an ancestor directory.* *Read it before acting outside a task or before reading a request as a waiver of the flow.*

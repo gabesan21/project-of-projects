@@ -41,6 +41,7 @@ Roadmaps show structure and open work; `memory/` preserves chronological proof i
 - Epochs, phases and modifications are never removed as a task-completion side effect.
 - Conflicts, missing branches/tools, dirty worktrees, or PR failure block without autonomous resolution/merge; partial close-out failure preserves card and roadmap, records the blocking step, and retries from the first incomplete effect.
 - External clones change only in their own authorized task.
+- The no-kanban route (plan mode) without identifiable memory (`D-`) does not authorize writing; contracts are edited only when the assessment records real impact.
 
 ## Conformance
 

@@ -10,7 +10,7 @@
 - **Three classes of file, three routes — and only one of them is the kanban.** The class decides how it gets fixed; none of them is decided by a card's label:
   1. **Managed harness** (`WORKFLOW.md`, `_templates/`, `scripts/`, `.agents/skills/`): **not edited here.** It is fixed at the origin that installed it and the scope **reinstalls** — editing the local copy produces drift that the next install erases. A finding in this class is a report.
   2. **The scope's own harness** (`AGENTS.md`, `PROJECT.md`, `roadmap/`, `modifications/`, `specs/`, `notes/`, `skills/`, `researches/`, `memory/`): **adjust it directly, with no card, no branch/worktree/PR per task.** It is the material the kanban consults; submitting it to the kanban is asking the process to approve itself. Periodic maintenance is [[.agents/skills/weekly-review/SKILL|weekly-review]] (and [[.agents/skills/optimize-memory/SKILL|optimize-memory]] for `memory/`), both outside the task flow.
-  3. **Content** (code, manuscript, the real work): through a task that legitimately reached `004_processing`, **or** through a **direct fix** approved by the rule-13 triage (see "Direct fix" below). It is this class — and no other — that rule 13 protects.
+  3. **Content** (code, manuscript, the real work): through a task that legitimately reached `004_processing`, **or** through a **direct fix** approved by the rule-13 triage (see "Direct fix" below), **or** through the **no-kanban route** — the coding agent's plan mode — when the user chooses it in the triage (see "No-kanban route" below). It is this class — and no other — that rule 13 protects.
 - **The delivery route comes from the anatomy, never from a label.** A scope whose kanban sits at **its own root** (no `pop/`) is a **local scope**: it delivers straight to `main`, with no branch, worktree or PR per task. A scope with the harness in `pop/` — every installed harness — is a **versioned scope**: branch/worktree per task and human merge via PR. `scripts/pop_delivery.py` is the source of the route; no card field overrides it.
 
 Every task is a folder that moves through `001→005_closing`. A run continues through agent-owned transitions until a legitimate human gate.
@@ -53,7 +53,7 @@ Templates: [[_templates/TASK|TASK]] · [[_templates/TASK-PLAN|TASK-PLAN]] · [[_
 
 ## 001 — birth and release
 
-A change request with no active card enters through `new-task` and then `advance-task`; the absence of a card never authorizes editing. “Start the flow in yolo” materializes and releases the task, records `yolo: true`, and follows this same state machine.
+A change request whose triage (rule 13 of [[AGENTS|AGENTS]]) decided on the kanban enters through `new-task` and then `advance-task`; yolo and roadmap/modifications items enter the kanban by default, with a notice. The absence of a card never authorizes editing outside the direct-fix and no-kanban routes. “Start the flow in yolo” materializes and releases the task, records `yolo: true`, and follows this same state machine.
 
 Create the card from the template, out of the roadmap or a modification, resolve epoch/phase/modification yolo inheritance, record `depends_on`, suggest S/M/L, and link relevant specs. The human owns `- [ ] Ready to plan`; an explicit command or a roadmap/modifications yolo mark may authorize the agent to check it with a log entry. WIP in 004 is at most three.
 
@@ -131,7 +131,7 @@ Tests do not run per task: **they run once per phase**, concentrated in its last
 
 ## Yolo scheduling, telemetry, and circuit breaker
 
-- A yolo mark may come from the roadmap/modifications or from the human saying “start the flow in yolo”. With no card, `new-task` materializes and releases it while recording the conversational source; yolo is never a waiver.
+- A yolo mark may come from the roadmap/modifications or from the human saying “start the flow in yolo”. With no card, `new-task` materializes and releases it while recording the conversational source; yolo is never a waiver. **Asking for yolo implies the kanban:** the agent warns ("this goes through the kanban") and materializes the task; the no-kanban route has no yolo mode.
 - `yolo: true` keeps the same state machine with a **single quality gate in `005_closing`**, judged by `pop-judge-dredd` in a clean session with its fixed native profile. It first checks the original request, then plan, specs, diff and quality—by reading, without rerun. Outside yolo the gate is the human PR. `critical: true` keeps 003 with the same role/profile and makes 005 `full`.
 - **Two returns per route, always with a delta:** an execution blocker returns to 004 (`yolo_005_returns`, type `execucao`); a plan defect returns to 002 (`yolo_003_returns`, type `lacuna` or `premissa`). The 3rd failure of the same route opens the circuit breaker. Only the delta's fronts re-enter. **One judge per round and approval is terminal:** an `aprovada` verdict ends the gate — no second judgment; a `pontual=true` delta follows directed repair, with no `pop_move` and no counter. The locks are mechanical: `pop_move` validates the `.verify.md`'s `pop-verdict`/`pop-delta` markers and refuses a reentry with no work on the delta's `paths`; the gate's wall-clock budget (below) cuts the cycle that does not converge.
 - `pop_yolo.py wave` selects up to three eligible tasks with satisfied dependencies and isolated projects by default; overlap serializes.
@@ -147,8 +147,8 @@ Tests do not run per task: **they run once per phase**, concentrated in its last
 - Dependencies must be completed before consumers; never implement missing work opportunistically.
 - Every internal wikilink carries a trigger. Dates use `YYYY-MM-DD`; notes stay near 150 lines, the plan root ≤80 and each front file ≤50.
 - **A return is incremental:** every return leaving `005_closing` names a delta and is classified in `return_kind`; the re-entry works only on the delta and the re-review is differential over it. A return that discards approved work is an orchestrator bug. Normal returns: 003→002, 004→002, `005_closing`→004 (execution blocker) and `005_closing`→002 (plan defect).
-- **An explicit human command overrides only its stated scope:** obey without reinterpreting what it actually superseded, and record the deviation. “Apply”, “execute”, “urgent”, “finish it” and “in yolo” do not waive the card, kanban, or continuity; “start the flow in yolo” requires the entire yolo route. Only a literal and unequivocal waiver activates the protocol below; ambiguity or destructiveness allows one question.
-- **No work outside a route:** project content changes in 004 (after 003 or through the legitimate 002→004 transition for non-critical yolo, in the correct worktree) **or** through the direct-fix route approved by the rule-13 triage. A request that fails the triage and has no card runs `new-task` → `advance-task`; do not improvise.
+- **An explicit human command overrides only its stated scope:** obey without reinterpreting what it actually superseded, and record the deviation. “Apply”, “execute”, “urgent” and “finish it” do not decide the triage for you. **The kanban is optional** (rule 13 of [[AGENTS|AGENTS]]): “in yolo” or a roadmap/modifications item implies the kanban by default — warn and proceed — and the no-kanban route never waives memory, specs or the project's skills.
+- **No work outside a route:** project content changes in 004 (after 003 or through the legitimate 002→004 transition for non-critical yolo, in the correct worktree), through the direct-fix route approved by the rule-13 triage **or through the no-kanban route (plan mode) chosen by the user in the triage**. A request the triage sends to the kanban runs `new-task` → `advance-task`; do not improvise.
 
 ### Direct fix — the route without a card
 
@@ -159,11 +159,13 @@ The rule-13 triage in [[AGENTS|AGENTS]] decides at the entrance. Direct fix when
 3. Durable proof: ledger `memory/<YYYY-MM-DD>/F-YYYYMMDD-<slug>.md` ([[_templates/MEMORY|MEMORY]], `authorization: direct-fix triage`) + one entry per thing done, and sync of the affected specs/DOX. **No line in the roadmap or MODIFICATIONS** — the record is memory + specs.
 4. Grew midway (second objective, durable contract touched)? **Stop**: materialize the task and report what was already done in the card.
 
-### Protocol for a deviation without kanban
+### No-kanban route — the coding agent's plan mode
 
-Only a literal human order such as “do not use the kanban” or “do this outside PoP” waives the stages. The waiver is specific: no other rule or protection is waived by inference.
+The kanban is **optional**: the agent recommends it when the change is large, and it is the implied default (with a notice to the user) when the request is yolo or covers a roadmap/modifications item. When the user opts out of the kanban, the route is **the coding agent's own plan mode** — planning and approval happen there, with no card, stages or `pop_move`. The route waives ceremony, **never continuity**:
 
-1. Before writing, record the authorizing command and scope in the ledger `memory/<YYYY-MM-DD>/D-YYYYMMDD-<slug>.md`, using [[_templates/MEMORY|MEMORY]]; the `D-` ID identifies a deviation without a card and fills `authorization`.
-2. Preserve repository, safety, ownership, and merge rules that were not explicitly superseded.
-3. Before finishing, complete the ledger with commit/PR, result and verification, and open one entry per thing done and per deviation; record the specs and DOX impact assessment and update only the contracts actually affected.
-4. Without unequivocal authorization or a route to that durable evidence, do not edit: materialize a normal task.
+1. Before writing, record the request and the choice in the ledger `memory/<YYYY-MM-DD>/D-YYYYMMDD-<slug>.md`, using [[_templates/MEMORY|MEMORY]]; the `D-` ID identifies work without a card and fills `authorization`.
+2. Plan in the coding agent's plan mode and only execute with the plan approved; delivery follows the scope's route (local: straight to `main`; versioned: short branch + PR, like any delivery).
+3. **The project's agents and skills keep applying:** delegation-first, the six specialists, `clean-code-*`, `ui-*` and the other applicable skills — the route changes the tracking, not the standard of work.
+4. Before finishing, complete the ledger with commit/PR, result and verification, open one entry per thing done and record the specs and DOX impact assessment, updating only the contracts actually affected.
+5. Without a route to that durable evidence, do not edit. If the work grows beyond the approved plan (second objective, new durable contract), **stop** and return to triage.
+6. The no-kanban route **has no yolo mode**: without a card there is no `pop-judge-dredd`, circuit breaker or gates — the human approves the plan and the result.
