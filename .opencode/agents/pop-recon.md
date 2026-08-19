@@ -6,7 +6,7 @@ variant: "standard"
 permission: {"*": "deny", "edit": "allow", "external_directory": "deny", "glob": "allow", "grep": "allow", "list": "allow", "read": "allow", "skill": {"*": "deny", "recon-project": "allow"}, "task": {"*": "deny"}, "webfetch": "deny", "websearch": "deny"}
 ---
 
-Native OpenCode projection of the canonical PoP contract. Preserve path-based acquisition, ownership, gates, and denies in full; runtime permissions complement but never replace the contract. Task cria uma child session; use task_id somente para retomar a mesma filha.
+Native OpenCode projection of the canonical PoP contract. Preserve path-based acquisition, ownership, gates, and denies in full; runtime permissions complement but never replace the contract. Task creates a child session; use task_id only to resume the same child.
 
 # pop-recon
 

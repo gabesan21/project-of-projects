@@ -47,58 +47,58 @@ def load_json(path: Path) -> dict[str, Any]:
     try:
         value = json.loads(path.read_text(encoding="utf-8"))
     except (OSError, UnicodeError, json.JSONDecodeError) as error:
-        raise BuildError(f"JSON inválido ou ilegível em {path}: {error}") from error
+        raise BuildError(f"invalid or unreadable JSON at {path}: {error}") from error
     if not isinstance(value, dict):
-        raise BuildError(f"{path} deve conter um objeto JSON")
+        raise BuildError(f"{path} must contain a JSON object")
     return value
 
 
 def require_string_list(value: Any, location: str) -> list[str]:
     if not isinstance(value, list) or any(not isinstance(item, str) or not item for item in value):
-        raise BuildError(f"{location} deve ser uma lista de strings não vazias")
+        raise BuildError(f"{location} must be a list of non-empty strings")
     if len(value) != len(set(value)):
-        raise BuildError(f"{location} contém duplicatas")
+        raise BuildError(f"{location} contains duplicates")
     return value
 
 
 def validate_profiles(document: dict[str, Any]) -> dict[str, dict[str, Any]]:
     if set(document) != {"version", "roles"} or document.get("version") != 1:
-        raise BuildError("perfil exige somente version=1 e roles")
+        raise BuildError("profile requires only version=1 and roles")
     roles = document.get("roles")
     if not isinstance(roles, dict) or set(roles) != set(ROLES):
-        raise BuildError("roles deve conter exatamente os seis especialistas canônicos")
+        raise BuildError("roles must contain exactly the six canonical specialists")
     validated: dict[str, dict[str, Any]] = {}
     for role in ROLES:
         profile = roles[role]
         if not isinstance(profile, dict) or set(profile) != PROFILE_FIELDS:
             fields = set(profile) if isinstance(profile, dict) else set()
             raise BuildError(
-                f"perfil {role} inválido; ausentes={sorted(PROFILE_FIELDS-fields)}, "
-                f"desconhecidos={sorted(fields-PROFILE_FIELDS)}"
+                f"invalid {role} profile; missing={sorted(PROFILE_FIELDS-fields)}, "
+                f"unknown={sorted(fields-PROFILE_FIELDS)}"
             )
         model = profile["model"]
         normalized_model = model.strip() if isinstance(model, str) else ""
         if not normalized_model or normalized_model == "inherit":
-            raise BuildError(f"{role}.model deve ser explícito e diferente de inherit")
+            raise BuildError(f"{role}.model must be explicit and different from inherit")
         if profile["effort"] not in EFFORTS:
-            raise BuildError(f"{role}.effort fora do enum oficial: {profile['effort']!r}")
+            raise BuildError(f"{role}.effort outside the official enum: {profile['effort']!r}")
         if profile["permissionMode"] not in PERMISSION_MODES:
-            raise BuildError(f"{role}.permissionMode inválido: {profile['permissionMode']!r}")
+            raise BuildError(f"invalid {role}.permissionMode: {profile['permissionMode']!r}")
         tools = require_string_list(profile["tools"], f"{role}.tools")
         denied = require_string_list(profile["disallowedTools"], f"{role}.disallowedTools")
         skills = require_string_list(profile["skills"], f"{role}.skills")
         if not isinstance(profile["nesting"], bool) or not isinstance(profile["web"], bool):
-            raise BuildError(f"{role}.nesting e web devem ser booleanos")
+            raise BuildError(f"{role}.nesting and web must be booleans")
         if profile["web"] or not {"WebFetch", "WebSearch"}.issubset(denied):
-            raise BuildError(f"{role} deve negar web, WebFetch e WebSearch explicitamente")
+            raise BuildError(f"{role} must explicitly deny web, WebFetch and WebSearch")
         if profile["nesting"] and role not in DELEGATING_ROLES:
-            raise BuildError(f"{role} não pode habilitar nesting pelo contrato canônico")
+            raise BuildError(f"{role} cannot enable nesting per the canonical contract")
         # Claude Code gives deny precedence over allow.
         effective_tools = [tool for tool in tools if tool not in denied]
         effective_denied = list(denied)
         if profile["nesting"]:
             if "Agent" not in effective_tools or "Agent" in effective_denied:
-                raise BuildError(f"{role} habilita nesting sem Agent efetivamente permitido")
+                raise BuildError(f"{role} enables nesting without Agent effectively allowed")
             effective_tools[effective_tools.index("Agent")] = f"Agent({','.join(CHILD_AGENTS[role])})"
         else:
             effective_tools = [tool for tool in effective_tools if tool != "Agent"]
@@ -113,28 +113,28 @@ def validate_profiles(document: dict[str, Any]) -> dict[str, dict[str, Any]]:
 
 def load_sources(source_dir: Path) -> dict[str, str]:
     if not source_dir.is_dir() or source_dir.is_symlink():
-        raise BuildError(f"diretório canônico ausente ou inseguro: {source_dir}")
+        raise BuildError(f"missing or unsafe canonical directory: {source_dir}")
     expected = {f"{role}.md" for role in ROLES}
     actual = {entry.name for entry in source_dir.iterdir() if entry.is_file()}
     if expected != actual:
         raise BuildError(
-            f"fontes .md devem ser exatamente os seis especialistas; "
-            f"ausentes={sorted(expected-actual)}, extras={sorted(actual-expected)}"
+            f".md sources must be exactly the six specialists; "
+            f"missing={sorted(expected-actual)}, extra={sorted(actual-expected)}"
         )
     sources: dict[str, str] = {}
     for role in ROLES:
         path = source_dir / f"{role}.md"
         if path.is_symlink():
-            raise BuildError(f"origem canônica não pode ser symlink: {path}")
+            raise BuildError(f"canonical source cannot be a symlink: {path}")
         try:
             body = path.read_text(encoding="utf-8")
         except (OSError, UnicodeError) as error:
-            raise BuildError(f"origem canônica ilegível: {path}: {error}") from error
+            raise BuildError(f"unreadable canonical source: {path}: {error}") from error
         if not body.startswith(f"# {role}\n"):
-            raise BuildError(f"título canônico incompatível em {path}")
+            raise BuildError(f"incompatible canonical heading in {path}")
         missing = [section for section in REQUIRED_SECTIONS if f"## {section}\n" not in body]
         if missing:
-            raise BuildError(f"{path} não cobre seções canônicas: {missing}")
+            raise BuildError(f"{path} does not cover canonical sections: {missing}")
         sources[role] = body
     return sources
 
@@ -164,20 +164,20 @@ def render_agent(role: str, profile: dict[str, Any], body: str) -> str:
 def effective_max_spawn_depth(runtime: dict[str, Any]) -> int:
     configured = runtime.get("maxSpawnDepth")
     if configured is not None and (not isinstance(configured, int) or isinstance(configured, bool) or configured < 1):
-        raise BuildError("runtime.maxSpawnDepth deve ser inteiro positivo")
+        raise BuildError("runtime.maxSpawnDepth must be a positive integer")
     env_value = os.environ.get("CLAUDE_CODE_MAX_SUBAGENT_SPAWN_DEPTH")
     if env_value is not None:
         try:
             effective = int(env_value)
         except ValueError as error:
-            raise BuildError("CLAUDE_CODE_MAX_SUBAGENT_SPAWN_DEPTH deve ser inteiro positivo") from error
+            raise BuildError("CLAUDE_CODE_MAX_SUBAGENT_SPAWN_DEPTH must be a positive integer") from error
         if effective < 1:
-            raise BuildError("CLAUDE_CODE_MAX_SUBAGENT_SPAWN_DEPTH deve ser inteiro positivo")
+            raise BuildError("CLAUDE_CODE_MAX_SUBAGENT_SPAWN_DEPTH must be a positive integer")
         if configured is not None and configured != effective:
-            raise BuildError("runtime.maxSpawnDepth diverge de CLAUDE_CODE_MAX_SUBAGENT_SPAWN_DEPTH")
+            raise BuildError("runtime.maxSpawnDepth differs from CLAUDE_CODE_MAX_SUBAGENT_SPAWN_DEPTH")
         return effective
     if configured is None:
-        raise BuildError("preflight de nesting exige runtime.maxSpawnDepth ou env equivalente")
+        raise BuildError("nesting preflight requires runtime.maxSpawnDepth or the equivalent env")
     return configured
 
 
@@ -185,70 +185,70 @@ def validate_nesting(runtime: dict[str, Any], profiles: dict[str, dict[str, Any]
     enabled = {role for role, profile in profiles.items() if profile["nesting"]}
     if not enabled:
         if runtime.get("nesting") not in (None, {}):
-            raise BuildError("runtime.nesting deve ser vazio quando todos os especialistas negam nesting")
+            raise BuildError("runtime.nesting must be empty when every specialist denies nesting")
         return
     max_depth = effective_max_spawn_depth(runtime)
     nesting = runtime.get("nesting")
     if not isinstance(nesting, dict) or set(nesting) != enabled:
-        raise BuildError(f"runtime.nesting deve cobrir exatamente {sorted(enabled)}")
+        raise BuildError(f"runtime.nesting must cover exactly {sorted(enabled)}")
     for role in sorted(enabled):
         preflight = nesting[role]
         if not isinstance(preflight, dict) or set(preflight) != NESTING_FIELDS:
             fields = set(preflight) if isinstance(preflight, dict) else set()
             raise BuildError(
-                f"runtime.nesting.{role} inválido; ausentes={sorted(NESTING_FIELDS-fields)}, "
-                f"desconhecidos={sorted(fields-NESTING_FIELDS)}"
+                f"invalid runtime.nesting.{role}; missing={sorted(NESTING_FIELDS-fields)}, "
+                f"unknown={sorted(fields-NESTING_FIELDS)}"
             )
         execution_mode = preflight["executionMode"]
         if execution_mode not in {"main", "subagent"}:
-            raise BuildError(f"runtime.nesting.{role}.executionMode deve ser main ou subagent")
+            raise BuildError(f"runtime.nesting.{role}.executionMode must be main or subagent")
         current_depth = preflight["currentDepth"]
         if not isinstance(current_depth, int) or isinstance(current_depth, bool) or current_depth < 0:
-            raise BuildError(f"runtime.nesting.{role}.currentDepth deve ser inteiro não negativo")
+            raise BuildError(f"runtime.nesting.{role}.currentDepth must be a non-negative integer")
         if current_depth >= max_depth:
-            raise BuildError(f"depth efetivo impede {role} de delegar: {current_depth} >= {max_depth}")
+            raise BuildError(f"effective depth prevents {role} from delegating: {current_depth} >= {max_depth}")
         allowed = require_string_list(preflight["allowedChildren"], f"runtime.nesting.{role}.allowedChildren")
         expected = list(CHILD_AGENTS[role])
         if allowed != expected:
-            raise BuildError(f"allowlist de filhos incompatível em {role}; esperado={expected}")
+            raise BuildError(f"incompatible children allowlist in {role}; expected={expected}")
         if execution_mode == "subagent":
             raise BuildError(
-                f"allowlist de filhos de {role} não é representável em subagent aninhado; "
-                "Claude Code ignora os nomes em Agent(...)"
+                f"children allowlist of {role} is not representable in a nested subagent; "
+                "Claude Code ignores the names in Agent(...)"
             )
 
 
 def validate_runtime(runtime: dict[str, Any], profiles: dict[str, dict[str, Any]]) -> None:
     if set(runtime) - RUNTIME_FIELDS:
-        raise BuildError(f"campos de runtime desconhecidos: {sorted(set(runtime)-RUNTIME_FIELDS)}")
+        raise BuildError(f"unknown runtime fields: {sorted(set(runtime)-RUNTIME_FIELDS)}")
     env_model = os.environ.get("CLAUDE_CODE_SUBAGENT_MODEL")
     if env_model:
         mismatches = [role for role, profile in profiles.items() if profile["model"] != env_model]
         if mismatches:
-            raise BuildError(f"CLAUDE_CODE_SUBAGENT_MODEL={env_model!r} substitui modelos de {mismatches}")
+            raise BuildError(f"CLAUDE_CODE_SUBAGENT_MODEL={env_model!r} overrides models of {mismatches}")
     invocation = runtime.get("invocationModels", {})
     if not isinstance(invocation, dict) or any(role not in ROLES for role in invocation):
-        raise BuildError("runtime.invocationModels deve ser mapa parcial dos papéis canônicos")
+        raise BuildError("runtime.invocationModels must be a partial map of the canonical roles")
     for role, effective in invocation.items():
         if not isinstance(effective, str) or effective != profiles[role]["model"]:
-            raise BuildError(f"override de invocação incompatível em {role}: {effective!r}")
+            raise BuildError(f"incompatible invocation override in {role}: {effective!r}")
     available = runtime.get("availableModels")
     if available is not None:
         allowed = require_string_list(available, "runtime.availableModels")
         blocked = [role for role, profile in profiles.items() if profile["model"] not in allowed]
         if blocked:
-            raise BuildError(f"availableModels não garante o modelo declarado de {blocked}")
+            raise BuildError(f"availableModels does not guarantee the declared model of {blocked}")
     parent_mode = runtime.get("parentPermissionMode")
     if parent_mode is not None:
         if parent_mode not in PERMISSION_MODES:
-            raise BuildError(f"parentPermissionMode inválido: {parent_mode!r}")
+            raise BuildError(f"invalid parentPermissionMode: {parent_mode!r}")
         if parent_mode in OVERRIDING_PARENT_MODES:
             incompatible = [role for role, profile in profiles.items() if profile["permissionMode"] != parent_mode]
             if incompatible:
-                raise BuildError(f"modo do pai {parent_mode!r} prevalece e diverge em {incompatible}")
+                raise BuildError(f"parent mode {parent_mode!r} prevails and differs in {incompatible}")
     thinking = runtime.get("thinkingEnabled")
     if thinking is not None and not isinstance(thinking, bool):
-        raise BuildError("runtime.thinkingEnabled deve ser booleano")
+        raise BuildError("runtime.thinkingEnabled must be a boolean")
     validate_nesting(runtime, profiles)
 
 
@@ -273,36 +273,36 @@ def render_all(source_dir: Path, profiles_path: Path, runtime_path: Path | None)
 
 def ensure_safe_tree(destination: Path) -> None:
     if destination.is_symlink():
-        raise BuildError(f"destino não pode ser symlink: {destination}")
+        raise BuildError(f"destination cannot be a symlink: {destination}")
     if destination.exists() and not destination.is_dir():
-        raise BuildError(f"destino existe e não é diretório: {destination}")
+        raise BuildError(f"destination exists and is not a directory: {destination}")
     if destination.exists():
         for path in destination.rglob("*"):
             if path.is_symlink():
-                raise BuildError(f"destino contém symlink inseguro: {path}")
+                raise BuildError(f"destination contains an unsafe symlink: {path}")
 
 
 def validate_hash_map(value: Any, location: str, expected_names: set[str]) -> dict[str, str]:
     if not isinstance(value, dict) or set(value) != expected_names:
-        raise BuildError(f"{location} deve conter exatamente {sorted(expected_names)}")
+        raise BuildError(f"{location} must contain exactly {sorted(expected_names)}")
     for name, digest in value.items():
         if Path(name).name != name or name in {".", ".."} or "/" in name or "\\" in name:
-            raise BuildError(f"basename inseguro em {location}: {name!r}")
+            raise BuildError(f"unsafe basename in {location}: {name!r}")
         if not isinstance(digest, str) or not SHA256_PATTERN.fullmatch(digest):
-            raise BuildError(f"hash SHA-256 inválido em {location}.{name}")
+            raise BuildError(f"invalid SHA-256 hash in {location}.{name}")
     return value
 
 
 def validate_manifest(document: dict[str, Any], location: Path) -> set[str]:
     if set(document) != MANIFEST_FIELDS:
-        raise BuildError(f"schema de manifesto incompatível em {location}")
+        raise BuildError(f"incompatible manifest schema in {location}")
     if document["version"] != 1 or document["generator"] != "create-agent-claude-code":
-        raise BuildError(f"identidade de manifesto incompatível em {location}")
+        raise BuildError(f"incompatible manifest identity in {location}")
     expected = {f"{role}.md" for role in ROLES}
     files = validate_hash_map(document["files"], f"{location}.files", expected)
     validate_hash_map(document["sources"], f"{location}.sources", expected)
     if not isinstance(document["profile"], str) or not SHA256_PATTERN.fullmatch(document["profile"]):
-        raise BuildError(f"hash de perfil inválido em {location}")
+        raise BuildError(f"invalid profile hash in {location}")
     return set(files)
 
 
@@ -320,7 +320,7 @@ def write_staging(staging: Path, destination: Path, rendered: dict[str, str], ma
     for name in rendered:
         target = destination / name
         if target.exists() and name not in managed:
-            raise BuildError(f"colisão com arquivo não gerido: {target}")
+            raise BuildError(f"collision with unmanaged file: {target}")
     for stale in managed - set(rendered):
         stale_path = staging / stale
         if stale_path.exists():
@@ -337,7 +337,7 @@ def write_staging(staging: Path, destination: Path, rendered: dict[str, str], ma
 def swap_tree(staging: Path, destination: Path) -> None:
     backup = destination.parent / f".{destination.name}.backup-{os.getpid()}"
     if backup.exists():
-        raise BuildError(f"backup transacional já existe: {backup}")
+        raise BuildError(f"transactional backup already exists: {backup}")
     moved_old = False
     try:
         if destination.exists():
@@ -347,7 +347,7 @@ def swap_tree(staging: Path, destination: Path) -> None:
     except OSError as error:
         if moved_old and backup.exists() and not destination.exists():
             os.replace(backup, destination)
-        raise BuildError(f"falha na troca transacional: {error}") from error
+        raise BuildError(f"transactional swap failure: {error}") from error
     if backup.exists():
         shutil.rmtree(backup)
 
@@ -360,7 +360,7 @@ def generate(destination: Path, rendered: dict[str, str], manifest: dict[str, An
         write_staging(staging, destination, rendered, manifest)
         for name, expected in rendered.items():
             if (staging / name).read_text(encoding="utf-8") != expected:
-                raise BuildError(f"staging divergente em {name}")
+                raise BuildError(f"staging mismatch in {name}")
         swap_tree(staging, destination)
     finally:
         if staging.exists():
@@ -370,16 +370,16 @@ def generate(destination: Path, rendered: dict[str, str], manifest: dict[str, An
 def validate_destination(destination: Path, rendered: dict[str, str], manifest: dict[str, Any]) -> None:
     ensure_safe_tree(destination)
     if not destination.is_dir():
-        raise BuildError(f"destino ausente: {destination}")
+        raise BuildError(f"missing destination: {destination}")
     for name, expected in rendered.items():
         path = destination / name
         if not path.is_file() or path.read_text(encoding="utf-8") != expected:
-            raise BuildError(f"artefato ausente ou divergente: {path}")
+            raise BuildError(f"missing or divergent artifact: {path}")
     manifest_path = destination / MANIFEST
     actual_manifest = load_json(manifest_path)
     validate_manifest(actual_manifest, manifest_path)
     if actual_manifest != manifest:
-        raise BuildError(f"manifesto divergente: {destination / MANIFEST}")
+        raise BuildError(f"divergent manifest: {destination / MANIFEST}")
 
 
 def parse_args() -> argparse.Namespace:
@@ -403,8 +403,8 @@ def main() -> int:
     except (BuildError, OSError, UnicodeError) as error:
         print(f"BLOCKED: {error}", file=sys.stderr)
         return 2
-    verb = "gerados" if args.action == "generate" else "validados"
-    print(f"concluída: {len(rendered)} agents {verb} em {args.destination}")
+    verb = "generated" if args.action == "generate" else "validated"
+    print(f"done: {len(rendered)} agents {verb} in {args.destination}")
     return 0
 
 

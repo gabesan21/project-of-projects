@@ -61,89 +61,89 @@ def load_json(path: Path) -> dict[str, Any]:
     try:
         value = json.loads(path.read_text(encoding="utf-8"))
     except (OSError, UnicodeError, json.JSONDecodeError) as error:
-        raise BuildError(f"JSON inválido ou ilegível em {path}: {error}") from error
+        raise BuildError(f"invalid or unreadable JSON at {path}: {error}") from error
     if not isinstance(value, dict):
-        raise BuildError(f"{path} deve conter objeto JSON")
+        raise BuildError(f"{path} must contain a JSON object")
     if contains_key(value, "tools"):
-        raise BuildError("campo deprecated tools é proibido em todo o perfil")
+        raise BuildError("deprecated tools field is forbidden throughout the profile")
     return value
 
 
 def string_list(value: Any, location: str) -> list[str]:
     if not isinstance(value, list) or not value or any(not isinstance(item, str) or not item for item in value):
-        raise BuildError(f"{location} deve ser lista não vazia de strings não vazias")
+        raise BuildError(f"{location} must be a non-empty list of non-empty strings")
     if len(value) != len(set(value)):
-        raise BuildError(f"{location} contém duplicatas")
+        raise BuildError(f"{location} contains duplicates")
     return value
 
 
 def validate_profiles(document: dict[str, Any]) -> dict[str, Any]:
     if set(document) != TOP_LEVEL_FIELDS or document.get("version") != 1:
-        raise BuildError("perfil exige somente version=1, subagent_depth, capabilities e roles")
+        raise BuildError("profile requires only version=1, subagent_depth, capabilities and roles")
     if document["subagent_depth"] != 2 or isinstance(document["subagent_depth"], bool):
-        raise BuildError("subagent_depth deve ser explicitamente 2 para a topologia canônica")
+        raise BuildError("subagent_depth must be explicitly 2 for the canonical topology")
     capabilities = document["capabilities"]
     if not isinstance(capabilities, dict) or not capabilities:
-        raise BuildError("capabilities deve ser mapa não vazio de provider/model")
+        raise BuildError("capabilities must be a non-empty provider/model map")
     variants_by_model: dict[str, tuple[str, ...]] = {}
     for model, capability in capabilities.items():
         if not isinstance(model, str) or "/" not in model or model.strip() != model or model == "inherit":
-            raise BuildError(f"capability exige provider/model concreto: {model!r}")
+            raise BuildError(f"capability requires a concrete provider/model: {model!r}")
         if not isinstance(capability, dict) or set(capability) != {"variants"}:
-            raise BuildError(f"capability de {model} aceita somente variants")
+            raise BuildError(f"capability of {model} accepts only variants")
         variants_by_model[model] = tuple(string_list(capability["variants"], f"{model}.variants"))
     roles = document["roles"]
     if not isinstance(roles, dict) or set(roles) != set(ROLES):
         actual = set(roles) if isinstance(roles, dict) else set()
-        raise BuildError(f"roles deve conter exatamente os seis especialistas; divergência={sorted(actual ^ set(ROLES))}")
+        raise BuildError(f"roles must contain exactly the six specialists; mismatch={sorted(actual ^ set(ROLES))}")
     normalized: dict[str, dict[str, Any]] = {}
     for role in ROLES:
         profile = roles[role]
         fields = set(profile) if isinstance(profile, dict) else set()
         if not isinstance(profile, dict) or fields != PROFILE_FIELDS:
-            raise BuildError(f"perfil {role} divergente; ausentes={sorted(PROFILE_FIELDS-fields)} extras={sorted(fields-PROFILE_FIELDS)}")
+            raise BuildError(f"divergent {role} profile; missing={sorted(PROFILE_FIELDS-fields)} extra={sorted(fields-PROFILE_FIELDS)}")
         if profile["mode"] != ROLE_MODES[role]:
-            raise BuildError(f"{role}.mode deve ser {ROLE_MODES[role]}")
+            raise BuildError(f"{role}.mode must be {ROLE_MODES[role]}")
         model, variant = profile["model"], profile["variant"]
         if not isinstance(model, str) or model not in variants_by_model:
-            raise BuildError(f"{role}.model não possui capability fechada")
+            raise BuildError(f"{role}.model has no closed capability")
         if not isinstance(variant, str) or variant not in variants_by_model[model]:
-            raise BuildError(f"{role}.variant não é suportada pela capability de {model}")
+            raise BuildError(f"{role}.variant is not supported by the capability of {model}")
         permissions = string_list(profile["permissions"], f"{role}.permissions")
         if set(permissions) - PERMISSION_NAMES:
-            raise BuildError(f"{role}.permissions desconhecidas: {sorted(set(permissions)-PERMISSION_NAMES)}")
+            raise BuildError(f"unknown {role}.permissions: {sorted(set(permissions)-PERMISSION_NAMES)}")
         if set(permissions) != ROLE_PERMISSIONS[role]:
-            raise BuildError(f"{role}.permissions deve ser exatamente {sorted(ROLE_PERMISSIONS[role])}")
+            raise BuildError(f"{role}.permissions must be exactly {sorted(ROLE_PERMISSIONS[role])}")
         skills = string_list(profile["skills"], f"{role}.skills")
         if any(not re.fullmatch(r"[a-z0-9]+(?:-[a-z0-9]+)*", skill) for skill in skills):
-            raise BuildError(f"{role}.skills contém nome inválido")
+            raise BuildError(f"{role}.skills contains an invalid name")
         if not REQUIRED_SKILLS.get(role, set()).issubset(skills):
-            raise BuildError(f"{role}.skills omite skill canônica obrigatória")
+            raise BuildError(f"{role}.skills omits a mandatory canonical skill")
         normalized[role] = {**profile, "permissions": permissions, "skills": skills}
     return {"version": 1, "subagent_depth": 2, "capabilities": variants_by_model, "roles": normalized}
 
 
 def load_sources(source_dir: Path) -> dict[str, str]:
     if not source_dir.is_dir() or source_dir.is_symlink():
-        raise BuildError(f"diretório de fontes ausente ou inseguro: {source_dir}")
+        raise BuildError(f"missing or unsafe sources directory: {source_dir}")
     expected = {f"{role}.md" for role in ROLES}
     actual = {path.name for path in source_dir.iterdir() if path.is_file()}
     if actual != expected:
-        raise BuildError(f"fontes devem ser exatamente os seis especialistas; divergência={sorted(actual ^ expected)}")
+        raise BuildError(f"sources must be exactly the six specialists; mismatch={sorted(actual ^ expected)}")
     sources: dict[str, str] = {}
     for role in ROLES:
         path = source_dir / f"{role}.md"
         if path.is_symlink():
-            raise BuildError(f"fonte não pode ser symlink: {path}")
+            raise BuildError(f"source cannot be a symlink: {path}")
         try:
             body = path.read_text(encoding="utf-8")
         except (OSError, UnicodeError) as error:
-            raise BuildError(f"fonte ilegível {path}: {error}") from error
+            raise BuildError(f"unreadable source {path}: {error}") from error
         if not body.startswith(f"# {role}\n"):
-            raise BuildError(f"heading incompatível em {path}")
+            raise BuildError(f"incompatible heading in {path}")
         missing = [section for section in REQUIRED_SECTIONS if f"## {section}\n" not in body]
         if missing:
-            raise BuildError(f"{path} não cobre seções canônicas: {missing}")
+            raise BuildError(f"{path} does not cover canonical sections: {missing}")
         sources[role] = body
     return sources
 
@@ -178,7 +178,7 @@ def render_agent(role: str, profile: dict[str, Any], body: str) -> str:
     prefix = (
         "Native OpenCode projection of the canonical PoP contract. Preserve path-based acquisition, "
         "ownership, gates, and denies in full; runtime permissions complement but never replace the contract. "
-        "Task cria uma child session; use task_id somente para retomar a mesma filha.\n\n"
+        "Task creates a child session; use task_id only to resume the same child.\n\n"
     )
     return "---\n" + "\n".join(fields) + "\n---\n\n" + prefix + body
 
@@ -207,24 +207,24 @@ def render_all(source_dir: Path, profiles_path: Path) -> tuple[dict[str, str], d
 
 def safe_destination(destination: Path) -> None:
     if destination.name == ".opencode" or ".opencode" in destination.parts:
-        raise BuildError("destination deve ser raiz candidata, nunca .opencode ou descendente")
+        raise BuildError("destination must be a candidate root, never .opencode or a descendant")
     if destination.resolve(strict=False) == Path.cwd().resolve():
-        raise BuildError("destination não pode ser o diretório de trabalho ativo")
+        raise BuildError("destination cannot be the active working directory")
     if (destination / ".git").exists() or (destination / "AGENTS.md").exists():
-        raise BuildError("destination parece raiz ativa; use diretório candidato isolado")
+        raise BuildError("destination looks like an active root; use an isolated candidate directory")
     if destination.is_symlink() or (destination.exists() and not destination.is_dir()):
-        raise BuildError(f"destination inseguro: {destination}")
+        raise BuildError(f"unsafe destination: {destination}")
     if destination.exists():
         for path in destination.rglob("*"):
             if path.is_symlink():
-                raise BuildError(f"bundle contém symlink inseguro: {path}")
+                raise BuildError(f"bundle contains an unsafe symlink: {path}")
 
 
 def validate_hashes(value: Any, names: set[str], location: str) -> None:
     if not isinstance(value, dict) or set(value) != names:
-        raise BuildError(f"{location} deve conter exatamente {sorted(names)}")
+        raise BuildError(f"{location} must contain exactly {sorted(names)}")
     if any(not isinstance(item, str) or not SHA256.fullmatch(item) for item in value.values()):
-        raise BuildError(f"{location} contém digest inválido")
+        raise BuildError(f"{location} contains an invalid digest")
 
 
 def load_manifest(destination: Path) -> dict[str, Any] | None:
@@ -233,11 +233,11 @@ def load_manifest(destination: Path) -> dict[str, Any] | None:
         return None
     document = load_json(path)
     if set(document) != MANIFEST_FIELDS or document.get("version") != 1 or document.get("generator") != "create-agent-opencode":
-        raise BuildError(f"manifesto incompatível em {path}")
+        raise BuildError(f"incompatible manifest at {path}")
     validate_hashes(document["files"], RENDERED_FILES, f"{path}.files")
     validate_hashes(document["sources"], {f"{role}.md" for role in ROLES}, f"{path}.sources")
     if not isinstance(document["profile"], str) or not SHA256.fullmatch(document["profile"]):
-        raise BuildError(f"profile digest inválido em {path}")
+        raise BuildError(f"invalid profile digest at {path}")
     return document
 
 
@@ -245,11 +245,11 @@ def validate_bundle(destination: Path, rendered: dict[str, str], manifest: dict[
     if check_safe:
         safe_destination(destination)
     if not destination.is_dir() or load_manifest(destination) != manifest:
-        raise BuildError("bundle ausente ou manifesto divergente")
+        raise BuildError("missing bundle or divergent manifest")
     for relative, expected in rendered.items():
         path = destination / relative
         if not path.is_file() or path.read_text(encoding="utf-8") != expected:
-            raise BuildError(f"artefato ausente ou divergente: {path}")
+            raise BuildError(f"missing or divergent artifact: {path}")
 
 
 def write_bundle(destination: Path, rendered: dict[str, str], manifest: dict[str, Any]) -> None:
@@ -260,10 +260,10 @@ def write_bundle(destination: Path, rendered: dict[str, str], manifest: dict[str
         for relative, expected_digest in prior["files"].items():
             path = destination / relative
             if not path.is_file() or digest(path.read_bytes()) != expected_digest:
-                raise BuildError(f"arquivo gerido foi alterado fora do builder: {path}")
+                raise BuildError(f"managed file was changed outside the builder: {path}")
     for relative in rendered:
         if (destination / relative).exists() and relative not in managed:
-            raise BuildError(f"colisão com arquivo não gerido: {destination / relative}")
+            raise BuildError(f"collision with unmanaged file: {destination / relative}")
     destination.parent.mkdir(parents=True, exist_ok=True)
     staging = Path(tempfile.mkdtemp(prefix=f".{destination.name}.staging-", dir=destination.parent))
     backup = destination.parent / f".{destination.name}.backup-{os.getpid()}"
@@ -280,7 +280,7 @@ def write_bundle(destination: Path, rendered: dict[str, str], manifest: dict[str
         )
         validate_bundle(staging, rendered, manifest, check_safe=False)
         if backup.exists():
-            raise BuildError(f"backup transacional já existe: {backup}")
+            raise BuildError(f"transactional backup already exists: {backup}")
         if destination.exists():
             os.replace(destination, backup)
         os.replace(staging, destination)
@@ -296,8 +296,8 @@ def write_bundle(destination: Path, rendered: dict[str, str], manifest: dict[str
             shutil.rmtree(backup)
         except OSError as error:
             print(
-                f"WARNING: bundle novo confirmado em {destination}, "
-                f"mas o backup pós-commit não foi removido ({backup}): {error}",
+                f"WARNING: new bundle confirmed at {destination}, "
+                f"but the post-commit backup was not removed ({backup}): {error}",
                 file=sys.stderr,
             )
 
@@ -319,8 +319,8 @@ def main(argv: list[str] | None = None) -> int:
         print(f"BLOCKED: {error}", file=sys.stderr)
         return 2
     messages = {
-        "build": f"concluída: bundle candidato gerado localmente em {args.destination}",
-        "validate-static": "STATIC_OK: seis subagents, config, manifesto e corpos validados localmente",
+        "build": f"done: candidate bundle generated locally at {args.destination}",
+        "validate-static": "STATIC_OK: six subagents, config, manifest and bodies validated locally",
     }
     print(messages[args.action])
     return 0

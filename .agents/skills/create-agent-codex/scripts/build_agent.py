@@ -49,7 +49,7 @@ class Collision(ValueError):
 
 def nonempty_string(value: Any, field: str) -> str:
     if not isinstance(value, str) or not value.strip():
-        raise Invalid(f"{field} deve ser string não vazia")
+        raise Invalid(f"{field} must be a non-empty string")
     return value
 
 
@@ -57,14 +57,14 @@ def parse_role(source: Path) -> tuple[str, str, str]:
     try:
         body = source.read_text(encoding="utf-8")
     except OSError as exc:
-        raise Invalid(f"não foi possível ler o papel: {source}: {exc}") from exc
+        raise Invalid(f"could not read the role: {source}: {exc}") from exc
 
     heading = re.match(r"\A# ([^\n]+)\n", body)
     if not heading:
-        raise Invalid("papel deve iniciar com heading H1")
+        raise Invalid("role must start with an H1 heading")
     name = heading.group(1).strip()
     if not ROLE_NAME.fullmatch(name):
-        raise Invalid(f"nome de papel inválido: {name!r}")
+        raise Invalid(f"invalid role name: {name!r}")
 
     sections: dict[str, str] = {}
     matches = list(re.finditer(r"(?m)^## ([^\n]+)\n", body))
@@ -73,7 +73,7 @@ def parse_role(source: Path) -> tuple[str, str, str]:
         sections[match.group(1).strip()] = body[match.end() : end].strip()
     missing = [section for section in ROLE_SECTIONS if not sections.get(section)]
     if missing:
-        raise Invalid("seções canônicas ausentes/vazias: " + ", ".join(missing))
+        raise Invalid("missing/empty canonical sections: " + ", ".join(missing))
 
     description = " ".join(sections["Trigger"].split())
     instructions = (
@@ -92,11 +92,11 @@ def toml_string(value: str) -> str:
 
 def render_agent(source: Path, model: str, effort: str, sandbox_mode: str) -> bytes:
     if model not in MODELS:
-        raise Invalid(f"model fora da allowlist local: {model}")
+        raise Invalid(f"model outside the local allowlist: {model}")
     if effort not in EFFORTS:
-        raise Invalid(f"model_reasoning_effort fora da allowlist local: {effort}")
+        raise Invalid(f"model_reasoning_effort outside the local allowlist: {effort}")
     if sandbox_mode not in SANDBOX_MODES:
-        raise Invalid(f"sandbox_mode fora da allowlist local: {sandbox_mode}")
+        raise Invalid(f"sandbox_mode outside the local allowlist: {sandbox_mode}")
     name, description, instructions = parse_role(source)
     values = {
         "name": name,
@@ -116,22 +116,22 @@ def validate_static_bytes(content: bytes) -> dict[str, str]:
     try:
         document = tomllib.loads(content.decode("utf-8"))
     except (UnicodeDecodeError, tomllib.TOMLDecodeError) as exc:
-        raise Invalid(f"TOML inválido: {exc}") from exc
+        raise Invalid(f"invalid TOML: {exc}") from exc
     keys = set(document)
     if keys != REQUIRED_KEYS:
         missing = sorted(REQUIRED_KEYS - keys)
         extra = sorted(keys - REQUIRED_KEYS)
-        raise Invalid(f"schema standalone divergente; ausentes={missing}; extras={extra}")
+        raise Invalid(f"divergent standalone schema; missing={missing}; extra={extra}")
     for key in REQUIRED_KEYS:
         nonempty_string(document[key], key)
     if not ROLE_NAME.fullmatch(document["name"]):
-        raise Invalid("name não está em kebab-case")
+        raise Invalid("name is not in kebab-case")
     if document["model"] not in MODELS:
-        raise Invalid(f"model fora da allowlist local: {document['model']}")
+        raise Invalid(f"model outside the local allowlist: {document['model']}")
     if document["model_reasoning_effort"] not in EFFORTS:
-        raise Invalid("model_reasoning_effort fora da allowlist local")
+        raise Invalid("model_reasoning_effort outside the local allowlist")
     if document["sandbox_mode"] not in SANDBOX_MODES:
-        raise Invalid("sandbox_mode fora da allowlist local")
+        raise Invalid("sandbox_mode outside the local allowlist")
     return document
 
 
@@ -145,7 +145,7 @@ def validate_against_source(content: bytes, source: Path) -> dict[str, str]:
         agent["sandbox_mode"],
     )
     if expected != content:
-        raise Invalid("agent diverge da projeção determinística da origem canônica")
+        raise Invalid("agent differs from the deterministic projection of the canonical source")
     return agent
 
 
@@ -153,7 +153,7 @@ def read_bytes(path: Path, label: str) -> bytes:
     try:
         return path.read_bytes()
     except OSError as exc:
-        raise Invalid(f"não foi possível ler {label}: {path}: {exc}") from exc
+        raise Invalid(f"could not read {label}: {path}: {exc}") from exc
 
 
 def atomic_write(
@@ -166,13 +166,13 @@ def atomic_write(
     path.parent.mkdir(parents=True, exist_ok=True)
     if path.exists():
         if not replace:
-            raise Collision(f"destino já existe: {path}; use --replace conscientemente")
+            raise Collision(f"destination already exists: {path}; use --replace deliberately")
         try:
             current = validate_against_source(path.read_bytes(), source)
         except (OSError, Invalid) as exc:
-            raise Collision(f"destino existente não é substituível com segurança: {exc}") from exc
+            raise Collision(f"existing destination cannot be safely replaced: {exc}") from exc
         if current["name"] != expected_name:
-            raise Collision("destino existente pertence a outro agent")
+            raise Collision("existing destination belongs to another agent")
 
     temporary: str | None = None
     try:
@@ -183,7 +183,7 @@ def atomic_write(
             os.fsync(handle.fileno())
         os.replace(temporary, path)
     except OSError as exc:
-        raise Invalid(f"falha de escrita atômica em {path}: {exc}") from exc
+        raise Invalid(f"atomic write failure at {path}: {exc}") from exc
     finally:
         if temporary:
             try:
@@ -194,9 +194,9 @@ def atomic_write(
 
 def require_agent_destination(path: Path, expected_name: str) -> None:
     if path.parent.name != "agents" or path.parent.parent.name != ".codex":
-        raise Invalid("destino final deve estar em .codex/agents/")
+        raise Invalid("final destination must be under .codex/agents/")
     if path.name != f"{expected_name}.toml":
-        raise Invalid("nome do destino deve corresponder ao name do agent")
+        raise Invalid("destination name must match the agent's name")
 
 
 def reject_render_agent_destination(path: Path) -> None:
@@ -207,14 +207,14 @@ def reject_render_agent_destination(path: Path) -> None:
         and normalized_parts[index + 1] == "agents"
         for index, part in enumerate(normalized_parts)
     ):
-        raise Invalid("render não pode escrever sob .codex/agents/; use promote")
+        raise Invalid("render cannot write under .codex/agents/; use promote")
 
 
 def parser() -> argparse.ArgumentParser:
     root = argparse.ArgumentParser(description=__doc__)
     commands = root.add_subparsers(dest="command", required=True)
 
-    render = commands.add_parser("render", help="renderizar candidato estaticamente válido")
+    render = commands.add_parser("render", help="render a statically valid candidate")
     render.add_argument("source", type=Path)
     render.add_argument("candidate", type=Path)
     render.add_argument("--model", required=True)
@@ -222,11 +222,11 @@ def parser() -> argparse.ArgumentParser:
     render.add_argument("--sandbox-mode", required=True)
     render.add_argument("--replace", action="store_true")
 
-    static = commands.add_parser("validate-static", help="validar apenas estrutura e allowlists")
+    static = commands.add_parser("validate-static", help="validate structure and allowlists only")
     static.add_argument("agent", type=Path)
     static.add_argument("--source", required=True, type=Path)
 
-    promote = commands.add_parser("promote", help="promover candidato validado localmente")
+    promote = commands.add_parser("promote", help="promote a locally validated candidate")
     promote.add_argument("candidate", type=Path)
     promote.add_argument("output", type=Path)
     promote.add_argument("--source", required=True, type=Path)
@@ -254,7 +254,7 @@ def main(argv: list[str] | None = None) -> int:
                 require_agent_destination(args.output, agent["name"])
                 atomic_write(args.output, content, args.replace, agent["name"], args.source)
                 digest = hashlib.sha256(content).hexdigest()
-                print(f"OK promovido name={agent['name']} sha256={digest} output={args.output}")
+                print(f"OK promoted name={agent['name']} sha256={digest} output={args.output}")
         return 0
     except Collision as exc:
         print(f"COLLISION: {exc}", file=sys.stderr)

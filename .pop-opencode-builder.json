@@ -1,11 +1,11 @@
 {
   "files": {
-    ".opencode/agents/pop-execution-orchestrator.md": "f891b5330d67e17e4333d7e165118893df37d179cf3912554f0f680eb61f6a1c",
-    ".opencode/agents/pop-executor.md": "7eb6f254ad567881076e40e593ecab88bd359c5e017c009366e47fac086516e5",
-    ".opencode/agents/pop-judge-dredd.md": "ab88845807ccf0d3a2c7615faee9a2cd5b60b732ed8730d00a78c082bab6e122",
-    ".opencode/agents/pop-phase-verifier.md": "d06d587fe29d546b3d841852e16b2f41b2b6ecb08b48c1137a7095a6f8e4806b",
-    ".opencode/agents/pop-planner.md": "96f44667ff0cdbce460fc0c7fd1dd6426363862c73623451ce1cca7c9a963352",
-    ".opencode/agents/pop-recon.md": "e742d1b40fd973abcaa6e3ee3f898fc38a933a2c212d2c3ed4739c757415f102",
+    ".opencode/agents/pop-execution-orchestrator.md": "10fbdd039515f67593bb4e11e3758a10cf31c8114a30425e1aeaae9c7f4f6bed",
+    ".opencode/agents/pop-executor.md": "0f10642f1a8a8497ad2fb2daf9e61c4539e79998efa9f8705e618a9883477f71",
+    ".opencode/agents/pop-judge-dredd.md": "a63d294bc4caa482c9220209fd675b1998ee6198e5c3517ab59caddf8394e086",
+    ".opencode/agents/pop-phase-verifier.md": "bdfbeca258f21d4cdfbaa16ccbad5e13b8115af9e9a8c6e786b4e269cb6fa65f",
+    ".opencode/agents/pop-planner.md": "a6ff4d30911bc94429f0bf90fe46e8b14b79dc0f471fe2c406ad6e92bffbdd14",
+    ".opencode/agents/pop-recon.md": "89a3e8bb44ebbcdb8ac66827e06706e9e27c339c0f32ac6870b9edd4ec1c554e",
     "opencode.json": "117fb9121e87200a7255b1997cf513c049b862c9aa459f484743968a31ef5d89"
   },
   "generator": "create-agent-opencode",

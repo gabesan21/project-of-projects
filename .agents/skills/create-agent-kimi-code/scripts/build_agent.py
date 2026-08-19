@@ -64,11 +64,11 @@ def fail(message: str) -> None:
 def read_source(path: Path) -> tuple[str, str]:
     role = path.stem
     if role not in ROLE_POLICY:
-        fail(f"papel não canônico: {role}")
+        fail(f"non-canonical role: {role}")
     body = path.read_text(encoding="utf-8").rstrip() + "\n"
     missing = [section for section in REQUIRED_SECTIONS if f"## {section}" not in body]
     if missing:
-        fail("corpo canônico incompleto: " + ", ".join(missing))
+        fail("incomplete canonical body: " + ", ".join(missing))
     return role, body
 
 
@@ -86,7 +86,7 @@ def render_agent(role: str, body: str, routing: str) -> str:
     identity = re.search(r"## Identity\n\n([^\n]+)", body)
     trigger = re.search(r"## Trigger\n\n([^\n]+)", body)
     if not identity or not trigger:
-        fail("identidade ou gatilho não encontrado no corpo canônico")
+        fail("identity or trigger not found in the canonical body")
     lines = [
         "---", f"name: {role}", f"description: {identity.group(1)}", f"whenToUse: {trigger.group(1)}",
         "override: false", f"model_preference: {routing}", *yaml_list("tools", policy["tools"]),
@@ -102,36 +102,36 @@ def render_agent(role: str, body: str, routing: str) -> str:
 def reject_unsupported_effort(config: dict[str, object], alias: str, effort: str) -> None:
     models = config.get("models")
     if not isinstance(models, dict):
-        fail("config sem tabela [models]")
+        fail("config without a [models] table")
     model_entry = models.get(alias)
     if not isinstance(model_entry, dict):
-        fail(f"alias de secondary model não resolvido em [models]: {alias}")
+        fail(f"secondary model alias unresolved in [models]: {alias}")
     effective_model = model_entry.get("model")
     if not isinstance(effective_model, str) or not effective_model:
-        fail(f"entrada [models] sem model efetivo: {alias}")
+        fail(f"[models] entry without an effective model: {alias}")
     is_k27 = re.search(r"(?:kimi-for-coding|k2[.-]?7)", f"{alias} {effective_model}", re.I)
     if effort == "medium" and is_k27:
-        fail("K2.7 medium não é effort efetivo demonstrado")
+        fail("K2.7 medium is not a demonstrated effective effort")
 
 
 def render_config_candidate(source: Path, output: Path, model: str, effort: str | None = None) -> None:
     if source.resolve() == output.resolve():
-        fail("config fonte e candidata devem ser paths diferentes")
+        fail("source and candidate configs must be different paths")
     kimi_home = Path(os.environ.get("KIMI_CODE_HOME", Path.home() / ".kimi-code"))
     if output.resolve() == (kimi_home / "config.toml").resolve():
-        fail("edição da config ativa é proibida; use um candidato separado")
+        fail("editing the active config is forbidden; use a separate candidate")
     raw = source.read_text(encoding="utf-8")
     try:
         parsed = tomllib.loads(raw)
     except tomllib.TOMLDecodeError as error:
-        fail(f"config fonte inválida: {error}")
+        fail(f"invalid source config: {error}")
     if "secondary_model" in parsed:
-        fail("config fonte já possui [secondary_model]; recusar sobrescrita implícita")
+        fail("source config already has [secondary_model]; refusing implicit overwrite")
     if not re.fullmatch(r"[A-Za-z0-9._:/+-]+", model):
-        fail("alias de secondary model inválido")
+        fail("invalid secondary model alias")
     if effort is not None:
         if not re.fullmatch(r"[a-z0-9_-]+", effort):
-            fail("secondary effort inválido")
+            fail("invalid secondary effort")
         reject_unsupported_effort(parsed, model, effort)
     suffix = ("\n" if raw.endswith("\n") else "\n\n") + f'[secondary_model]\nmodel = "{model}"\n'
     if effort is not None:
@@ -142,24 +142,24 @@ def render_config_candidate(source: Path, output: Path, model: str, effort: str 
 
 def parse_generated_agent(raw: str) -> tuple[dict[str, object], str]:
     if not raw.startswith("---\n") or "\n---\n" not in raw[4:]:
-        fail("frontmatter ausente ou inválido")
+        fail("missing or invalid frontmatter")
     header, body = raw[4:].split("\n---\n", 1)
     fields: dict[str, object] = {}
     current: str | None = None
     for line in header.splitlines():
         if line.startswith("  - "):
             if current is None or not isinstance(fields[current], list):
-                fail("item YAML sem lista")
+                fail("YAML item without a list")
             fields[current].append(line[4:])
             continue
         if ":" not in line:
-            fail(f"linha de frontmatter inválida: {line}")
+            fail(f"invalid frontmatter line: {line}")
         key, value = line.split(":", 1)
         current = key
         fields[key] = [] if value.strip() in {"", "[]"} else value.strip()
     unknown = set(fields) - KNOWN_FIELDS
     if unknown:
-        fail("campos Kimi desconhecidos: " + ", ".join(sorted(unknown)))
+        fail("unknown Kimi fields: " + ", ".join(sorted(unknown)))
     return fields, body
 
 
@@ -168,32 +168,32 @@ def validate_agent(source: Path, agent: Path, routing: str, config: Path | None)
     raw_agent = agent.read_text(encoding="utf-8")
     fields, generated_body = parse_generated_agent(raw_agent)
     if set(fields) != KNOWN_FIELDS:
-        fail("frontmatter não contém exatamente os campos Kimi esperados")
+        fail("frontmatter does not contain exactly the expected Kimi fields")
     if raw_agent != render_agent(role, canonical, routing):
-        fail("agent diverge da projeção determinística da fonte")
+        fail("agent differs from the deterministic projection of the source")
     if fields.get("name") != role or fields.get("model_preference") != routing:
-        fail("name ou routing diverge da solicitação")
+        fail("name or routing differs from the request")
     policy = ROLE_POLICY[role]
     for field, expected in (("tools", policy["tools"]), ("disallowedTools", policy["denied"]), ("subagents", policy["subagents"])):
         if fields.get(field) != expected:
-            fail(f"{field} diverge da policy fail-closed do papel")
+            fail(f"{field} differs from the role's fail-closed policy")
     digest = hashlib.sha256(canonical.encode()).hexdigest()
     if SOURCE_MARKER.format(digest=digest) not in generated_body or not generated_body.rstrip().endswith(canonical.rstrip()):
-        fail("corpo canônico não foi preservado integralmente")
+        fail("canonical body was not fully preserved")
     if routing == "secondary":
         if config is None:
-            fail("routing secondary exige config candidata")
+            fail("secondary routing requires a candidate config")
         try:
             parsed = tomllib.loads(config.read_text(encoding="utf-8"))
         except tomllib.TOMLDecodeError as error:
-            fail(f"config candidata inválida: {error}")
+            fail(f"invalid candidate config: {error}")
         secondary = parsed.get("secondary_model")
         if not isinstance(secondary, dict) or not isinstance(secondary.get("model"), str):
-            fail("config candidata sem [secondary_model].model")
+            fail("candidate config without [secondary_model].model")
         effort = secondary.get("default_effort")
         if effort is not None:
             if not isinstance(effort, str):
-                fail("[secondary_model].default_effort deve ser string quando presente")
+                fail("[secondary_model].default_effort must be a string when present")
             reject_unsupported_effort(parsed, secondary["model"], effort)
 
 
@@ -226,20 +226,20 @@ def main() -> int:
     args = make_parser().parse_args()
     try:
         if args.require_guarantee:
-            fail("garantia não demonstrada: " + ", ".join(args.require_guarantee))
+            fail("undemonstrated guarantee: " + ", ".join(args.require_guarantee))
         if args.command == "build":
             role, body = read_source(args.source)
             if args.routing == "secondary":
                 required = (args.config_source, args.config_out, args.secondary_model)
                 if not all(required):
-                    fail("secondary exige config fonte/candidata e model")
+                    fail("secondary requires source/candidate config and model")
                 render_config_candidate(args.config_source, args.config_out, args.secondary_model, args.secondary_effort)
             args.agent_out.parent.mkdir(parents=True, exist_ok=True)
             args.agent_out.write_text(render_agent(role, body, args.routing), encoding="utf-8")
-            print("projeção gerada e validável sem executar coding agent")
+            print("projection generated and validatable without running a coding agent")
         else:
             validate_agent(args.source, args.agent, args.routing, args.config)
-            print("estrutura, policy, config candidata e corpo canônico válidos localmente")
+            print("structure, policy, candidate config and canonical body are locally valid")
     except (BuildError, OSError) as error:
         print(f"BLOCKED: {error}", file=sys.stderr)
         return 2
