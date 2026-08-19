@@ -28,7 +28,7 @@ class PopSandboxTest(unittest.TestCase):
         self._tmp = tempfile.TemporaryDirectory()
         self.addCleanup(self._tmp.cleanup)
         self.root = Path(self._tmp.name) / "vault"
-        self.project = self.root / "categories" / "applications" / "demo"
+        self.project = self.root / "projects" / "demo"
         shutil.copytree(FIXTURE, self.project)
         shutil.copytree(ROOT / "_templates" / "coding-dockers",
                         self.root / "_templates" / "coding-dockers")
@@ -39,7 +39,7 @@ class PopSandboxTest(unittest.TestCase):
             path.write_text("fixture\n", encoding="utf-8") if kind == "file" else path.mkdir()
         self.patches = (
             mock.patch.object(sandbox.poplib, "discover_projects", return_value=[self.project]),
-            mock.patch.object(sandbox.poplib, "project_label", return_value="applications/demo"),
+            mock.patch.object(sandbox.poplib, "project_label", return_value="demo"),
             mock.patch.object(sandbox.poplib, "templates_dir", return_value=self.root / "_templates"),
             mock.patch.object(sandbox.Path, "home", return_value=self.home),
         )
@@ -48,7 +48,7 @@ class PopSandboxTest(unittest.TestCase):
             self.addCleanup(patcher.stop)
 
     def propose(self, agent="codex", packages=()):
-        return sandbox.proposal(self.root, "applications/demo", self.project, agent, list(packages))
+        return sandbox.proposal(self.root, "demo", self.project, agent, list(packages))
 
     def complete_recipe(self, agent="codex"):
         path = self.root / "_templates" / "coding-dockers" / "recipes" / f"{agent}.json"
@@ -58,7 +58,7 @@ class PopSandboxTest(unittest.TestCase):
         path.write_text(json.dumps(recipe), encoding="utf-8")
 
     def new_args(self, confirmation=None, packages=()):
-        return argparse.Namespace(project="applications/demo", agent="codex",
+        return argparse.Namespace(project="demo", agent="codex",
                                   package=list(packages), confirm=confirmation)
 
     def test_proposal_detects_stack_sorts_packages_and_includes_exact_binds(self):
@@ -183,12 +183,12 @@ class PopSandboxTest(unittest.TestCase):
         self.complete_recipe()
         _, shown = self.propose()
         sandbox.command_new(self.new_args(shown["confirmation_hash"]), self.root)
-        self.assertEqual(sandbox.check_fresh(self.root, "applications/demo", "codex"), 0)
+        self.assertEqual(sandbox.check_fresh(self.root, "demo", "codex"), 0)
 
         dockerfile = self.root / "_templates" / "coding-dockers" / "Dockerfile"
         dockerfile.write_text(dockerfile.read_text(encoding="utf-8") + "\n# stale\n", encoding="utf-8")
         with self.assertRaisesRegex(sandbox.SandboxError, "stale sandbox"):
-            sandbox.check_fresh(self.root, "applications/demo", "codex")
+            sandbox.check_fresh(self.root, "demo", "codex")
 
     def test_rm_removes_only_artifacts_when_daemon_proves_absence(self):
         self.complete_recipe()
@@ -213,6 +213,17 @@ class PopSandboxTest(unittest.TestCase):
         with mock.patch.object(sandbox.subprocess, "run", side_effect=present):
             with self.assertRaisesRegex(sandbox.SandboxError, "remaining internal resource"):
                 sandbox.command_rm(self.new_args(), self.root)
+
+    def test_multi_repo_mother_resolves_to_the_project_folder(self):
+        repo = self.root / "projects" / "store" / "api"
+        repo.mkdir(parents=True)
+        with mock.patch.object(sandbox.poplib, "discover_projects", return_value=[repo]), \
+                mock.patch.object(sandbox.poplib, "project_label", return_value="store/api"):
+            self.assertEqual(sandbox.resolve_project(self.root, "store/api"),
+                             ("store/api", repo))
+            label, project = sandbox.resolve_project(self.root, "store")
+        self.assertEqual(label, "store")
+        self.assertEqual(project, repo.parent)
 
     def test_rejects_traversal_agent_package_and_socket(self):
         with self.assertRaisesRegex(sandbox.SandboxError, "without an external path or traversal"):

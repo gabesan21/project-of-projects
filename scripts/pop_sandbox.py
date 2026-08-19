@@ -79,6 +79,12 @@ def resolve_project(root: Path, value: str) -> tuple[str, Path]:
         poplib.project_label(root, project): project
         for project in poplib.discover_projects(root)
     }
+    # A multi-repo mother has no pop/ or kanban (it is not a task scope), but
+    # it is a valid sandbox target: the project folder mounts, repos inside.
+    for label in list(projects):
+        if "/" in label:
+            parent_label = label.split("/", 1)[0]
+            projects.setdefault(parent_label, root / "projects" / parent_label)
     if value not in projects:
         raise SandboxError(f"unknown project: {value}")
     project = projects[value]

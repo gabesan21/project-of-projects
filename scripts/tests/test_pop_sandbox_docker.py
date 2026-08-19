@@ -44,7 +44,7 @@ class PopSandboxDockerExperiment(unittest.TestCase):
         token = uuid.uuid4().hex[:12]
         self.scope = f"probe{token}"
         self.vault = self.base / "vault"
-        self.project = self.vault / "categories" / "applications" / self.scope
+        self.project = self.vault / "projects" / self.scope
         self.project.mkdir(parents=True)
         shutil.copytree(TEMPLATES, self.vault / "_templates" / "coding-dockers")
         recipe_path = self.vault / "_templates" / "coding-dockers" / "recipes" / "codex.json"
@@ -66,7 +66,7 @@ class PopSandboxDockerExperiment(unittest.TestCase):
         patches = (
             mock.patch.object(sandbox.poplib, "discover_projects", return_value=[self.project]),
             mock.patch.object(sandbox.poplib, "project_label",
-                              return_value=f"applications/{self.scope}"),
+                              return_value=f"{self.scope}"),
             mock.patch.object(sandbox.poplib, "templates_dir",
                               return_value=self.vault / "_templates"),
             mock.patch.object(sandbox.Path, "home", return_value=self.home),
@@ -75,10 +75,10 @@ class PopSandboxDockerExperiment(unittest.TestCase):
             patcher.start()
             self.addCleanup(patcher.stop)
         _, shown = sandbox.proposal(
-            self.vault, f"applications/{self.scope}", self.project, "codex", []
+            self.vault, f"{self.scope}", self.project, "codex", []
         )
         sandbox.command_new(argparse.Namespace(
-            project=f"applications/{self.scope}", agent="codex", package=[],
+            project=f"{self.scope}", agent="codex", package=[],
             confirm=shown["confirmation_hash"],
         ), self.vault)
         self.context = self.vault / "coding-dockers" / self.scope / "codex"

@@ -7,7 +7,11 @@
 - **Scope:** this directory is the entire scope of the flow — the harness travels with it and **nothing above this root belongs to it**, even when a tool loads an ancestor `AGENTS.md` on its own ("Current scope" section of [[WORKFLOW|WORKFLOW]]).
 - **Project language:** <en> — specs, notes, researches, code comments and the entire kanban flow follow this language.
 - **Supported languages (i18n):** <list of languages the application must support — handled in the roadmap and specs. Applications only; remove if not applicable.>
-- **Profile:** [[categories/<category>/<project>/pop/PROJECT|PROJECT]] · **Roadmap:** [[categories/<category>/<project>/pop/ROADMAP|ROADMAP]] · **Modifications:** [[categories/<category>/<project>/pop/MODIFICATIONS|MODIFICATIONS]] (created on demand)
+- **Type:** <uni-repo | multi-repo> — `uni-repo`: this folder **is** the repository itself — or a free root with no repo, versioned in the repository that hosts it — with the entire `pop/` inside it | `multi-repo`: this folder is the **harness-less mother** — only this AGENTS.md, INDEX.md and the general ROADMAP.md; each repo cloned at the root carries its own complete `pop/` and declares `type: uni-repo`.
+
+> **`multi-repo` mother:** no `pop/` — remove the sections that depend on the harness (Workflow, Skills, DOX); the file keeps type, repositories and the links to the general INDEX/ROADMAP.
+
+- **Profile:** [[pop/PROJECT|PROJECT]] · **Roadmap:** [[pop/ROADMAP|ROADMAP]] · **Modifications:** [[pop/MODIFICATIONS|MODIFICATIONS]] (created on demand)
 
 ## What does NOT go in this file
 
@@ -41,7 +45,7 @@ Content changes enter through triage: direct fix, the **no-kanban route** (the c
 ## Skills
 
 - **PoP workflow:** `.agents/skills/` — `new-task`, `advance-task`, `judge-dredd`, `plan-roadmap`, `write-spec`, `sync-specs`, `optimize-memory`.
-- **Project domain:** `pop/skills/` — listed in the profile [[categories/<category>/<project>/pop/PROJECT|PROJECT]].
+- **Project domain:** `pop/skills/` — listed in the profile [[pop/PROJECT|PROJECT]].
 
 ### Clean code (code projects only)
 

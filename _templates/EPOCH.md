@@ -2,7 +2,7 @@
 
 > Blockquotes in this template are fill-in instructions — **delete them when filling it in**.
 
-- **Project:** [[categories/<category>/<project>/pop/PROJECT|<Project name>]] · **Roadmap:** [[categories/<category>/<project>/pop/ROADMAP|Roadmap]]
+- **Project:** [[projects/<project>/pop/PROJECT|<Project name>]] · **Roadmap:** [[projects/<project>/pop/ROADMAP|Roadmap]]
 - **Status:** pending | in progress | completed
 - **Description:** one line — what this chapter delivers.
 - **Yolo:** yes | no — **optional** bullet (absent = no); only the human marks it.
@@ -16,7 +16,7 @@
 
 > Researches in `pop/researches/` (a scope whose harness lives at its own root: without the `pop/` prefix) that grounded the breakdown; whatever remained unanswered is RECON NEEDED, with the check that resolves it. Forks: pre-identified route changes.
 
-- [[categories/<category>/<project>/pop/researches/<topic>/<note>|<topic>]] — what it established, in one line.
+- [[projects/<project>/pop/researches/<topic>/<note>|<topic>]] — what it established, in one line.
 - [ ] RECON NEEDED: <assumption> — check: <research/experiment/task that resolves it>.
 - Fork: if <observation/conclusion X> → <what changes in the epoch, in one line>.
 
@@ -25,7 +25,7 @@
 - **Status:** pending | in progress | completed
 - **Description:** one line.
 - **Yolo:** yes | no — **optional** bullet (absent = inherits from the epoch).
-- **Specs:** [[categories/<category>/<project>/pop/specs/<spec>|<spec>]]
+- **Specs:** [[projects/<project>/pop/specs/<spec>|<spec>]]
 
 | Task | Description (≤1 line) | Status |
 |------|-----------------------|--------|

@@ -6,8 +6,8 @@
 !/worktrees/.gitignore
 
 # Clones of aggregated repositories (keep in sync with "Aggregated repositories" in INDEX.md)
-# `included` projects with a repo: categories/<category>/<project>/
-# Example: categories/applications/my-app/
+# `uni-repo` projects with a repo: projects/<project>/
+# Example: projects/my-app/
 
 # Obsidian per-user session state (the rest of .obsidian/ is versioned so the
 # vault works out of the box: Dataview-powered INBOX, Excalidraw, git, theme)

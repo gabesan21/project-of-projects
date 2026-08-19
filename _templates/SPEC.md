@@ -52,6 +52,6 @@ Objective durable behavior. One spec answers one question.
 
 ## Related references
 
-- [[categories/<category>/<project>/pop/specs/<spec>|<spec>]] — *follow when <condition>*.
+- [[projects/<project>/pop/specs/<spec>|<spec>]] — *follow when <condition>*.
 
 > Never store reasoning, edit sequence, implementation history, or completed-task lists. Strategy belongs in plans; events/commits/dates in memory; reusable procedures in skills.

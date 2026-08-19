@@ -31,4 +31,4 @@ Code without a DOX tree → recursive sweep and tree construction: root AGENTS.m
 - **002 (brief):** the planner identifies contracts applicable to likely areas and links them; broad walking happens only when a decision depends on it.
 - **004:** each front walks the tree to its edit location before its first change. Reuse an extract if base/hash is unchanged; changed contracts join the delivery.
 - **005:** the reviewer checks whether changes to purpose, structure, flows or rules updated contracts; no-impact changes require no rewrite.
-- **Type `default` with an external repo that must stay clean of AI files:** decide with the user in the interview — commit the DOX tree to the repo (PoP default) or keep only the root contract in the project's AGENTS.md, inside PoP.
+- **A repo that must stay clean of AI files:** decide with the user in the interview — commit the DOX tree to the repo (PoP default) or keep only the root contract in the project's AGENTS.md, outside the repository.

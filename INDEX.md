@@ -1,6 +1,6 @@
 # General index
 
-Overview of every project in the vault. Descriptions of up to 144 characters — details and status in each category's `INDEX.md`.
+Overview of every project in the vault. Descriptions of up to 144 characters.
 
 ## Structure
 
@@ -8,51 +8,27 @@ Overview of every project in the vault. Descriptions of up to 144 characters —
 ProjectOfProjects/
 ├── INBOX.md         → [[INBOX|what awaits human decision]]
 ├── WORKFLOW.md      → [[WORKFLOW|task flow on the kanban]]
-├── TYPES.md         → [[TYPES|project types: default, included, multi-repo, full-multi-repo]]
+├── TYPES.md         → [[TYPES|project types: uni-repo, multi-repo]]
 ├── coding-dockers/  → [[coding-dockers/INDEX|optional local coding-agent sandboxes; only this index is tracked]]
 ├── drafts/          → the human's project drafts: new/ and import/ ([[_templates/NEW_PROJECT|NEW_PROJECT]] · [[_templates/IMPORT_PROJECT|IMPORT_PROJECT]])
 ├── open_questions/  → open questions for the human, outside any task — the open ones show up in the [[INBOX|INBOX]]
-└── categories/      → every project category
-    ├── agents/          → [[categories/agents/INDEX|agents index]]
-    ├── applications/    → [[categories/applications/INDEX|applications index]]
-    ├── writing/         → [[categories/writing/INDEX|writing index]]
-    └── work/            → [[categories/work/INDEX|work index]]
+└── projects/        → one folder per project, no category level ([[TYPES|TYPES]])
 ```
 
-## agents
-
-*AI agents, automations and skills.*
-
-_No projects yet._
-
-## applications
-
-*Applications and software in general.*
-
-_No projects yet._
-
-## writing
-
-*Writing: articles, books, content.*
-
-_No projects yet._
-
-## work
-
-*Professional projects.*
+## Projects
 
 _No projects yet._
 
 ## Aggregated repositories
 
-Repositories this PoP aggregates — `included` projects with a repo and **all** repos of `multi-repo` and `full-multi-repo` projects (see [[TYPES|TYPES]]; a `default` project's repo lives only in the project's AGENTS.md). The clones are gitignored: whoever forks the PoP clones from this list, each at the indicated path.
+Repositories this PoP aggregates — `uni-repo` projects with a repo and **all** repos of `multi-repo` projects (see [[TYPES|TYPES]]; a repo-less `uni-repo` project lives only in the project's AGENTS.md). The clones are gitignored: whoever forks the PoP clones from this list, each at the indicated path.
 
 _No repositories yet._
 
 **Format of each line:**
 
 ```
-| [[categories/<category>/<project>/PROJECT|<project>]] | <type> | <url> | `<local clone path>` | `<PR branch>` |
+| [[projects/<project>/PROJECT|<project>]] | <type> | <url> | `<local clone path>` | `<PR branch>` |
 ```
 
 ---
@@ -60,5 +36,5 @@ _No repositories yet._
 **Format of each entry:**
 
 ```
-- [[categories/<category>/<project>/PROJECT|<Project name>]] — description of up to 144 characters.
+- [[projects/<project>/PROJECT|<Project name>]] — description of up to 144 characters.
 ```

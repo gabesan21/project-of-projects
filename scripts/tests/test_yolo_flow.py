@@ -218,13 +218,13 @@ class YoloFlowTest(unittest.TestCase):
     def test_wave_limits_three_tasks_and_one_per_project(self):
         self.card("1.1.1-meta")
         for index in range(3):
-            project = self.root / f"categories/a/p{index}"
+            project = self.root / f"projects/p{index}"
             for stage in STAGES:
                 (project / "pop/kanban" / stage).mkdir(parents=True)
             folder = project / "pop/kanban/002_planning" / f"2.1.{index + 1}-task"
             folder.mkdir(parents=True)
             (folder / f"2.1.{index + 1}-task.md").write_text(
-                "---\nproject: a/p%d\nstage: 002_planning\nyolo: true\n"
+                "---\nproject: p%d\nstage: 002_planning\nyolo: true\n"
                 "blocked: false\ndepends_on: []\n---\n" % index, encoding="utf-8")
         result = self.run_cli("pop_yolo.py", "wave", "--json")
         self.assertEqual(result.returncode, 0, result.stderr)

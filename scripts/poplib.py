@@ -73,7 +73,7 @@ def vault_root(override: Optional[str] = None) -> Path:
     if override:
         return Path(override).resolve()
     base = Path(__file__).resolve().parent.parent
-    if base.name == "pop" and (base / ".included-harness.json").is_file():
+    if base.name == "pop" and (base / ".unirepo-harness.json").is_file():
         return base.parent
     return base
 
@@ -84,7 +84,7 @@ def is_installed_scope(root: Path) -> bool:
     An installed scope hosts no other projects, keeps no aggregation indexes
     and does not answer for the origin's version.
     """
-    return (root / "pop" / ".included-harness.json").is_file()
+    return (root / "pop" / ".unirepo-harness.json").is_file()
 
 
 def harness_root(project: Path) -> Path:
@@ -157,8 +157,8 @@ def discover_projects(root: Path) -> list:
     if (root / "kanban").is_dir() or (root / "pop" / "kanban").is_dir():
         scopes.add(root)
     patterns = (
-        ("categories/*/*/pop/kanban", 2),      # Project.
-        ("categories/*/*/*/pop/kanban", 2),    # Embedded full-multi-repo repository.
+        ("projects/*/pop/kanban", 2),      # uni-repo project.
+        ("projects/*/*/pop/kanban", 2),    # multi-repo repository.
     )
     for pattern, up in patterns:
         for kanban in root.glob(pattern):
@@ -172,7 +172,7 @@ def discover_projects(root: Path) -> list:
     return sorted(scopes)
 
 
-# Harness traversal includes each embedded full-multi-repo repository.
+# Harness traversal includes each multi-repo repository.
 HARNESS_DIRS = ("roadmap", "specs", "researches", "skills", "notes",
                 "memory", "open_questions", "drafts", "kanban")
 HARNESS_ROOT_FILES = ("PROJECT.md", "ROADMAP.md")  # INDEX.md has its own 144/600 limit.
@@ -215,7 +215,7 @@ def project_label(root: Path, project: Path) -> str:
     """
     if project == root:
         return "pop" if (root / "kanban").is_dir() else root.name
-    parts = project.relative_to(root / "categories").parts
+    parts = project.relative_to(root / "projects").parts
     return "/".join(parts)
 
 
@@ -223,7 +223,7 @@ def project_dir(root: Path, label: str) -> Path:
     if label == project_label(root, root):
         return root
     parts = [p for p in label.split("/") if p]
-    return root.joinpath("categories", *parts)
+    return root.joinpath("projects", *parts)
 
 
 def delivery_route(root: Path, project: Path, *, yolo: bool) -> dict:

@@ -1,6 +1,6 @@
 ---
 name: import-project
-description: Imports an existing repository or project into the vault - codebase recon, fit interview (type, category) and a mandatory Epoch 1 of organization (faithful specs, skills, research, notes), with a gate that blocks changes to the project until it completes. Use when the user asks to import/add an existing project or repository to the PoP.
+description: Imports an existing repository or project into the vault - codebase recon, fit interview (type, language) and a mandatory Epoch 1 of organization (faithful specs, skills, research, notes), with a gate that blocks changes to the project until it completes. Use when the user asks to import/add an existing project or repository to the PoP.
 ---
 
 # import-project
@@ -25,7 +25,7 @@ Brings a project **that already exists** (repository or local folder) into the P
 
 ## Step 2 — Fit into the vault
 
-Ask: **(a)** which category (in `categories/`: `agents` | `applications` | `writing` | `work` — or a new one)? **(b)** which **type** (explain using TYPES.md): AI specs can be committed to the repo → `included` (the project's root is the clone itself, with `pop/` committed in it); repo must stay clean of harness → `default` (repo declared only in the project's AGENTS.md, no mandatory clone in the PoP); it's one of several repos of the same project → `multi-repo` (clones at the root of the project folder); several repos that must work standalone, each with its own `<repo>/pop/` committed inside → `full-multi-repo`? **(c)** what is the tasks' **PR branch**? **(d)** project name in kebab-case (propose one; it may differ from the repo name). **(e)** what is the **project's default language** — the recon indicates the current language of code and docs; confirm. Specs, notes, research, code comments and the flow follow that language (declared in the project's AGENTS.md). **(f)** if it is an application: which **languages must it support** (i18n) — the recon shows what i18n already exists; the confirmed list goes into the AGENTS.md and is handled in the roadmap and specs.
+Ask: **(a)** which **type** (explain using [[TYPES|TYPES]]): AI specs and harness committed in the repo itself → `uni-repo` (the clone at `projects/<project>/` **is** the project, with the whole `pop/` committed in it; a local project with no repo is also `uni-repo`, versioned in the PoP); it's one of several repos of the same project → `multi-repo` (a parent folder at `projects/<project>/` **with no harness** — one clone per repo at its root, each with its own complete `pop/`; no central kanban)? **(b)** what is the tasks' **PR branch**? **(c)** project name in kebab-case (propose one; it may differ from the repo name). **(d)** what is the **project's default language** — the recon indicates the current language of code and docs; confirm. Specs, notes, research, code comments and the flow follow that language (declared in the project's AGENTS.md). **(e)** if it is an application: which **languages must it support** (i18n) — the recon shows what i18n already exists; the confirmed list goes into the AGENTS.md and is handled in the roadmap and specs.
 
 ## Step 3 — Project flow (what makes the specs faithful)
 
@@ -38,7 +38,7 @@ Ask what the code doesn't show: **(a)** what the project does today, in the user
 
 ## Step 5 — Materialization
 
-1. Create the full structure as in `new-project` step 6 (anatomy per type, clones, `.gitignore`, indexes, Aggregated repositories when `included`/`multi-repo`/`full-multi-repo`). For each `included` target, run the same `python3 scripts/pop_install_included.py <repo>`; don't re-copy inventories manually.
+1. Create the full structure as in `new-project` step 6 (anatomy per type, clones, `.gitignore`, index, Aggregated repositories according to the type). For each repo with a harness — a `uni-repo` with a repo and each repo of a `multi-repo` — run the same `python3 scripts/pop_install_unirepo.py <repo>`; don't re-copy inventories manually.
 2. **Organization gate** — add to the "Essential rules" of the project's AGENTS.md:
    > **Imported project:** until Epoch 1 (Organization) is `completed` in the ROADMAP, no task may change the project's content (the folder root) or the repository — only the harness in `pop/` (specs, skills, researches, notes). A change request during this period → record it in `pop/notes/ideas/` or as a future-epoch task, explaining the gate.
 3. **`pop/PROJECT.md`** receives the summarized recon map; **`pop/ROADMAP.md`** with Epoch 1 = Organization (the vault-root meta-project and not-yet-migrated projects: harness at the root, no `pop/`); the epoch file carries the **RECON NEEDED** items left open (with each one's check).

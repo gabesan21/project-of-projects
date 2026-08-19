@@ -2,7 +2,7 @@
 
 > Blockquotes in this template are fill-in instructions — **delete them when filling it in**. This file exists **only for multi-task modifications**; a single-task modification lives in the MODIFICATIONS.md line + card.
 
-- **Project:** [[categories/<category>/<project>/pop/PROJECT|<Project name>]] · **Modifications:** [[categories/<category>/<project>/pop/MODIFICATIONS|Modifications]]
+- **Project:** [[projects/<project>/pop/PROJECT|<Project name>]] · **Modifications:** [[projects/<project>/pop/MODIFICATIONS|Modifications]]
 - **Status:** open | in progress | completed
 - **Description:** one line — what changes and why.
 - **Yolo:** yes | no — **optional** bullet (absent = no); only the human marks it.

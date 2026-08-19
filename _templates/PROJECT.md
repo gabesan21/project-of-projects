@@ -1,10 +1,9 @@
 # <Project name>
 
-- **Category:** [[categories/agents/INDEX|agents]] | [[categories/applications/INDEX|applications]] | [[categories/writing/INDEX|writing]] | [[categories/work/INDEX|work]]
 - **Status:** idea | planning | in progress | paused | completed | abandoned
 - **Priority:** high | medium | low
 - **Created on:** YYYY-MM-DD
-- **Roadmap:** [[categories/<category>/<project>/pop/ROADMAP|Roadmap]]
+- **Roadmap:** [[projects/<project>/pop/ROADMAP|Roadmap]]
 
 ## Goal
 
@@ -22,7 +21,7 @@ Standard anatomy (see the root AGENTS.md): the project's `AGENTS.md` + `.agents/
 
 Project-specific rules for agents working on this project:
 
-- **Type and repositories:** declared in the [[categories/<category>/<project>/AGENTS|project AGENTS]] (`default` | `included` | `multi-repo` | `full-multi-repo`, repos and PR branch — see [[TYPES|TYPES]]).
+- **Type and repositories:** declared in the [[projects/<project>/AGENTS|project AGENTS]] — where the content lives, which repos exist and what the PR branch is (`uni-repo` | `multi-repo`, see [[TYPES|TYPES]]).
 - **Worktree per task:** yes (default) | no (acceptable only in a project without a git repository — tasks lose isolation and the PR).
 - **Tools and restrictions:** what is allowed and what is not.
 - **Tone/style:** if applicable.
@@ -31,7 +30,7 @@ Project-specific rules for agents working on this project:
 
 ## Related projects
 
-- [[categories/<category>/<project>/pop/PROJECT|<name>]] — why they relate.
+- [[projects/<project>/pop/PROJECT|<name>]] — why they relate.
 
 ## Decisions
 

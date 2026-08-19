@@ -37,7 +37,7 @@ class DocumentedRecipesTest(unittest.TestCase):
         self._tmp = tempfile.TemporaryDirectory()
         self.addCleanup(self._tmp.cleanup)
         self.root = Path(self._tmp.name) / "vault"
-        self.project = self.root / "categories" / "applications" / "demo"
+        self.project = self.root / "projects" / "demo"
         shutil.copytree(FIXTURE, self.project)
         shutil.copytree(
             ROOT / "_templates" / "coding-dockers",
@@ -55,7 +55,7 @@ class DocumentedRecipesTest(unittest.TestCase):
             path.write_text("fixture\n", encoding="utf-8") if kind == "file" else path.mkdir()
         patches = (
             mock.patch.object(sandbox.poplib, "discover_projects", return_value=[self.project]),
-            mock.patch.object(sandbox.poplib, "project_label", return_value="applications/demo"),
+            mock.patch.object(sandbox.poplib, "project_label", return_value="demo"),
             mock.patch.object(sandbox.poplib, "templates_dir", return_value=self.root / "_templates"),
             mock.patch.object(sandbox.Path, "home", return_value=self.home),
             mock.patch.object(sandbox.subprocess, "run", side_effect=guarded_subprocess),
@@ -66,7 +66,7 @@ class DocumentedRecipesTest(unittest.TestCase):
 
     def args_for(self, agent: str, confirmation: str) -> argparse.Namespace:
         return argparse.Namespace(
-            project="applications/demo", agent=agent, package=[], confirm=confirmation
+            project="demo", agent=agent, package=[], confirm=confirmation
         )
 
     def test_guard_rejects_all_five_executables_with_any_subcommand(self):
@@ -103,7 +103,7 @@ class DocumentedRecipesTest(unittest.TestCase):
         for agent, expected in expectations.items():
             with self.subTest(agent=agent):
                 profile, shown = sandbox.proposal(
-                    self.root, "applications/demo", self.project, agent, []
+                    self.root, "demo", self.project, agent, []
                 )
                 self.assertTrue(profile["stack"]["node"])
                 self.assertEqual(shown["confirmation_hash"], profile["input_sha256"])
@@ -130,14 +130,14 @@ class DocumentedRecipesTest(unittest.TestCase):
 
     def test_hash_covers_recipe_without_assuming_other_slot_state(self):
         _, original = sandbox.proposal(
-            self.root, "applications/demo", self.project, "codex", []
+            self.root, "demo", self.project, "codex", []
         )
         recipe_path = self.root / "_templates" / "coding-dockers" / "recipes" / "codex.json"
         recipe = json.loads(recipe_path.read_text(encoding="utf-8"))
         recipe["open"]["argv"].append("--fixture")
         recipe_path.write_text(json.dumps(recipe), encoding="utf-8")
         _, changed = sandbox.proposal(
-            self.root, "applications/demo", self.project, "codex", []
+            self.root, "demo", self.project, "codex", []
         )
         self.assertNotEqual(original["confirmation_hash"], changed["confirmation_hash"])
 

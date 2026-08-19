@@ -25,7 +25,7 @@ class EmergingRecipesTest(unittest.TestCase):
         self._tmp = tempfile.TemporaryDirectory()
         self.addCleanup(self._tmp.cleanup)
         self.root = Path(self._tmp.name) / "vault"
-        self.project = self.root / "categories" / "applications" / "demo"
+        self.project = self.root / "projects" / "demo"
         self.project.mkdir(parents=True)
         shutil.copytree(
             ROOT / "_templates" / "coding-dockers",
@@ -48,7 +48,7 @@ class EmergingRecipesTest(unittest.TestCase):
         patches = (
             mock.patch.object(sandbox.poplib, "discover_projects", return_value=[self.project]),
             mock.patch.object(
-                sandbox.poplib, "project_label", return_value="applications/demo"
+                sandbox.poplib, "project_label", return_value="demo"
             ),
             mock.patch.object(
                 sandbox.poplib, "templates_dir", return_value=self.root / "_templates"
@@ -66,7 +66,7 @@ class EmergingRecipesTest(unittest.TestCase):
 
     def args_for(self, agent: str, confirmation: str) -> argparse.Namespace:
         return argparse.Namespace(
-            project="applications/demo", agent=agent, package=[], confirm=confirmation
+            project="demo", agent=agent, package=[], confirm=confirmation
         )
 
     def test_pinned_opt_in_node_supports_kimi(self):
@@ -125,7 +125,7 @@ class EmergingRecipesTest(unittest.TestCase):
         for agent, state_target in state_targets.items():
             with self.subTest(agent=agent):
                 profile, shown = sandbox.proposal(
-                    self.root, "applications/demo", self.project, agent, []
+                    self.root, "demo", self.project, agent, []
                 )
                 self.assertTrue(profile["stack"]["node"])
                 self.assertEqual(profile["input_sha256"], shown["confirmation_hash"])
@@ -156,7 +156,7 @@ class EmergingRecipesTest(unittest.TestCase):
 
     def test_hash_covers_emerging_recipe(self):
         _, original = sandbox.proposal(
-            self.root, "applications/demo", self.project, "kimi-code", []
+            self.root, "demo", self.project, "kimi-code", []
         )
         recipe_path = (
             self.root
@@ -169,7 +169,7 @@ class EmergingRecipesTest(unittest.TestCase):
         recipe["open"]["argv"].append("--fixture")
         recipe_path.write_text(json.dumps(recipe), encoding="utf-8")
         _, changed = sandbox.proposal(
-            self.root, "applications/demo", self.project, "kimi-code", []
+            self.root, "demo", self.project, "kimi-code", []
         )
 
         self.assertNotEqual(original["confirmation_hash"], changed["confirmation_hash"])

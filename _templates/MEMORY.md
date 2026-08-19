@@ -1,6 +1,6 @@
 ---
 task: <id>-<slug>
-project: <category>/<project>
+project: <project>
 started: YYYY-MM-DD
 finished: YYYY-MM-DD
 commit: <final-commit-hash>
@@ -30,5 +30,5 @@ authorization: <D-YYYYMMDD-<slug>: no-kanban route (plan mode) chosen in the tri
 
 > Every link carries a trigger: when it is worth following. Evidence of a change belongs to the entries; whole-task pointers live here.
 
-- **Origin:** [[categories/<category>/<project>/pop/roadmap/<n>-<slug>|Phase <n>.<m>]] — *follow for the context that asked for the task*.
+- **Origin:** [[projects/<project>/pop/roadmap/<n>-<slug>|Phase <n>.<m>]] — *follow for the context that asked for the task*.
 - **PR/commit:** <link or hash> — *follow to inspect the final diff*.

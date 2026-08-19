@@ -26,7 +26,7 @@ class PopSandboxProjectStackTest(unittest.TestCase):
         self.addCleanup(self._tmp.cleanup)
         temp = Path(self._tmp.name)
         self.root = temp / "vault"
-        self.project = self.root / "categories" / "applications" / "demo"
+        self.project = self.root / "projects" / "demo"
         shutil.copytree(ROOT / "_templates" / "coding-dockers",
                         self.root / "_templates" / "coding-dockers")
         self.home = temp / "home"
@@ -57,7 +57,7 @@ class PopSandboxProjectStackTest(unittest.TestCase):
 
     def propose(self):
         return sandbox.proposal(
-            self.root, "applications/demo", self.project, "codex", [])
+            self.root, "demo", self.project, "codex", [])
 
     def test_detects_nested_first_party_stack_and_sail(self):
         profile, shown = self.propose()

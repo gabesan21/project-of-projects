@@ -39,7 +39,7 @@ A few paragraphs covering the base approach, execution-constraining decisions an
 - **Must not edit:** `<write boundaries>`.
 - **Depends on:** `<Fxx>` | none.
 - **Expected input:** <contract or artifact produced by dependency> | none.
-- **Skills:** [[categories/<category>/<project>/pop/skills/<skill>|<skill>]] — *use for <trigger>*.
+- **Skills:** [[projects/<project>/pop/skills/<skill>|<skill>]] — *use for <trigger>*.
 - **Criteria:** <IDs of criteria below satisfied by this front>.
 
 > Missing/incompatible dependency or expected input → report `BLOCKED` to the orchestrator. Never implement, simulate or repair the dependency autonomously.
@@ -71,7 +71,7 @@ A few paragraphs covering the base approach, execution-constraining decisions an
 
 > Link durable contracts; do not copy them. Create/change a spec only when delivery changes durable behavior, interface or invariant.
 
-- [[categories/<category>/<project>/pop/specs/<spec>|<spec>]] — *follow for <contract>; expected change: <one line or none>*.
+- [[projects/<project>/pop/specs/<spec>|<spec>]] — *follow for <contract>; expected change: <one line or none>*.
 - [`<subtree>/AGENTS.md`](../<path-in-repo>/AGENTS.md) — *follow before changing <area>*.
 
 ## Execution topology

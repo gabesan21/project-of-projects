@@ -102,8 +102,9 @@ def print_list(title, items):
 def main():
     parser = argparse.ArgumentParser(
         description="Vault overview: tasks by stage and pending gates.")
-    parser.add_argument("--project", metavar="CATEGORY/PROJECT",
-                        help="limit output to one project")
+    parser.add_argument("--project", metavar="PROJECT",
+                        help="limit output to one project (e.g. my-project; "
+                             "multi-repo repository: my-app/frontend)")
     parser.add_argument("--scope", "--vault", dest="vault", metavar="DIR",
                         help="vault root (default: directory above scripts/)")
     args = parser.parse_args()

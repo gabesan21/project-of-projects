@@ -113,7 +113,7 @@ def main():
         else:
             repo = poplib.vault_root(args.repo)
     elif (project / ".git").exists():
-        repo = project  # Included clone or embedded full-multi-repo repository.
+        repo = project  # uni-repo project or multi-repo repository.
     else:
         repo = root
     if not (repo / ".git").exists():

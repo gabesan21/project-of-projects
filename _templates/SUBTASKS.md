@@ -12,7 +12,7 @@
 - **Must not edit:** `<reserved files, areas and fronts>`.
 - **Depends on:** `<Fxx>` | none.
 - **Expected input:** <dependency contract/artifact> | none.
-- **Skills:** [[categories/<category>/<project>/pop/skills/<skill>|<skill>]] — *use for <trigger>*.
+- **Skills:** [[projects/<project>/pop/skills/<skill>|<skill>]] — *use for <trigger>*.
 - **Criteria:** <IDs from the [[<id>-<slug>.plan|plan]]>.
 
 ## Execution contract

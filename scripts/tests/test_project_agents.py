@@ -27,7 +27,7 @@ class ProjectAgentsRulerTest(unittest.TestCase):
         self._tmp = tempfile.TemporaryDirectory()
         self.addCleanup(self._tmp.cleanup)
         self.root = Path(self._tmp.name) / "vault"
-        self.project = self.root / "categories" / "applications" / "app"
+        self.project = self.root / "projects" / "app"
         self.project.mkdir(parents=True)
 
     def write(self, body):
@@ -71,7 +71,7 @@ class ProjectAgentsRulerTest(unittest.TestCase):
         self.assertIn("DOX block of 40 already discounted", warnings[0])
 
     def test_level_one_dox_heading_is_discounted_too(self):
-        """In `full-multi-repo` the block arrives as `# DOX process`."""
+        """In a multi-repo repository the block arrives as `# DOX process`."""
         self.write("line\n" * (CAP + 3) + self.dox_block(12, level="# "))
         _, warnings = self.run_check()
         self.assertIn("DOX block of 12 already discounted", warnings[0])

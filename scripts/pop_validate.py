@@ -11,7 +11,6 @@ import poplib
 import pop_roadmap
 
 MAX_ROOT_DESC = 144
-MAX_CAT_DESC = 600
 MAX_NOTE_LINES = 150
 MAX_PLAN_LINES = 80      # plan root (`<id>.plan.md`), regardless of size
 MAX_FRONT_LINES = 50     # front file in `subtasks/`: one executor's slice
@@ -38,7 +37,7 @@ GATE_ARTIFACT_LIMITS = {
 MAX_MEMORY_LEDGER = 1200
 MAX_MEMORY_ENTRY = 800
 # Date on which the `memory/<YYYY-MM-DD>/` layout became mandatory. Flat memory
-# older than it is tolerated legacy — that is what keeps `included` clones
+# older than it is tolerated legacy — that is what keeps `uni-repo` clones
 # valid, whose memories this vault does not rewrite.
 MEMORY_LAYOUT_SINCE = "2026-07-27"
 MEMORY_DATE_DIR = pop_roadmap.MEMORY_DATE_DIR
@@ -91,7 +90,7 @@ LINK_SKIP_PARTS = {"external-repository", ".obsidian", ".git", "worktrees",
 # `_stage_artifact_base` strips from both sides of the comparison.
 STAGE_ARTIFACT_SUFFIXES = (".plan", ".approval", ".verify",
                            ".defense", ".accusation", ".judgment")
-EXTERNAL_PROJECT_LINK = re.compile(r"\[\[categories/[^/]+/[^/]+/")
+EXTERNAL_PROJECT_LINK = re.compile(r"\[\[projects/[^/]+/")
 
 
 def _spec_links(path):
@@ -319,30 +318,6 @@ def check_root_index(root, violations):
         if m and len(m.group(1)) > MAX_ROOT_DESC:
             violations.append(f"{index}:{n}: description has {len(m.group(1))} "
                               f"characters (max. {MAX_ROOT_DESC})")
-
-
-def check_category_indexes(root, categories, violations):
-    for category in sorted(categories):
-        index = root / "categories" / category / "INDEX.md"
-        if not index.is_file():
-            continue
-        entry_start, desc = None, []
-
-        def flush():
-            if entry_start and len(" ".join(desc)) > MAX_CAT_DESC:
-                violations.append(
-                    f"{index}:{entry_start}: description has "
-                    f"{len(' '.join(desc))} characters (max. {MAX_CAT_DESC})")
-
-        for n, line in lines_outside_fences(index):
-            stripped = line.strip()
-            if stripped.startswith("#"):
-                flush()
-                entry_start = n if stripped.startswith("### ") else None
-                desc = []
-            elif entry_start and stripped and not stripped.startswith("- **Status:**"):
-                desc.append(stripped)
-        flush()
 
 
 def note_limit(path):
@@ -683,7 +658,7 @@ def check_memory(root, projects, violations):
     earlier than `MEMORY_LAYOUT_SINCE`, and the layout requirement only reaches
     the **current scope** (`scope == root`). A nested scope validates its own
     memory when it runs its own `pop_validate`: demanding the layout of an
-    `included` clone here would be telling this vault to rewrite memory that is
+    `uni-repo` clone here would be telling this vault to rewrite memory that is
     not its own — and the ruler would be born failing work in flight in there.
     The content of the date folders, when they exist, is validated in any scope:
     there the layout has already been adopted and what is checked is coherence,
@@ -726,7 +701,7 @@ def check_roadmap_residuals(root, violations):
 
 
 # Legacy harness markers are rejected by the positive anatomy whitelist.
-LEGACY_MARKERS = ("kanban", ".included-harness.json")
+LEGACY_MARKERS = ("kanban", ".unirepo-harness.json")
 
 
 def _scan_legacy_markers(scope, root, violations):
@@ -738,15 +713,16 @@ def _scan_legacy_markers(scope, root, violations):
 
 
 def check_strict_anatomy(root, violations):
-    categories = root / "categories"
-    if not categories.is_dir():
+    projects = root / "projects"
+    if not projects.is_dir():
         return
-    for project in sorted(categories.glob("*/*")):
+    for project in sorted(projects.glob("*")):
         if not project.is_dir():
             continue
         if any(part.startswith(".") for part in project.relative_to(root).parts):
             continue
         _scan_legacy_markers(project, root, violations)
+        # one more level: multi-repo repository
         for sub in sorted(project.glob("*")):
             if sub.is_dir() and sub.name != "pop" and not sub.name.startswith("."):
                 _scan_legacy_markers(sub, root, violations)
@@ -885,14 +861,14 @@ def check_harness_freshness(root, projects, violations):
     """A harness installed in a project is at the source's version.
 
     The root PoP is the single source: a project with
-    `pop/.included-harness.json` received a managed copy of the WORKFLOW, the
+    `pop/.unirepo-harness.json` received a managed copy of the WORKFLOW, the
     templates and the scripts. If the `content_sha` stamp diverges, that
     project is running a flow the vault has already abandoned — fail closed,
     because the remedy is a single command. Only the vault that **is** the
     source runs this check (a clone does not audit itself).
     """
     try:
-        import pop_install_included as installer
+        import pop_install_unirepo as installer
     except ImportError:
         return
     if installer.SOURCE != root or not installer.MANIFEST.is_file():
@@ -906,17 +882,17 @@ def check_harness_freshness(root, projects, violations):
         if stamped is None:
             violations.append(
                 f"{marker}: harness without a `content_sha` stamp — reinstall "
-                f"with `python3 scripts/pop_install_included.py {label}`")
+                f"with `python3 scripts/pop_install_unirepo.py {label}`")
         elif stamped != current:
             violations.append(
                 f"{marker}: harness STALE ({stamped[:12]} ≠ source "
                 f"{current[:12]}) — reinstall with "
-                f"`python3 scripts/pop_install_included.py {label}`")
+                f"`python3 scripts/pop_install_unirepo.py {label}`")
 
 
 def check_standalone(root, violations):
     hb = root / "pop"
-    manifest_path = hb / ".included-harness.json"
+    manifest_path = hb / ".unirepo-harness.json"
     if not manifest_path.is_file():
         violations.append(f"{manifest_path}: standalone manifest missing")
         return
@@ -953,23 +929,20 @@ def check_standalone(root, violations):
 
 def main():
     parser = argparse.ArgumentParser(
-        description="Validate vault limits: 144/600 characters, 150 lines, "
+        description="Validate vault limits: 144 characters, 150 lines, "
                     "card frontmatter, orphaned worktrees, broken wikilinks, "
                     "adopted specs, and pop-hash code citations.")
     parser.add_argument("--scope", "--vault", dest="vault", metavar="DIR",
                         help="vault root (default: directory above scripts/)")
     parser.add_argument("--standalone", action="store_true",
-                        help="fail closed for the local included contract")
+                        help="fail closed for the local uni-repo contract")
     args = parser.parse_args()
 
     root = poplib.vault_root(args.vault)
     projects = poplib.discover_projects(root)
-    categories = {poplib.project_label(root, p).split("/")[0]
-                  for p in projects if p != root}
 
     violations, warnings = [], []
     check_root_index(root, violations)
-    check_category_indexes(root, categories, violations)
     check_note_sizes(root, projects, violations)
     check_cards(root, projects, violations)
     check_gate_artifacts(root, projects, violations)

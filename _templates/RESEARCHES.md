@@ -2,14 +2,14 @@
 
 > Blockquotes in this template are fill-in instructions — **delete them when filling it in**.
 
-Profile: [[categories/<category>/<project>/pop/PROJECT|<Project name>]] · Roadmap: [[categories/<category>/<project>/pop/ROADMAP|Roadmap]]
+Profile: [[projects/<project>/pop/PROJECT|<Project name>]] · Roadmap: [[projects/<project>/pop/ROADMAP|Roadmap]]
 
 > **Optional** file, next to ROADMAP.md. **Deep research** prompts proposed by the agent for the **user** to run in whatever tool they prefer (deep research) and deposit the result in `pop/researches/<topic>/` (a scope whose harness lives at its own root: without the `pop/` prefix). A delivered research enriches the roadmap (epoch recon), the specs and the project itself.
 
 ## <topic-in-kebab-case>
 
 - **Status:** pending (delivered → the section leaves the file; the synthesis is the record)
-- **Feeds:** epoch <n> | spec [[categories/<category>/<project>/pop/specs/<spec>|<spec>]] | RECON NEEDED <which>
+- **Feeds:** epoch <n> | spec [[projects/<project>/pop/specs/<spec>|<spec>]] | RECON NEEDED <which>
 - **Suggested prompt:**
 
 > A complete, self-contained prompt: project context in 2–3 sentences, the central question, what the answer needs to cover (comparisons, sources, criteria) and the expected format of the result. It must work pasted into any research tool, without this repository nearby.

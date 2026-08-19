@@ -98,4 +98,4 @@ The automated suite validates recipes, generation, mounts, isolation, and lifecy
 ## Related references
 
 - [[coding-dockers/INDEX|Local coding dockers]] — *follow for operation, catalog, lifecycle, and the final user-run acceptance checklist*.
-- [[specs/included-standalone|Fully standalone included harness]] — *follow to verify that the feature does not enter the package installed into projects*.
+- [[specs/unirepo-standalone|Fully standalone uni-repo harness]] — *follow to verify that the feature does not enter the package installed into projects*.

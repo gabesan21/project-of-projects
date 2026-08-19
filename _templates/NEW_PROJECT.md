@@ -13,15 +13,14 @@ created: YYYY-MM-DD
 - **What the project is** (1–2 sentences):
 - **Success** — how you'll know it worked:
 - **Kind** (programming, writing, business, research, personal...):
-- **Category** (in `categories/`: `agents` | `applications` | `writing` | `work` — or propose a new one):
-- **Kebab-case name** (proposal):
+- **Kebab-case name** (proposal — becomes the folder in `projects/<name>/`, with no category level):
 
 ## Type and repositories
 
-> Types explained in [[TYPES|TYPES]]: `default` (content at the project folder root, harness in `pop/`) | `included` (the project root is the repo, `pop/` committed into it) | `multi-repo` (one clone per repo at the folder root, a single `pop/`) | `full-multi-repo` (several repos, each with an embedded `included`-style `pop/`; no central kanban — tasks live in the repos).
+> Types explained in [[TYPES|TYPES]]: `uni-repo` (the folder in `projects/<project>/` **is the repository itself**, with the entire `pop/` committed into it — or a free root with no repo, versioned in the PoP) | `multi-repo` (mother folder in `projects/<project>/` **with no harness** — one clone per repo at the root, each with its own complete `pop/`; no central kanban — tasks live in the repos).
 
 - **Type:**
-- **Repository(ies)** — URL and name of each (**all of them**, if `multi-repo`):
+- **Repository(ies)** — URL and name of each: optional (one) if `uni-repo`; **all of them**, if `multi-repo`:
 - **PR branch** — where task worktrees open PRs to (e.g. `main`):
 
 ## Context and harness

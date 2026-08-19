@@ -23,6 +23,8 @@ Create one local Linux sandbox per project × agent without exposing neighboring
 
 Accepted agents: `claude-code`, `codex`, `opencode`, `pi`, and `kimi-code`. An unrepresentable stack, incompatible bind, or different agent requires stopping for a decision; never accept free-form shell commands or relax isolation.
 
+`<project>` is the scope label: a uni-repo uses `<proj>` and a multi-repo repo uses `<proj>/<repo>`. The multi-repo parent (`<proj>`, with no `pop/`) is also a valid target — the sandbox mounts the whole project folder, with the repos inside; it is the default when the user works in the aggregated view.
+
 ## Operate
 
 - Check freshness without starting anything: `python3 scripts/pop_sandbox.py --check-fresh <project> <agent>`.

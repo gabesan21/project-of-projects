@@ -7,6 +7,7 @@
 </p>
 
 <p align="center">
+  <a href="#recommended-ways-to-use-pop">Ways to use</a> ·
   <a href="#getting-started">Getting started</a> ·
   <a href="#how-it-works">How it works</a> ·
   <a href="#core-skills">Core skills</a> ·
@@ -27,7 +28,14 @@
 
 This repository does **not** hold your projects' code. It holds their **planning, tracking and agent harness** — and aggregates your real repositories around it.
 
-**What it is for:** letting a **master agent manage many projects at once**. An orchestrator — Openclaw, Hermes Agent, or whatever drives your agents — opens this vault, sees every project through a single index, and operates each of them through the same kanban flow, with the same conventions, templates and scripts. Nothing to relearn per project: the vault is the shared harness, and every project is an independent island exposing an identical contract.
+## Recommended ways to use PoP
+
+The same vault serves four very different setups — pick the one that matches how you work:
+
+1. **Fork it to command a single multi-repository project.** Dedicate a fork to one project that spans several repos — front-end, back-end, mobile, infra. The fork becomes that project's command center: the mother folder in `projects/` holds the general cross-repo `ROADMAP.md`, each repository is cloned inside with its own complete `pop/` harness and kanban, and you reshape the harness itself — rules, templates, skills, gates — to that project's needs. Best when one big project is the center of your work.
+2. **Clone it as a harness installer and updater.** Keep your repositories exactly where they are and use a local clone purely as the single source of the workflow: `scripts/pop_install_unirepo.py <repo>` installs (or updates) a managed, version-stamped `pop/` harness in each of your standalone repos, `--check-fresh` tells you which ones fell behind, and a reinstall brings them current. Best when you want the PoP workflow inside many independent repos without moving any planning into the vault.
+3. **Fork it to manage projects that have no repository.** Writing, research, personal initiatives, work that produces no code: a `uni-repo` project needs no git repo at all — the folder in `projects/<name>/` is versioned in the vault itself, content and harness together, with the full kanban flow. Best when your projects are documents, plans and ideas rather than codebases.
+4. **Fork it as the process brain of an agent orchestrator.** Point an orchestrator — Hermes Agent, OpenClaw or similar — at your fork and let `AGENTS.md`, `WORKFLOW.md`, the skills and the templates act as its operating procedures for creating and managing many projects at once: a master agent sees every project through a single index, operates each through the same kanban flow with the same conventions, and every project stays an independent island exposing an identical contract — with `INBOX.md` as your daily queue. Best when an orchestrator runs your whole portfolio.
 
 ## Why
 
@@ -43,7 +51,7 @@ Working with AI agents across many projects tends to scatter context everywhere.
 
 ## How it works
 
-Every project lives in a category folder under `categories/` with the same anatomy — a sheet (`PROJECT.md`), a roadmap (`ROADMAP.md` + `roadmap/`, in epochs → phases → tasks), modifications (`MODIFICATIONS.md` + `modifications/`) for work that arrives outside the plan, specs, skills, notes, researches, memory and a kanban every task travels through:
+Every project lives in its own folder under `projects/` — no category level — with the same anatomy — a sheet (`PROJECT.md`), a roadmap (`ROADMAP.md` + `roadmap/`, in epochs → phases → tasks), modifications (`MODIFICATIONS.md` + `modifications/`) for work that arrives outside the plan, specs, skills, notes, researches, memory and a kanban every task travels through:
 
 ```mermaid
 flowchart LR
@@ -113,18 +121,14 @@ project-of-projects/
 ├── INDEX.md             ← all projects at a glance + aggregated repositories
 ├── INBOX.md             ← everything waiting for a human decision (Dataview)
 ├── WORKFLOW.md          ← the kanban state machine
-├── TYPES.md             ← project types: default | included | multi-repo
+├── TYPES.md             ← project types: uni-repo | multi-repo
 ├── specs/               ← durable contracts for the harness itself
 ├── _templates/          ← templates for every standard file
 ├── notes/               ← vault notes: the harness decision log
 ├── scripts/             ← stdlib-only Python CLI: status, validation, kanban moves
 ├── open_questions/      ← the agent's open questions for you (surface in the INBOX)
 ├── drafts/              ← your project drafts: new/ and import/ (fill a template, let an agent process it)
-└── categories/          ← every project category
-    ├── agents/          ← AI agents, automations, skills
-    ├── applications/    ← applications and software
-    ├── writing/         ← articles, books, content
-    └── work/            ← professional projects
+└── projects/            ← every project, one folder each (uni-repo or multi-repo mother)
 ```
 
 ## Core skills
@@ -152,28 +156,28 @@ Stdlib-only Python (≥ 3.9) CLIs in `scripts/` turn agent sweeps into one comma
 
 ```sh
 python3 scripts/pop_status.py                          # overview: tasks per stage, pending gates, blocked, WIP alerts
-python3 scripts/pop_validate.py                        # limits & invariants: 144/600 chars, note sizes, card frontmatter
-python3 scripts/pop_task.py agents/my-project 1.1.1-user-table --title "User table"   # scaffold a task in 001
+python3 scripts/pop_validate.py                        # limits & invariants: 144-char index, note sizes, card frontmatter
+python3 scripts/pop_task.py my-project 1.1.1-user-table --title "User table"   # scaffold a task in 001
 python3 scripts/pop_move.py 1.1.1-user-table 002_planning --reason "plan started"     # validated stage transition
 python3 scripts/pop_worktree.py add 1.1.1-user-table   # create/remove the task's worktree + branch
 python3 scripts/pop_check_scope.py --base HEAD~1 --allow 'src/**' --deny 'src/generated/**'  # validate front ownership
-python3 scripts/pop_sandbox.py new applications/my-project codex  # proposal only; exact hash confirmation writes the local profile
+python3 scripts/pop_sandbox.py new my-project codex  # proposal only; exact hash confirmation writes the local profile
 ```
 
 Coding dockers are an optional, human-operated flow separate from headless `delegate-coding`. A generated `start.sh` opens exactly one of `claude`, `codex`, `opencode`, `pi`, or `kimi` without extra flags, mounts only the selected project plus the documented local Git/GitHub/agent state, and keeps project Docker resources in its own internal daemon. See [[coding-dockers/INDEX|Local coding dockers]] for setup, lifecycle, and the manual acceptance checklist.
 
 ## The vault is the harness source
 
-A project can also run **standalone**: an `included` repo carries its own `pop/` harness, so whoever clones just that repo still has the workflow, the templates, the scripts and the core skills. Those copies are **managed** — this vault is the single source, and a project never evolves its harness locally.
+A project can also run **standalone**: a `uni-repo` carries its own `pop/` harness committed into the repository, so whoever clones just that repo still has the workflow, the templates, the scripts and the core skills. Those copies are **managed** — this vault is the single source, and a project never evolves its harness locally.
 
 ```sh
-python3 scripts/pop_install_included.py ../my-repo                 # install or update the managed harness
-python3 scripts/pop_install_included.py --check-fresh ../my-repo    # exit 0 = current, exit 1 = behind the source
-python3 scripts/pop_install_included.py --sha                       # the source harness version
-python3 scripts/pop_install_included.py --audit-manifest            # the manifest covers everything it should
+python3 scripts/pop_install_unirepo.py ../my-repo                 # install or update the managed harness
+python3 scripts/pop_install_unirepo.py --check-fresh ../my-repo    # exit 0 = current, exit 1 = behind the source
+python3 scripts/pop_install_unirepo.py --sha                       # the source harness version
+python3 scripts/pop_install_unirepo.py --audit-manifest            # the manifest covers everything it should
 ```
 
-Each install mirrors the set declared in `_templates/included-manifest.json` and writes two things into the target's `pop/.included-harness.json`: the source's `content_sha` and the **inventory** of the files it wrote. The stamp is the whole reason "up to date" is checkable — without it, a clone parked on an old version of the flow is indistinguishable from a current one — and `pop_validate.py` turns a stale or unstamped target into a **violation** that `weekly-review` surfaces with the one-command remedy. The inventory is what authorizes the *next* update to prune a retired template or script: only files the installer itself brought before are candidates, because **a managed folder is not an exclusive folder** — your project may keep its own scripts and fixtures in `pop/scripts/`, and an update must never touch them.
+Each install mirrors the set declared in `_templates/unirepo-manifest.json` and writes two things into the target's `pop/.unirepo-harness.json`: the source's `content_sha` and the **inventory** of the files it wrote. The stamp is the whole reason "up to date" is checkable — without it, a clone parked on an old version of the flow is indistinguishable from a current one — and `pop_validate.py` turns a stale or unstamped target into a **violation** that `weekly-review` surfaces with the one-command remedy. The inventory is what authorizes the *next* update to prune a retired template or script: only files the installer itself brought before are candidates, because **a managed folder is not an exclusive folder** — your project may keep its own scripts and fixtures in `pop/scripts/`, and an update must never touch them.
 
 Fixing a harness is therefore always a **reinstall**, never an edit to the local copy: a patched copy silently forks the workflow, and the next install overwrites it anyway.
 
@@ -209,8 +213,8 @@ All plugins serve the **human** side — agents never depend on them (`INBOX.md`
 ## Make it yours
 
 - **Language** — the template ships in English; the vault's language is declared in `AGENTS.md` (rule 1) and each project declares its own default language (plus supported i18n languages for applications). Fork it in any language you like.
-- **Categories** — `agents`, `applications`, `writing`, `work` (in `categories/`) are starters. Add your own: create the folder with an `INDEX.md` and register it in `AGENTS.md` and the root `INDEX.md`.
-- **Project types** — see `TYPES.md`: keep work inside the vault (`default`), embed the harness in your repo (`included`), or aggregate several repos (`multi-repo`). Clones are always gitignored — the vault stays planning-only.
+- **Projects** — every project gets one folder directly under `projects/`, with no category level. Nothing to register beyond the root `INDEX.md`.
+- **Project types** — see `TYPES.md`: a `uni-repo` project folder **is** the repository (with `pop/` committed into it — or no repo at all, versioned in the vault), and a `multi-repo` mother folder aggregates several repo clones, each with its own complete `pop/` and kanban. Clones are always gitignored — the vault stays planning-only.
 - **Rules** — the WIP limit, criticality gates and every workflow rule live in `AGENTS.md` and `WORKFLOW.md`. Edit them; the templates in `_templates/` are the single source the skills build from, so keep them in sync.
 - **Application context** — programming projects use the **DOX process** (`_templates/DOX.md`): a tree of `AGENTS.md` contract files inside the code, kept honest at every task closeout.
 

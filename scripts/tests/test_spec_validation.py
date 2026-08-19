@@ -110,18 +110,18 @@ class SpecValidationTest(unittest.TestCase):
 
     def test_rejects_mismatched_project_in_a_project_scope(self):
         """The label separates siblings, so equality holds where siblings exist."""
-        project = self.root / "categories/agents/gandalf-harness"
+        project = self.root / "projects/example-harness"
         (project / "pop/kanban").mkdir(parents=True)
         self.specs = project / "pop/specs"
         self.specs.mkdir()
         self.write_spec(project="other")
         self.adopt("contract")
-        self.assert_invalid("differs from scope label `agents/gandalf-harness`")
+        self.assert_invalid("differs from scope label `example-harness`")
 
     def test_accepts_a_label_inherited_from_the_parent_vault_at_the_root(self):
         """Standalone clone: the scope is the root and the parent's label is not
         reproducible — demanding equality would break the isolated repo."""
-        self.write_spec(project="applications/qr-payments")
+        self.write_spec(project="applications/example-payments")
         self.adopt("specs/contract")
         result = self.run_validator()
         self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
@@ -132,11 +132,11 @@ class SpecValidationTest(unittest.TestCase):
         self.assert_invalid("empty `project`")
 
     def test_accepts_project_equal_to_full_scope_label(self):
-        project = self.root / "categories/agents/gandalf-harness"
+        project = self.root / "projects/example-harness"
         (project / "pop/kanban").mkdir(parents=True)
         self.specs = project / "pop/specs"
         self.specs.mkdir()
-        self.write_spec(project="agents/gandalf-harness")
+        self.write_spec(project="example-harness")
         self.adopt("contract")
         result = self.run_validator()
         self.assertEqual(result.returncode, 0, result.stdout + result.stderr)

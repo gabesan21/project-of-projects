@@ -1,6 +1,6 @@
 ---
 id: <n>.<m>.<t>
-project: <category>/<project>
+project: <project>
 origin: roadmap
 epoch: <n>
 phase: "<n>.<m>"
@@ -31,7 +31,7 @@ updated: YYYY-MM-DD
 > **Origin:** a roadmap task (`origin: roadmap`) uses id `<n>.<m>.<t>` and fills `epoch`/`phase` (delete `modification`); a modification task (`origin: modifications`) uses id `M-<n>.<t>` and fills `modification: M-<n>` (delete `epoch`/`phase`).
 > **Machine fields:** `yolo_*_returns`, `return_kind` and `circuit_breaker` are born empty/zeroed and are written **only** by `pop_move`/the orchestrator — editing them by hand inflates counters and makes the gate pick the wrong review mode.
 
-- **Origin:** [[categories/<category>/<project>/pop/roadmap/<n>-<epoch-slug>|Phase <n>.<m>]] — *or* [[categories/<category>/<project>/pop/MODIFICATIONS|M-<n>]] for a modification task.
+- **Origin:** [[projects/<project>/pop/roadmap/<n>-<epoch-slug>|Phase <n>.<m>]] — *or* [[projects/<project>/pop/MODIFICATIONS|M-<n>]] for a modification task.
 - **Plan:** [[<id>-<slug>.plan]] · **Approval:** [[<id>-<slug>.approval]] · **Verification:** [[<id>-<slug>.verify]]
 
 ## What
@@ -54,9 +54,9 @@ One sentence: why now, and what it unblocks.
 
 | Stage | Project skills | Owner |
 |-------|----------------|-------|
-| 002_planning | [[categories/<category>/<project>/pop/skills/<skill>\|<skill>]] | agent |
-| 004_processing | [[categories/<category>/<project>/pop/skills/<skill>\|<skill>]] | agent |
-| 005_closing | [[categories/<category>/<project>/pop/skills/<skill>\|<skill>]] | agent |
+| 002_planning | [[projects/<project>/pop/skills/<skill>\|<skill>]] | agent |
+| 004_processing | [[projects/<project>/pop/skills/<skill>\|<skill>]] | agent |
+| 005_closing | [[projects/<project>/pop/skills/<skill>\|<skill>]] | agent |
 
 ## Dependencies
 
@@ -68,7 +68,7 @@ One sentence: why now, and what it unblocks.
 
 > Every link carries a trigger: when it is worth following.
 
-- **Spec:** [[categories/<category>/<project>/pop/specs/<spec>|<spec>]] — *follow to understand <contract/invariant>*.
+- **Spec:** [[projects/<project>/pop/specs/<spec>|<spec>]] — *follow to understand <contract/invariant>*.
 - **Related task:** [[<id-of-another-task>]] — *follow if <condition>*.
 
 ## Log

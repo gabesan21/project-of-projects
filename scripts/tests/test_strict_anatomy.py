@@ -3,8 +3,9 @@
 
 Only the new anatomy (harness in `pop/`) is recognized; the legacy one
 (harness at the project root, content in `project/`) is a violation. Fixture:
-a mini-vault in a TemporaryDirectory with the meta-project at the root, a new
-project and a new embedded repo (full-multi-repo). Stdlib only.
+a mini-vault in a TemporaryDirectory with the meta-project at the root, a
+uni-repo project and a multi-repo repository (mother without harness, as
+TYPES requires). Stdlib only.
 
 Usage:
     python3 -m unittest discover -s scripts/tests -v   (from the vault root)
@@ -41,7 +42,11 @@ def release_card(card: Path) -> None:
 
 
 class StrictAnatomyTest(unittest.TestCase):
-    """Mini-vault with the 3 valid scopes: meta, new, new embedded."""
+    """Mini-vault with the 3 valid scopes: meta, uni-repo, multi-repo repository.
+
+    The multi-repo mother (`projects/mr/`) has no `pop/` or kanban — it is
+    neither a scope nor a violation; it is legitimate by construction.
+    """
 
     def setUp(self):
         self._tmp = tempfile.TemporaryDirectory()
@@ -49,8 +54,9 @@ class StrictAnatomyTest(unittest.TestCase):
         self.root = Path(self._tmp.name) / "vault"
         make_kanban(self.root / "kanban")                                # meta
         shutil.copytree(VAULT / "_templates", self.root / "_templates")
-        make_kanban(self.root / "categories/a/novo/pop/kanban")          # new
-        make_kanban(self.root / "categories/a/fmr/repo1/pop/kanban")     # new fmr
+        make_kanban(self.root / "projects/new/pop/kanban")               # uni-repo
+        (self.root / "projects/mr").mkdir(parents=True)                  # multi-repo mother (no harness)
+        make_kanban(self.root / "projects/mr/repo1/pop/kanban")          # multi-repo repository
 
     def run_script(self, script, *args):
         return subprocess.run(
@@ -58,18 +64,20 @@ class StrictAnatomyTest(unittest.TestCase):
              "--vault", str(self.root)],
             capture_output=True, text=True)
 
-    def test_discover_projects_acha_os_3_escopos_sem_duplicata(self):
+    def test_discover_projects_finds_the_3_scopes_without_duplicates(self):
         scopes = poplib.discover_projects(self.root)
         expected = sorted([
             self.root,
-            self.root / "categories/a/novo",
-            self.root / "categories/a/fmr/repo1",
+            self.root / "projects/new",
+            self.root / "projects/mr/repo1",
         ])
         self.assertEqual(scopes, expected)
         self.assertEqual(len(scopes), len(set(scopes)))
+        # the multi-repo mother (no harness) is not a scope
+        self.assertNotIn(self.root / "projects/mr", scopes)
 
     def test_roundtrip_label_dir(self):
-        for label in ("a/novo", "a/fmr/repo1"):
+        for label in ("new", "mr/repo1"):
             path = poplib.project_dir(self.root, label)
             self.assertTrue((poplib.harness_root(path) / "kanban").is_dir(),
                             f"{label}: {path} without kanban")
@@ -77,10 +85,10 @@ class StrictAnatomyTest(unittest.TestCase):
         self.assertEqual(poplib.project_dir(self.root, "pop"), self.root)
         self.assertEqual(poplib.project_label(self.root, self.root), "pop")
 
-    def test_pop_task_cria_card_na_anatomia_pop(self):
+    def test_pop_task_creates_card_in_the_pop_anatomy(self):
         for label, rel in (
-                ("a/novo", "categories/a/novo/pop/kanban"),
-                ("a/fmr/repo1", "categories/a/fmr/repo1/pop/kanban")):
+                ("new", "projects/new/pop/kanban"),
+                ("mr/repo1", "projects/mr/repo1/pop/kanban")):
             task_id = f"1.1.{hash(label) % 9 + 1}-task-{label.replace('/', '-')}"
             result = self.run_script("pop_task.py", label, task_id)
             self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
@@ -90,9 +98,9 @@ class StrictAnatomyTest(unittest.TestCase):
 
     def test_pop_task_roadmap_fills_epoch_phase_and_deletes_modification(self):
         task_id = "5.1.1-roadmap-ok"
-        result = self.run_script("pop_task.py", "a/novo", task_id)
+        result = self.run_script("pop_task.py", "new", task_id)
         self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
-        card = (self.root / "categories/a/novo/pop/kanban/001_initial_task"
+        card = (self.root / "projects/new/pop/kanban/001_initial_task"
                 / task_id / f"{task_id}.md")
         meta, _ = poplib.parse_frontmatter(card.read_text(encoding="utf-8"))
         self.assertEqual(meta.get("id"), "5.1.1")
@@ -103,9 +111,9 @@ class StrictAnatomyTest(unittest.TestCase):
 
     def test_pop_task_modification_fills_modification_and_deletes_epoch_phase(self):
         task_id = "M-1.1-adjust-contract"
-        result = self.run_script("pop_task.py", "a/novo", task_id)
+        result = self.run_script("pop_task.py", "new", task_id)
         self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
-        card = (self.root / "categories/a/novo/pop/kanban/001_initial_task"
+        card = (self.root / "projects/new/pop/kanban/001_initial_task"
                 / task_id / f"{task_id}.md")
         self.assertTrue(card.is_file(), f"card missing: {card}")
         meta, _ = poplib.parse_frontmatter(card.read_text(encoding="utf-8"))
@@ -120,15 +128,15 @@ class StrictAnatomyTest(unittest.TestCase):
     def test_pop_task_rejects_invalid_ids(self):
         for bad in ("M-1.1.1-extra-part", "1.1-missing-part",
                     "m-1.1-lowercase", "M-1.x-no-slug"):
-            result = self.run_script("pop_task.py", "a/novo", bad)
+            result = self.run_script("pop_task.py", "new", bad)
             self.assertEqual(result.returncode, 1, f"{bad} should fail")
             self.assertIn("Invalid id", result.stdout)
 
     def test_pop_validate_accepts_modification_card(self):
         task_id = "M-2.1-val-modification"
         self.assertEqual(
-            self.run_script("pop_task.py", "a/novo", task_id).returncode, 0)
-        release_card(self.root / "categories/a/novo/pop/kanban"
+            self.run_script("pop_task.py", "new", task_id).returncode, 0)
+        release_card(self.root / "projects/new/pop/kanban"
                      / "001_initial_task" / task_id / f"{task_id}.md")
         result = self.run_script("pop_validate.py")
         self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
@@ -158,9 +166,9 @@ class StrictAnatomyTest(unittest.TestCase):
         self.assertEqual(result.returncode, 1)
         self.assertIn("`modification`", result.stdout)
 
-    def test_pop_move_001_para_002(self):
+    def test_pop_move_001_to_002(self):
         label, rel, task_id = (
-            "a/novo", "categories/a/novo/pop/kanban", "2.1.1-move-novo")
+            "new", "projects/new/pop/kanban", "2.1.1-move-new")
         self.assertEqual(
             self.run_script("pop_task.py", label, task_id).returncode, 0)
         card = (self.root / rel / "001_initial_task" / task_id
@@ -173,16 +181,16 @@ class StrictAnatomyTest(unittest.TestCase):
         self.assertFalse(
             (self.root / rel / "001_initial_task" / task_id).exists())
 
-    def test_pop_validate_exit_0_na_fixture(self):
+    def test_pop_validate_exit_0_in_the_fixture(self):
         # with live cards in the pop/ anatomy, including one already moved to 002
         self.assertEqual(
-            self.run_script("pop_task.py", "a/novo", "3.1.1-val-novo")
+            self.run_script("pop_task.py", "new", "3.1.1-val-new")
             .returncode, 0)
-        release_card(self.root / "categories/a/novo/pop/kanban"
-                     / "001_initial_task" / "3.1.1-val-novo"
-                     / "3.1.1-val-novo.md")
+        release_card(self.root / "projects/new/pop/kanban"
+                     / "001_initial_task" / "3.1.1-val-new"
+                     / "3.1.1-val-new.md")
         self.assertEqual(
-            self.run_script("pop_move.py", "3.1.1-val-novo", "002_planning")
+            self.run_script("pop_move.py", "3.1.1-val-new", "002_planning")
             .returncode, 0)
         result = self.run_script("pop_validate.py")
         self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
@@ -191,9 +199,9 @@ class StrictAnatomyTest(unittest.TestCase):
         # `return_kind` is written only by pop_move; a value outside the enum
         # means a hand edit and breaks the choice of the re-review mode.
         self.assertEqual(
-            self.run_script("pop_task.py", "a/novo", "5.1.1-return-kind")
+            self.run_script("pop_task.py", "new", "5.1.1-return-kind")
             .returncode, 0)
-        card = (self.root / "categories/a/novo/pop/kanban" / "001_initial_task"
+        card = (self.root / "projects/new/pop/kanban" / "001_initial_task"
                 / "5.1.1-return-kind" / "5.1.1-return-kind.md")
         release_card(card)
         self.assertEqual(self.run_script("pop_validate.py").returncode, 0)
@@ -204,35 +212,35 @@ class StrictAnatomyTest(unittest.TestCase):
         self.assertEqual(result.returncode, 1, result.stdout + result.stderr)
         self.assertIn("`return_kind` invalid `parcial`", result.stdout)
 
-    def test_pop_validate_nao_avisa_link_estagio_irmao(self):
+    def test_pop_validate_does_not_warn_about_sibling_stage_link(self):
         # a card in 001 links `.plan/.approval/.verify` (from the template)
         # that are only born as the task advances — expected navigation link,
         # must not become a warning.
         self.assertEqual(
-            self.run_script("pop_task.py", "a/novo", "4.1.1-links-estagio")
+            self.run_script("pop_task.py", "new", "4.1.1-links-stage")
             .returncode, 0)
-        release_card(self.root / "categories/a/novo/pop/kanban"
-                     / "001_initial_task" / "4.1.1-links-estagio"
-                     / "4.1.1-links-estagio.md")
+        release_card(self.root / "projects/new/pop/kanban"
+                     / "001_initial_task" / "4.1.1-links-stage"
+                     / "4.1.1-links-stage.md")
         result = self.run_script("pop_validate.py")
         self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
-        self.assertNotIn("4.1.1-links-estagio.plan", result.stdout)
-        self.assertNotIn("4.1.1-links-estagio.approval", result.stdout)
-        self.assertNotIn("4.1.1-links-estagio.verify", result.stdout)
+        self.assertNotIn("4.1.1-links-stage.plan", result.stdout)
+        self.assertNotIn("4.1.1-links-stage.approval", result.stdout)
+        self.assertNotIn("4.1.1-links-stage.verify", result.stdout)
 
-    def test_pop_validate_rejeita_anatomia_legada(self):
+    def test_pop_validate_rejects_legacy_anatomy(self):
         # harness at the folder root (legacy kanban/) => violation, exit 1
-        make_kanban(self.root / "categories/a/legado/kanban")
+        make_kanban(self.root / "projects/legacy/kanban")
         result = self.run_script("pop_validate.py")
         self.assertEqual(result.returncode, 1, result.stdout + result.stderr)
         self.assertIn("legacy anatomy", result.stdout)
-        self.assertIn("categories/a/legado/kanban", result.stdout)
+        self.assertIn("projects/legacy/kanban", result.stdout)
 
-    def test_pop_validate_ignora_scaffold_sem_harness(self):
+    def test_pop_validate_ignores_scaffold_without_harness(self):
         # a folder with only `project/` and no harness = not-yet-imported
         # scaffold, not a PoP project => NOT an anatomy violation.
-        (self.root / "categories/a/scaffold/project").mkdir(parents=True)
-        (self.root / "categories/a/scaffold/.gitignore").write_text(
+        (self.root / "projects/scaffold/project").mkdir(parents=True)
+        (self.root / "projects/scaffold/.gitignore").write_text(
             "project/*\n", encoding="utf-8")
         result = self.run_script("pop_validate.py")
         self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
@@ -283,7 +291,7 @@ class ProjectAgentsCapTest(unittest.TestCase):
         self._tmp = tempfile.TemporaryDirectory()
         self.addCleanup(self._tmp.cleanup)
         self.root = Path(self._tmp.name)
-        self.project = self.root / "categories/agents/p"
+        self.project = self.root / "projects/p"
         (self.project / "pop/kanban/001_initial_task").mkdir(parents=True)
         self.agents = self.project / "AGENTS.md"
 
@@ -311,8 +319,8 @@ class ProjectAgentsCapTest(unittest.TestCase):
         self.assertNotIn("max. 60", self.validate().stdout)
 
 
-class IncludedInstallV2Test(unittest.TestCase):
-    """Included v2 installation (harness_root=pop) in a temporary repo."""
+class UnirepoInstallTest(unittest.TestCase):
+    """Uni-repo installation (harness_root=pop) in a temporary repo."""
 
     def setUp(self):
         self._tmp = tempfile.TemporaryDirectory()
@@ -322,16 +330,16 @@ class IncludedInstallV2Test(unittest.TestCase):
         (self.target / ".gitignore").write_text("node_modules/\n",
                                                 encoding="utf-8")
 
-    def test_instala_layout_pop_e_valida_standalone(self):
+    def test_installs_pop_layout_and_validates_standalone(self):
         result = subprocess.run(
-            [sys.executable, str(SCRIPTS / "pop_install_included.py"),
+            [sys.executable, str(SCRIPTS / "pop_install_unirepo.py"),
              str(self.target)],
             capture_output=True, text=True)
         self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
 
         pop = self.target / "pop"
         for rel in ("WORKFLOW.md", "INBOX.md",
-                    ".included-harness.json", "scripts/pop_validate.py",
+                    ".unirepo-harness.json", "scripts/pop_validate.py",
                     "_templates/TASK.md", "kanban/001_initial_task/.gitkeep",
                     "worktrees/.gitkeep"):
             self.assertTrue((pop / rel).exists(), f"pop/{rel} missing")
@@ -362,7 +370,7 @@ class IncludedInstallV2Test(unittest.TestCase):
         # The copied installer must also find skills at the repo root, not in
         # `pop/.agents/`, to allow future standalone updates.
         result = subprocess.run(
-            [sys.executable, str(pop / "scripts" / "pop_install_included.py"),
+            [sys.executable, str(pop / "scripts" / "pop_install_unirepo.py"),
              "--audit-manifest"], capture_output=True, text=True,
             cwd=self.target)
         self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
@@ -376,11 +384,11 @@ class HarnessFreshnessTest(unittest.TestCase):
         self.addCleanup(self._tmp.cleanup)
         self.target = Path(self._tmp.name) / "repo"
         self.target.mkdir()
-        self.marker = self.target / "pop" / ".included-harness.json"
+        self.marker = self.target / "pop" / ".unirepo-harness.json"
 
     def installer(self, *args):
         return subprocess.run(
-            [sys.executable, str(SCRIPTS / "pop_install_included.py"), *args],
+            [sys.executable, str(SCRIPTS / "pop_install_unirepo.py"), *args],
             capture_output=True, text=True)
 
     def install(self):
@@ -465,8 +473,8 @@ class HarnessFreshnessTest(unittest.TestCase):
         teach.
         """
         self.install()
-        vendored = self.target / "pop" / "scripts" / "pop_install_included.py"
-        stamp = json.loads((self.target / "pop" / ".included-harness.json")
+        vendored = self.target / "pop" / "scripts" / "pop_install_unirepo.py"
+        stamp = json.loads((self.target / "pop" / ".unirepo-harness.json")
                            .read_text(encoding="utf-8"))["content_sha"]
         for flag in ("--check-fresh", "--sha"):
             result = subprocess.run(
@@ -500,7 +508,7 @@ class HarnessFreshnessTest(unittest.TestCase):
         workflow.write_text(original + "\nRun it from the root PoP.\n",
                             encoding="utf-8")
         result = subprocess.run(
-            [sys.executable, str(SCRIPTS / "pop_install_included.py"),
+            [sys.executable, str(SCRIPTS / "pop_install_unirepo.py"),
              str(self.target)], capture_output=True, text=True)
         self.assertEqual(result.returncode, 1, result.stdout)
         self.assertIn("hosting scope", result.stderr)

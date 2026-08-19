@@ -17,7 +17,7 @@ ProjectOfProjects/
 ├── INDEX.md             ← master index: every project, 144 chars each
 ├── INBOX.md             ← the human's inbox: everything awaiting a decision
 ├── WORKFLOW.md          ← kanban state machine (task flow)
-├── TYPES.md             ← project types: default | included | multi-repo | full-multi-repo
+├── TYPES.md             ← project types: uni-repo | multi-repo
 ├── specs/               ← current contracts, discovered through [[specs/INDEX|the index]]
 ├── _templates/          ← templates for every standard file
 ├── notes/               ← vault notes: decisions/ holds the harness decisions
@@ -27,21 +27,14 @@ ProjectOfProjects/
 ├── drafts/              ← project drafts filled in by the human
 │   ├── new/             ← filled-in copies of [[_templates/NEW_PROJECT|NEW_PROJECT]]
 │   └── import/          ← filled-in copies of [[_templates/IMPORT_PROJECT|IMPORT_PROJECT]]
-└── categories/          ← every project category
-    ├── agents/          ← AI agents, automations, skills
-    │   ├── INDEX.md     ← category index: 600 chars + status
-    │   └── <project>/   ← standard anatomy (below)
-    ├── applications/    ← applications and software in general
-    ├── writing/         ← writing: articles, books, content
-    └── work/            ← professional projects
+└── projects/            ← every project: one folder per project, no category level
+    └── <project>/       ← standard anatomy (below)
 ```
-
-New categories may be created inside `categories/` when no existing one fits — always with their own `INDEX.md`, registering the new folder in this file and in the root `INDEX.md`.
 
 ## Anatomy of a project
 
 ```
-categories/<category>/<project>/
+projects/<project>/
 ├── AGENTS.md            ← standalone instructions: type, repos, workflow (CLAUDE.md → symlink)
 ├── .agents/skills/      ← real copies of the PoP core workflow skills
 ├── .gitignore           ← pop/worktrees/ + clones of the project's repos
@@ -86,25 +79,24 @@ When creating a project, **copy the templates from `_templates/`** and create th
 
 ## Types and repositories
 
-The PoP is a **repository aggregator**: every project declares a **type** in its AGENTS.md — `default` (a folder in the vault, content at its root, optional repo declared only there), `included` (the project's root is the external repo, with `pop/` committed into it), `multi-repo` (one clone per repo at the folder's root, a single `pop/`) or `full-multi-repo` (several repos, each clone with its own embedded `pop/`; the mother's `pop/` holds only the general ROADMAP, **with no central kanban** — every task lives in a repo's kanban) — detail in [[TYPES|TYPES]]. Repos of `included`, `multi-repo` and `full-multi-repo` go in the **Aggregated repositories** section of the root [[INDEX|INDEX]]; clones are never committed to the PoP (`.gitignore`).
+The PoP is a **repository aggregator**: every project declares a **type** in its AGENTS.md — `uni-repo` (the folder at `projects/<project>/` **is the repository itself**, with `pop/` committed into it; the **repo-less** variant stays valid, versioned in the PoP) or `multi-repo` (a parent folder **without a harness** aggregating several repos — one clone per repo at the root, each with its own complete `pop/`; **no central kanban**, every task lives in a repo's kanban) — detail in [[TYPES|TYPES]]. The repo of a `uni-repo` (when any) and all the repos of a `multi-repo` go in the **Aggregated repositories** section of the root [[INDEX|INDEX]]; clones are never committed to the PoP (`.gitignore`).
 
 ### The root PoP installs and updates the harness
 
-This vault is the **single source** of the harness. Every project that runs standalone — an `included` clone, an embedded repo of a `full-multi-repo` — never evolves WORKFLOW, templates, scripts or core skills on its own: it receives a **managed copy** via `python3 scripts/pop_install_included.py <dir>`, which mirrors the set declared in [[_templates/included-manifest.json|included-manifest]]. Each install writes into the target's `pop/.included-harness.json` both the source harness's `content_sha` and the **inventory** of what it wrote: the stamp makes "up to date" verifiable (`--check-fresh <dir>` fails closed when the target fell behind, and `pop_validate` reports staleness as a violation), and the inventory authorizes the next update's pruning — only what the installer brought before may be removed, because **a managed folder is not an exclusive folder** and the project keeps files of its own in `pop/scripts/`. Only the source **compares** versions; run from the installed copy, `--check-fresh` reports just the local version, because sending the project to look for the source is teaching it to cross its own boundary. Fixing harness by editing the local copy is always wrong — the project **reinstalls**.
+This vault is the **single source** of the harness. Every project that runs standalone — the clone of a `uni-repo`, each repo of a `multi-repo` — never evolves WORKFLOW, templates, scripts or core skills on its own: it receives a **managed copy** via `python3 scripts/pop_install_unirepo.py <dir>`, which mirrors the set declared in [[_templates/unirepo-manifest.json|unirepo-manifest]]. Each install writes into the target's `pop/.unirepo-harness.json` both the source harness's `content_sha` and the **inventory** of what it wrote: the stamp makes "up to date" verifiable (`--check-fresh <dir>` fails closed when the target fell behind, and `pop_validate` reports staleness as a violation), and the inventory authorizes the next update's pruning — only what the installer brought before may be removed, because **a managed folder is not an exclusive folder** and the project keeps files of its own in `pop/scripts/`. Only the source **compares** versions; run from the installed copy, `--check-fresh` reports just the local version, because sending the project to look for the source is teaching it to cross its own boundary. Fixing harness by editing the local copy is always wrong — the project **reinstalls**.
 
-**What travels is scope-relative.** Every managed file describes exclusively the root that receives it: whoever installs it never appears in it. `exclude_files` drops from the package what only serves a host of projects (`TYPES.md`, `NEW_PROJECT`/`IMPORT_PROJECT`, the `weekly-review` origin fronts), and `pop_install_included.py --audit-boundary` **fails the install** if the copied text goes back to naming this vault — `categories/`, root indexes, "meta-project", "parent PoP". The scripts follow the same rule: `poplib.vault_root()` stops at the `pop/.included-harness.json` marker, and an installed scope labels itself by the name of its own root, never `pop` (which would make it inherit delivery straight to `main`). The operational definition lives in the "Current scope" section of [[WORKFLOW|WORKFLOW]], which ships with every copy — *read it before touching anything that goes out to the projects*.
+**What travels is scope-relative.** Every managed file describes exclusively the root that receives it: whoever installs it never appears in it. `exclude_files` drops from the package what only serves a host of projects (`TYPES.md`, `NEW_PROJECT`/`IMPORT_PROJECT`, the `weekly-review` origin fronts), and `pop_install_unirepo.py --audit-boundary` **fails the install** if the copied text goes back to naming this vault — `projects/`, root indexes, "meta-project", "parent PoP". The scripts follow the same rule: `poplib.vault_root()` stops at the `pop/.unirepo-harness.json` marker, and an installed scope labels itself by the name of its own root, never `pop` (which would make it inherit delivery straight to `main`). The operational definition lives in the "Current scope" section of [[WORKFLOW|WORKFLOW]], which ships with every copy — *read it before touching anything that goes out to the projects*.
 
 ## IDs and link convention
 
 - IDs follow the hierarchy of their origin: roadmap epoch `1` → phase `1.1` → task `1.1.1-user-table-creation`; modifications modification `M-1` → task `M-1.1-adjust-contract`. Numeric id = roadmap; `M-` prefix = modifications. Slug in kebab-case, unique across the vault (if it collides with another project, adjust the slug).
 - **Task files move** between kanban stages, so all of them carry the task's unique name in the file name (`1.1.1-user-table-creation.md`, `M-1.1-adjust-contract.plan.md`…) and are linked **by name only**: `[[1.1.1-user-table-creation]]` resolves in any stage.
-- **Files that don't move** (sheets, roadmaps, modifications, specs, skills, indexes) are linked with full path + alias: `[[categories/agents/my-project/PROJECT|My Project]]`.
+- **Files that don't move** (sheets, roadmaps, modifications, specs, skills, indexes) are linked with full path + alias: `[[projects/my-project/PROJECT|My Project]]`.
 - **Links with a trigger:** in agent-facing navigation sections (the card's Links, related specs, memory, learnings, DOX contracts), every link carries 1 line saying **when** to follow it — a link without a trigger there is a link the agent rightly ignores.
 
 ## Indexes, INBOX, drafts and open questions
 
-- **`INDEX.md` (root):** vault structure + every project, description of **up to 144 characters** each, and the **Aggregated repositories** list (repos to clone, with path and PR branch).
-- **`categories/<category>/INDEX.md`:** per project: link, **status** and description of **up to 600 characters**.
+- **`INDEX.md` (root):** vault structure + every project — link, **status** and description of **up to 144 characters** each — and the **Aggregated repositories** list (repos to clone, with path and PR branch). There is no intermediate per-category index anymore: the root INDEX is the vault's only project index.
 - **`INBOX.md` (root):** everything awaiting the human — generated **automatically via Dataview** from the cards' frontmatter (in `001_initial_task` awaiting your release, `003_human_approval`, awaiting merge in `005_closing`, blocked ones) and from the open questions in `open_questions/`. Don't edit the lists by hand; it is the only file the human needs to open each day.
 - **`drafts/`:** project drafts filled in by the **human** from the templates [[_templates/NEW_PROJECT|NEW_PROJECT]] (→ `drafts/new/`) and [[_templates/IMPORT_PROJECT|IMPORT_PROJECT]] (→ `drafts/import/`) — they let you draft several projects before engaging an agent. The `new-project`/`import-project` skills consume the draft as a pre-answered interview (they confirm, they don't re-ask) and **delete it** when the project is materialized.
 - **`open_questions/`:** general questions from the agent that depend on the human and belong to no card — decisions about new projects, overall vault structure etc. One file per question ([[_templates/OPEN-QUESTION|template]], `status: open | answered`); the open ones show up in the INBOX. Answered → the agent applies the answer, marks it `answered` and, if it becomes a harness decision, records it in `notes/decisions/`.
@@ -118,7 +110,7 @@ The central procedures are **skills** in the open Agent Skills format (`SKILL.md
 | Skill | When to use |
 |-------|-------------|
 | `new-project` | Guided interview that creates a new project: essence, harness, roadmap and specs. Consumes a draft from `drafts/new/` if present. |
-| `import-project` | Imports an existing repository: recon, fit into type/category and Epoch 1 of organization. Consumes a draft from `drafts/import/` if present. |
+| `import-project` | Imports an existing repository: recon, fit into type and Epoch 1 of organization. Consumes a draft from `drafts/import/` if present. |
 | `recon-project` | Generates and consumes the deterministic `RECON.md` report of a directory before sweeping files — delegated recon, 002 with broad reading, Epoch 1 of `import-project`. |
 | `plan-roadmap` | Build/evolve the roadmap by interview (epochs → phases → candidate tasks). |
 | `new-task` | Quick interview that materializes a roadmap or modification task in `kanban/001_initial_task`; also handles change requests with no active card. |
@@ -174,17 +166,17 @@ When creating a new skill: create the folder at `.agents/skills/<name>/SKILL.md`
 1. **Language:** the general content of this vault is written in **English by default — forks may adopt any language**. Each project declares its **default language** in its own AGENTS.md — specs, notes, research, code comments and that project's entire flow follow the declared language (applications also declare the languages supported for i18n).
 2. **It is an Obsidian vault:** use wikilinks `[[...]]` for every internal reference, following the link convention above.
 3. **Cross-reference within the project:** when mentioning a spec, skill, task or note **from the same project** — or shared vault material (core skills, `_templates/`, [[WORKFLOW|WORKFLOW]], [[TYPES|TYPES]], indexes) — link it following the link convention. Do **not** reference material from **another project** — see rule 4.
-4. **Projects are independent islands:** each project is, at first sight, **unrelated** to its neighbors. Never mix material from different projects, and a project **never** references, depends on or integrates another vault project (no "integration epoch", "consumer project" or "sibling project" in the harness). Genuinely cross-project work is exactly what the `multi-repo`/`full-multi-repo` types exist to cover (see [[TYPES|TYPES]]); outside them, only cite another project if the **human explicitly asks**. Every project folder follows the standard anatomy.
+4. **Projects are independent islands:** each project is, at first sight, **unrelated** to its neighbors. Never mix material from different projects, and a project **never** references, depends on or integrates another vault project (no "integration epoch", "consumer project" or "sibling project" in the harness). Genuinely cross-project work is exactly what the `multi-repo` type exists to cover (see [[TYPES|TYPES]]); outside it, only cite another project if the **human explicitly asks**. Every project folder follows the standard anatomy.
 5. **Modularization — no file too large:** a note must not exceed **~150 lines**; a project's AGENTS.md is capped at **~60** and the ruler **always measures**: in an **application**, `pop_validate` discounts the DOX block and reports the rest's excess as a warning — an exemption that switches the measurement off is invisible debt, not an exception. A project AGENTS.md holds what belongs to that project and **points** to [[WORKFLOW|WORKFLOW]]/[[TYPES|TYPES]] — narrating the flow there is duplication that rots ([[_templates/AGENTS-PROJECT|the template]] lists what must not go in). A plan is a brief, not an exception: if it grows, split the task or move durable contracts into specs. A file answers **one** question; roadmap descriptions stay one line.
 6. **One run = up to the next human gate:** the agent advances the task and only stops where a human decision is awaited — gates and orchestration in [[WORKFLOW|WORKFLOW]].
 7. **Explicit owner:** every stage, subtask and skill has a declared owner (`agent` or `user`) and the agent never executes a `(user)` item — table and rules in [[WORKFLOW|WORKFLOW]].
-8. **Indexes always in sync:** when creating, completing or changing a project's status, update the category `INDEX.md` **and** the root one. Respect the limits: 144 chars (root), 600 chars (category).
+8. **Index always in sync:** when creating, completing or changing a project's status, update the root `INDEX.md`. Respect the limit: 144 chars per description.
 9. **Absolute dates:** always YYYY-MM-DD, never "next week" or "last month".
 10. **Decisions are recorded:** important decisions made in conversation go into the project folder (with date and rationale) before ending the session.
 11. **Lessons are extracted and integrated:** when completing a task, whatever was learned and is reusable becomes a skill (`skills/`) or a note (`notes/`) — updating an existing note on the same theme instead of duplicating, and flagging contradiction with a previous note/decision — linked in the task's card.
 12. **Planning and execution don't mix:** the project's content lives at the **root** of the project folder (or in the external repository indicated in the sheet's harness); all planning and knowledge lives in `pop/`. Legacy projects (pre-2026-07-14): content in `project/` until migration.
 13. **A content change enters through triage — optional kanban, tracking always:** every content change request is classified at the entrance. **Direct fix** when *all* hold: the scope is evident from the request itself, no new durable contract, no planning interview needed, and it fits in one session — it runs **without a card**, with durable proof in a memory ledger `F-YYYYMMDD-<slug>` + sync of the affected specs ("Direct fix" section of [[WORKFLOW|WORKFLOW]]); a fix is not a waiver: memory and specs stay mandatory. Outside the direct fix, the kanban is **optional and recommended by the agent when the change is large**; if the user opts out of it, the route is **the coding agent's own plan mode**, with no card and no stages — but **never** without tracking: a `D-YYYYMMDD-<slug>` ledger + entries + specs/DOX sync, and the project's agents and skills keep applying ("No-kanban route" section of [[WORKFLOW|WORKFLOW]]). **Yolo or a roadmap/modifications item → kanban by default**, implied: the agent warns ("this goes through the kanban") and proceeds; when in doubt, **one** one-line question decides. A fix that grows midway (second objective, contract touched) **stops** and returns to triage. Harness stays outside the kanban as always: **harness maintenance is done directly, with no card, no task branch/worktree/PR** (the three classes of file are in the "Current scope" section of [[WORKFLOW|WORKFLOW]]); creating a task to slim an AGENTS.md, fix a spec, a note or memory is a routing error, not diligence.
-14. **Self-validation before finishing:** the agent checks its own changes from the session — index limits (144/600 chars), ~150 lines per note, complete frontmatter on cards, links following the convention — and fixes anything out of bounds before the commit.
+14. **Self-validation before finishing:** the agent checks its own changes from the session — the index limit (144 chars), ~150 lines per note, complete frontmatter on cards, links following the convention — and fixes anything out of bounds before the commit.
 15. **Commit per session:** this vault is a git repository. When ending a work session, commit the changes with a short message in the vault's language saying what changed.
 16. **Worktrees and ownership:** outside a root-local PoP, 004 has one integration worktree per task. External yolo tasks integrate into `develop`; the final scope opens `develop` → `main`, and only the human merges. Dependencies are prerequisites — [[WORKFLOW|WORKFLOW]].
 17. **Durable memory and lean roadmap:** every completed task gets its ledger `memory/<YYYY-MM-DD>/<id>.md` (≤1200 chars) plus one entry `<id>.<nn>-<slug>.md` (≤800 chars, with linked evidence) per thing done. After memory/spec/status validation, the close-out of `005_closing` removes its row from the epoch or modification file and only then deletes `kanban/005_closing/<id>/`. Root roadmaps hold epochs; epoch files hold phases and open tasks; `MODIFICATIONS.md` and `modifications/` follow the same rule.
@@ -194,7 +186,7 @@ When creating a new skill: create the folder at `.agents/skills/<name>/SKILL.md`
 
 ## Harness decisions
 
-The vault's architecture decisions live in `notes/decisions/`, one note per decision day (`YYYY-MM-DD-harness-decisions.md`) — consult them before proposing harness changes: [[notes/decisions/2026-07-20-harness-decisions|2026-07-20]] · [[notes/decisions/2026-07-22-harness-decisions|2026-07-22]] · [[notes/decisions/2026-08-16-harness-decisions|2026-08-16]].
+The vault's architecture decisions live in `notes/decisions/`, one note per decision day (`YYYY-MM-DD-harness-decisions.md`) — consult them before proposing harness changes: [[notes/decisions/2026-07-20-harness-decisions|2026-07-20]] · [[notes/decisions/2026-07-22-harness-decisions|2026-07-22]] · [[notes/decisions/2026-08-16-harness-decisions|2026-08-16]] · [[notes/decisions/2026-08-18-harness-decisions|2026-08-18]].
 
 ## Open decisions (to discuss)
 

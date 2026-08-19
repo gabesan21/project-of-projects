@@ -222,8 +222,8 @@ class ResidualValidationTest(CloseLifecycleTest):
 class StandaloneLabelTest(CloseLifecycleTest):
     """The scope label separates siblings; a standalone clone has no siblings.
 
-    The memory of an `included` repo was written with the label relative to the
-    parent vault (`categories/<cat>/<proj>`), which the clone does not
+    The memory of a multi-repo repository was written with the label relative
+    to the parent vault (`<proj>/<repo>`), which the clone does not
     reproduce — demanding equality made the repo unable to close its own tasks.
     """
 
@@ -231,7 +231,7 @@ class StandaloneLabelTest(CloseLifecycleTest):
         self.write_card(TASK_R)
         (self.root / "memory" / f"{TASK_R}.md").write_text(
             "---\n"
-            f"task: {TASK_R}\nproject: categories/applications/dark-store\n"
+            f"task: {TASK_R}\nproject: applications/example-store\n"
             "started: 2026-07-20\nfinished: 2026-07-21\ncommit: abc123\npr:\n"
             "---\n\n# Memory\n", encoding="utf-8")
         self.write_epoch()
@@ -264,12 +264,12 @@ class WorktreeConsumerTest(CloseLifecycleTest):
         self.assertFalse((self.root / "worktrees").exists())
 
     def test_pop_worktree_consumer_reports_external_yolo_develop_to_main(self):
-        project = self.root / "categories/applications/example"
+        project = self.root / "projects/example"
         task = "1.1.1-external-yolo"
         card = project / "pop/kanban/004_processing" / task / f"{task}.md"
         card.parent.mkdir(parents=True)
         card.write_text(
-            "---\nid: 1.1.1\nproject: applications/example\n"
+            "---\nid: 1.1.1\nproject: example\n"
             "stage: 004_processing\nyolo: true\ncreated: 2026-07-21\n"
             "updated: 2026-07-21\n---\n", encoding="utf-8")
         route = self.run_cli("pop_worktree.py", "route", task)

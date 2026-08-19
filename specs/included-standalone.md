@@ -3,13 +3,13 @@ id: included-standalone
 project: pop
 domain: harness
 kind: contract
-status: active
-implementation: implemented
+status: superseded
+implementation: not_applicable
 origin: "4.1"
 created: 2026-07-13
-updated: 2026-07-27
+updated: 2026-08-18
 supersedes: []
-superseded_by:
+superseded_by: unirepo-standalone
 ---
 
 # Spec — Fully standalone included harness

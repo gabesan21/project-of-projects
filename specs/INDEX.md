@@ -4,7 +4,7 @@ Entry point for current public harness contracts. Execution history belongs in `
 
 - [[specs/spec-architecture|Spec architecture]] — *follow when creating, organizing, validating, or superseding specs*.
 - [[specs/judge-dredd|Judge Dredd]] — *follow when judging act 1 of `005_closing` for a yolo task, when touching the single-judge role, or for phase verification* (supersedes [[specs/adversarial-gate|adversarial gate]], historical).
-- [[specs/included-standalone|Fully standalone included harness]] — *follow when packaging or validating an isolated included repository*.
+- [[specs/unirepo-standalone|Fully standalone uni-repo harness]] — *follow when packaging or validating a `uni-repo` project's repository in isolation from the host* (supersedes [[specs/included-standalone|included-standalone]], historical).
 - [[specs/coding-dockers|Coding dockers]] — *follow when creating, operating, or validating an optional project × coding-agent sandbox*.
 - [[specs/harness-lifecycle|Harness lifecycle]] — *follow when closing tasks, pruning roadmaps, optimizing memories, or routing Git delivery*.
 - [[specs/multi-agent-orchestration|Multi-agent orchestration]] — *follow when planning fronts, delegating execution, scheduling yolo waves, or reviewing ownership*.

@@ -13,10 +13,10 @@ Two id origins: roadmap `<epoch>.<phase>.<task>-<slug>` (e.g.
 M-1.1-adjust-contract — task 1 of modification M-1).
 
 Usage:
-    python3 scripts/pop_task.py <category>/<project> <task-id> [--title "..."]
-    e.g.: python3 scripts/pop_task.py agents/my-project 1.2.3-user-table-creation
-          python3 scripts/pop_task.py agents/my-project M-1.1-adjust-contract
-    Embedded repo (full-multi-repo): <category>/<project>/<repo>.
+    python3 scripts/pop_task.py <project> <task-id> [--title "..."]
+    e.g.: python3 scripts/pop_task.py my-project 1.2.3-user-table-creation
+          python3 scripts/pop_task.py my-project M-1.1-adjust-contract
+    Multi-repo repository: <project>/<repo>.
 """
 
 import argparse
@@ -61,7 +61,7 @@ def fill_template(template, task_id, project, title):
             ("M-<n>", f"M-{mod_n}"),
         ]
     pairs += [
-        ("<category>/<project>", project),
+        ("<project>", project),
         ("<id>-<slug>", task_id),
         ("<short title>", title or slug.replace("-", " ")),
         ("created: YYYY-MM-DD", f"created: {date}"),
@@ -78,9 +78,9 @@ def main():
     parser = argparse.ArgumentParser(
         description="Creates the folder and card of a new task in "
                     "kanban/001_initial_task, from _templates/TASK.md.")
-    parser.add_argument("project", metavar="CATEGORY/PROJECT",
-                        help="destination project (e.g. agents/my-project; "
-                             "embedded repo: applications/my-app/frontend)")
+    parser.add_argument("project", metavar="PROJECT",
+                        help="destination project (e.g. my-project; "
+                             "multi-repo repository: my-app/frontend)")
     parser.add_argument("task_id", metavar="TASK-ID",
                         help="full task id (e.g. 1.2.3-user-table-creation "
                              "or M-1.1-adjust-contract)")
@@ -102,7 +102,7 @@ def main():
     harness = poplib.harness_root(project_dir)  # pop/ in the new anatomy
     if not (harness / "kanban").is_dir():
         print(f"Project without kanban/ (nor pop/kanban/): {project_dir} — "
-              f"check <category>/<project>[/<repo>].")
+              f"check <project>[/<repo>].")
         return 1
     existing = poplib.find_task(root, args.task_id)
     if existing:

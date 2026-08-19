@@ -5,19 +5,19 @@ import unittest
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
-INSTALL = ROOT / "scripts" / "pop_install_included.py"
+INSTALL = ROOT / "scripts" / "pop_install_unirepo.py"
 
 
 def run(*args, cwd=None):
     return subprocess.run(args, cwd=cwd, text=True, capture_output=True)
 
 
-class IncludedFlowsTest(unittest.TestCase):
+class UnirepoFlowsTest(unittest.TestCase):
     def setUp(self):
         self.tmp = tempfile.TemporaryDirectory()
-        self.target = Path(self.tmp.name) / "included"
+        self.target = Path(self.tmp.name) / "unirepo"
         self.target.mkdir()
-        (self.target / "AGENTS.md").write_text("# Fixture\n- **Type:** included\n")
+        (self.target / "AGENTS.md").write_text("# Fixture\n- **Type:** uni-repo\n")
 
     def tearDown(self): self.tmp.cleanup()
 
@@ -33,16 +33,16 @@ class IncludedFlowsTest(unittest.TestCase):
 
     def test_import_project(self):
         self.install(); self.install()
-        self.assertTrue((self.target / "pop/.included-harness.json").is_file())
+        self.assertTrue((self.target / "pop/.unirepo-harness.json").is_file())
 
-    def test_full_multi_repo(self):
+    def test_multi_repo(self):
         other = Path(self.tmp.name) / "second"; other.mkdir()
         (other / "AGENTS.md").write_text("# Second\n")
         self.install()
         result = run("python3", str(INSTALL), str(other))
         self.assertEqual(result.returncode, 0, result.stderr)
-        self.assertEqual((self.target / "pop/.included-harness.json").read_bytes(),
-                         (other / "pop/.included-harness.json").read_bytes())
+        self.assertEqual((self.target / "pop/.unirepo-harness.json").read_bytes(),
+                         (other / "pop/.unirepo-harness.json").read_bytes())
 
     def test_real_git_clone_keeps_standalone_anatomy(self):
         self.install()
@@ -60,13 +60,15 @@ class IncludedFlowsTest(unittest.TestCase):
 class StandaloneNegativeTest(unittest.TestCase):
     def test_missing_skill_and_external_link_fail(self):
         with tempfile.TemporaryDirectory() as raw:
-            target = Path(raw) / "included"; target.mkdir()
+            target = Path(raw) / "unirepo"; target.mkdir()
             (target / "AGENTS.md").write_text("# Fixture\n")
             self.assertEqual(run("python3", str(INSTALL), str(target)).returncode, 0)
             (target / ".agents/skills/judge-dredd/SKILL.md").unlink()
             self.assertNotEqual(run("python3", "pop/scripts/pop_validate.py", "--standalone", cwd=target).returncode, 0)
             shutil.copy2(ROOT / ".agents/skills/judge-dredd/SKILL.md", target / ".agents/skills/judge-dredd/SKILL.md")
-            (target / "pop/PROJECT.md").write_text("[[categories/applications/outside/PROJECT]]")
+            # The negative's external link uses `projects/`: in the new layout,
+            # a link to `projects/<proj>/...` points outside the scope.
+            (target / "pop/PROJECT.md").write_text("[[projects/applications/outside/PROJECT]]")
             self.assertNotEqual(run("python3", "pop/scripts/pop_validate.py", "--standalone", cwd=target).returncode, 0)
 
 
@@ -75,13 +77,13 @@ class MaterializerContractTest(unittest.TestCase):
         self.assertEqual(run("python3", str(INSTALL), "--audit-manifest").returncode, 0)
         for skill in ("new-project", "import-project"):
             text = (ROOT / ".agents/skills" / skill / "SKILL.md").read_text()
-            self.assertIn("pop_install_included.py", text)
+            self.assertIn("pop_install_unirepo.py", text)
 
 
 class LocalCliTest(unittest.TestCase):
     def test_local_operations(self):
         with tempfile.TemporaryDirectory() as raw:
-            target = Path(raw) / "included"; target.mkdir()
+            target = Path(raw) / "unirepo"; target.mkdir()
             (target / "AGENTS.md").write_text("# Fixture\n")
             self.assertEqual(run("python3", str(INSTALL), str(target)).returncode, 0)
             for name in ("pop_status.py", "pop_move.py", "pop_task.py", "pop_claim.py", "pop_worktree.py"):
@@ -122,7 +124,7 @@ class BoundaryTest(unittest.TestCase):
         (self.host / "kanban" / "001_initial_task").mkdir(parents=True)
         (self.host / "AGENTS.md").write_text("# Host\nNot the scope.\n")
         (self.host / "INDEX.md").write_text("# Host index\n")
-        self.target = self.host / "categories" / "apps" / "child"
+        self.target = self.host / "projects" / "child"
         self.target.mkdir(parents=True)
         (self.target / "AGENTS.md").write_text("# Child\n")
         self.assertEqual(run("python3", str(INSTALL), str(self.target)).returncode, 0)
@@ -144,7 +146,7 @@ class BoundaryTest(unittest.TestCase):
     def test_no_installed_file_points_outside(self):
         for path in sorted(self.target.rglob("*.md")):
             text = path.read_text(encoding="utf-8").lower()
-            for token in ("[[categories/", "root pop", "parent pop",
+            for token in ("[[projects/", "root pop", "parent pop",
                           "parent vault", "meta-project", str(self.host).lower()):
                 self.assertNotIn(token, text, f"{path}: {token}")
 
@@ -159,7 +161,7 @@ class BoundaryTest(unittest.TestCase):
         card.write_text(card.read_text().replace("size: S | M | L", "size: S"))
         for args in (("pop/scripts/pop_validate.py", "--standalone"),
                      ("pop/scripts/pop_status.py",),
-                     ("pop/scripts/pop_install_included.py", "--check-fresh", ".")):
+                     ("pop/scripts/pop_install_unirepo.py", "--check-fresh", ".")):
             result = run("python3", *args, cwd=alone)
             self.assertEqual(result.returncode, 0,
                              " ".join(args) + result.stdout + result.stderr)

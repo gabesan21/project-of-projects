@@ -2,7 +2,7 @@
 
 > Blockquotes in this template are fill-in instructions — **delete them when filling it in**.
 
-Profile: [[categories/<category>/<project>/pop/PROJECT|<Project name>]] · Roadmap: [[categories/<category>/<project>/pop/ROADMAP|Roadmap]]
+Profile: [[projects/<project>/pop/PROJECT|<Project name>]] · Roadmap: [[projects/<project>/pop/ROADMAP|Roadmap]]
 
 > Tracking of whatever arrives **outside the plan**: hotfixes, one-off tweaks, contract fixes/changes and small emergent features. One line per modification, always a short description; `M-<n>.<t>-<slug>` tasks live in the modification's file in `pop/modifications/` when multi-task ([[_templates/MODIFICATION|template]]; a scope whose harness lives at its own root: without the `pop/` prefix). Never add detail here.
 > **Before anything, the rule-13 triage of [[AGENTS|AGENTS]]:** a pinpoint fix does not even become a modification — it runs as a direct fix and lives only in memory + specs ("Direct fix" section of [[WORKFLOW|WORKFLOW]]).
@@ -12,6 +12,6 @@ Profile: [[categories/<category>/<project>/pop/PROJECT|<Project name>]] · Roadm
 
 | # | Modification | Description (≤1 line) | Status |
 |---|--------------|-----------------------|--------|
-| M-1 | [[categories/<category>/<project>/pop/modifications/m-1-<slug>\|<name>]] (multi-task) or loose name (single task) | What changes and why. · size: S | open |
+| M-1 | [[projects/<project>/pop/modifications/m-1-<slug>\|<name>]] (multi-task) or loose name (single task) | What changes and why. · size: S | open |
 
 **Modification status:** open | in progress | completed
