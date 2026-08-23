@@ -27,7 +27,7 @@ Roadmaps show structure and open work; `memory/` preserves chronological proof i
 - Flat memory in `memory/<id>.md` with `finished` earlier than 2026-07-27 is tolerated legacy; from that date on the folder layout is mandatory.
 - Weekly review reports completed-task residue and memory candidates; `optimize-memory` converts legacy memory into that layout and trims whatever exceeds the cap, never merging ledgers or removing chronology/critical decisions.
 - A root local PoP (`project: pop`, kanban at root) works directly on `main`, without its own task branch/worktree/PR.
-- External yolo tasks integrate idempotently into `develop`; the final scope opens/reuses `develop` → `main`, and only the human merges.
+- Each external yolo task's worktree starts from the current working branch and the task integrates idempotently into it; at scope close the agent **suggests** the PR to `main` and opens it only on the human's explicit request, who merges.
 
 ## Invariants
 

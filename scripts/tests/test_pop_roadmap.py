@@ -263,7 +263,7 @@ class WorktreeConsumerTest(CloseLifecycleTest):
         self.assertIn("directly on main", add.stdout)
         self.assertFalse((self.root / "worktrees").exists())
 
-    def test_pop_worktree_consumer_reports_external_yolo_develop_to_main(self):
+    def test_pop_worktree_consumer_reports_external_yolo_current_branch(self):
         project = self.root / "projects/example"
         task = "1.1.1-external-yolo"
         card = project / "pop/kanban/004_processing" / task / f"{task}.md"
@@ -275,8 +275,9 @@ class WorktreeConsumerTest(CloseLifecycleTest):
         route = self.run_cli("pop_worktree.py", "route", task)
         self.assertEqual(route.returncode, 0, route.stdout + route.stderr)
         self.assertIn("worktree=yes", route.stdout)
-        self.assertIn("integration_branch=develop", route.stdout)
-        self.assertIn("target_branch=main", route.stdout)
+        self.assertIn("integration_branch=current", route.stdout)
+        self.assertIn("final_pr=on-request", route.stdout)
+        self.assertIn("target_branch=on-request", route.stdout)
         self.assertIn("merge_owner=user", route.stdout)
 
 

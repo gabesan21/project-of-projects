@@ -231,9 +231,12 @@ def delivery_route(root: Path, project: Path, *, yolo: bool) -> dict:
         return {"task_branch": "main", "scope_pr": False,
                 "target_branch": "main", "worktree": False,
                 "merge_owner": "none"}
+    # External yolo: worktree and integration on the current working branch
+    # (resolved at add/integrate time, hence task_branch=None); the final PR
+    # exists only on explicit human request.
     if yolo:
-        return {"task_branch": "develop", "scope_pr": True,
-                "target_branch": "main", "worktree": True,
+        return {"task_branch": None, "scope_pr": False,
+                "target_branch": None, "worktree": True,
                 "merge_owner": "user"}
     return {"task_branch": "task", "scope_pr": False,
             "target_branch": None, "worktree": True,

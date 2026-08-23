@@ -50,7 +50,7 @@ When a runtime cannot reliably enforce named nested-child allowlists, dispatch i
 - Judge Dredd reads the original request, contracts, integrated diff, and evidence. Ordinary tests are `verify: phase` criteria run once by `pop-phase-verifier`, not rerun by the judge.
 - Outside yolo there is no agentic reviewer: the human PR is the gate, and a local scope with no PR has no verification gate.
 - Every return names a classified delta (`lacuna | premissa | execucao`), affected criteria/fronts, and intact fronts. Re-entry and rereview are differential unless a premise invalidates the surface.
-- Yolo schedules waves of at most three independent tasks; delivery/close-out is mechanical and idempotent.
+- Yolo schedules waves of at most three independent tasks; delivery/close-out is mechanical and idempotent, ending with the **suggestion** of a PR from the current working branch to `main`, opened only on human request.
 - Missing/incompatible input is reported as `BLOCKED`; a consumer never implements its dependency opportunistically.
 - Web is denied by default. The only exception is a yolo 004 executor whose exclusive deliverable is official-documentation research with no implementation; it records direct official URLs and the absolute consultation date. No other role receives web.
 

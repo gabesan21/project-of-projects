@@ -85,14 +85,15 @@ def main():
     project, stage, task_dir = found
     card = task_dir / f"{args.task_id}.md"
     meta = poplib.read_card(card)
-    route = poplib.delivery_route(root, project, yolo=bool(meta.get("yolo")))
+    yolo = bool(meta.get("yolo"))
+    route = poplib.delivery_route(root, project, yolo=yolo)
     print(f"Task {args.task_id} in {poplib.project_label(root, project)} "
           f"({stage}).")
     if args.action == "route":
         print(f"worktree={'yes' if route['worktree'] else 'no'}")
-        print(f"integration_branch={route['task_branch']}")
-        print(f"final_pr={'yes' if route['scope_pr'] else 'no'}")
-        print(f"target_branch={route['target_branch'] or 'configured-in-project'}")
+        print(f"integration_branch={route['task_branch'] or 'current'}")
+        print(f"final_pr={'on-request' if yolo and route['worktree'] else 'yes' if route['scope_pr'] else 'no'}")
+        print(f"target_branch={route['target_branch'] or ('on-request' if yolo else 'configured-in-project')}")
         print(f"merge_owner={route['merge_owner']}")
         return 0
     if not route["worktree"]:
@@ -122,15 +123,18 @@ def main():
     branch = f"task/{args.task_id}"
     if args.action == "add":
         base = args.base
-        if meta.get("yolo"):
-            if base and base != route["task_branch"]:
-                print("Operation refused: an external yolo task must start from "
-                      f"{route['task_branch']} and close with a PR to "
-                      f"{route['target_branch']}.")
-                return 1
-            base = route["task_branch"]
-            print(f"Yolo route: integrate into {base}; automatic final PR "
-                  f"to {route['target_branch']}; merge by {route['merge_owner']}.")
+        if yolo:
+            if not base:
+                current = git(repo, "branch", "--show-current")
+                base = current.stdout.strip()
+                if current.returncode != 0 or not base:
+                    print("Operation refused: the repo is on a detached HEAD; "
+                          "an external yolo task needs a current working "
+                          "branch (or an explicit --base).")
+                    return 1
+            print(f"Yolo route: worktree from {base} and integration back "
+                  f"into it; final PR only on human request; merge by "
+                  f"{route['merge_owner']}.")
         return cmd_add(repo, worktree, branch, base,
                        worktree.relative_to(project).as_posix())
     return cmd_remove(repo, worktree, branch, args.delete_branch)

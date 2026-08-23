@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Mechanical external-yolo delivery: task→develop and PR develop→main."""
+"""Mechanical external-yolo delivery: task→current branch and on-demand PR."""
 
 from __future__ import annotations
 
@@ -34,15 +34,16 @@ def ensure_clean(repo: Path):
 def integrate(repo: Path, task_id: str, dry_run: bool) -> str:
     ensure_clean(repo)
     branch = git(repo, "branch", "--show-current").stdout.strip()
-    if branch != "develop":
-        raise RuntimeError(f"current branch must be develop, got {branch or '?'}")
+    if not branch:
+        raise RuntimeError("detached HEAD: yolo integration requires a "
+                           "current working branch")
     task_branch = f"task/{task_id}"
     exists = git(repo, "show-ref", "--verify", f"refs/heads/{task_branch}")
     if exists.returncode:
         raise RuntimeError(f"missing branch: {task_branch}")
-    ancestor = git(repo, "merge-base", "--is-ancestor", task_branch, "develop")
+    ancestor = git(repo, "merge-base", "--is-ancestor", task_branch, branch)
     if ancestor.returncode == 0:
-        return git(repo, "rev-parse", "develop").stdout.strip()
+        return git(repo, "rev-parse", branch).stdout.strip()
     if dry_run:
         return f"dry-run: git merge --no-ff {task_branch}"
     merged = git(repo, "merge", "--no-ff", "--no-edit", task_branch)
@@ -53,20 +54,24 @@ def integrate(repo: Path, task_id: str, dry_run: bool) -> str:
     return git(repo, "rev-parse", "HEAD").stdout.strip()
 
 
-def final_pr(repo: Path, dry_run: bool) -> str:
+def final_pr(repo: Path, base: str, dry_run: bool) -> str:
     ensure_clean(repo)
+    head = git(repo, "branch", "--show-current").stdout.strip()
+    if not head:
+        raise RuntimeError("detached HEAD: the final PR requires a current "
+                           "working branch")
     if shutil.which("gh") is None:
         raise RuntimeError("missing `gh` tool")
     existing = subprocess.run(
-        ["gh", "pr", "list", "--base", "main", "--head", "develop",
+        ["gh", "pr", "list", "--base", base, "--head", head,
          "--state", "open", "--json", "url", "--jq", ".[0].url"],
         cwd=repo, capture_output=True, text=True)
     if existing.returncode == 0 and existing.stdout.strip():
         return existing.stdout.strip()
     if dry_run:
-        return "dry-run: gh pr create --base main --head develop"
+        return f"dry-run: gh pr create --base {base} --head {head}"
     created = subprocess.run(
-        ["gh", "pr", "create", "--base", "main", "--head", "develop",
+        ["gh", "pr", "create", "--base", base, "--head", head,
          "--title", "PoP yolo delivery",
          "--body", "Delivery integrated and verified by the PoP yolo flow."],
         cwd=repo, capture_output=True, text=True)
@@ -85,11 +90,13 @@ def main():
     merge.add_argument("--scope", "--vault", dest="vault")
     pr = sub.add_parser("scope-pr")
     pr.add_argument("--repo", default=".")
+    pr.add_argument("--base", default="main",
+                    help="PR target branch (default: main)")
     pr.add_argument("--dry-run", action="store_true")
     args = parser.parse_args()
     try:
         if args.command == "scope-pr":
-            print(final_pr(Path(args.repo).resolve(), args.dry_run))
+            print(final_pr(Path(args.repo).resolve(), args.base, args.dry_run))
             return 0
         root = poplib.vault_root(args.vault)
         found = poplib.find_task(root, args.task_id)

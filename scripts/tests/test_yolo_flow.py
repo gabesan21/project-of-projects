@@ -335,18 +335,19 @@ class YoloDeliveryTest(unittest.TestCase):
         self.addCleanup(self.tmp.cleanup)
         self.repo = Path(self.tmp.name) / "repo"
         self.repo.mkdir()
-        self.git("init", "-b", "develop")
+        self.git("init", "-b", "work")
         self.git("config", "user.email", "test@example.com")
         self.git("config", "user.name", "Test")
         (self.repo / "base.txt").write_text("base\n")
         self.git("add", ".")
         self.git("commit", "-m", "base")
         self.git("branch", "main")
+        self.git("branch", "develop")
         self.git("switch", "-c", "task/1.1.1-delivery")
         (self.repo / "feature.txt").write_text("ok\n")
         self.git("add", ".")
         self.git("commit", "-m", "feature")
-        self.git("switch", "develop")
+        self.git("switch", "work")
         for stage in STAGES:
             (self.repo / "pop/kanban" / stage).mkdir(parents=True)
         task = "1.1.1-delivery"
@@ -363,16 +364,28 @@ class YoloDeliveryTest(unittest.TestCase):
         self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
         return result
 
-    def test_delivery_integrates_into_develop_without_touching_main(self):
+    def test_delivery_integrates_into_current_branch_without_touching_others(self):
         main_before = self.git("rev-parse", "main").stdout.strip()
+        develop_before = self.git("rev-parse", "develop").stdout.strip()
         result = subprocess.run(
             [sys.executable, str(SCRIPTS / "pop_delivery.py"), "integrate",
              "1.1.1-delivery", "--repo", str(self.repo), "--vault", str(self.repo)],
             capture_output=True, text=True)
         self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
         self.assertEqual(self.git("rev-parse", "main").stdout.strip(), main_before)
+        self.assertEqual(self.git("rev-parse", "develop").stdout.strip(),
+                         develop_before)
         self.assertEqual(self.git("merge-base", "--is-ancestor",
-                                  "task/1.1.1-delivery", "develop").returncode, 0)
+                                  "task/1.1.1-delivery", "work").returncode, 0)
+
+    def test_integrate_refuses_detached_head(self):
+        self.git("switch", "--detach", "work")
+        result = subprocess.run(
+            [sys.executable, str(SCRIPTS / "pop_delivery.py"), "integrate",
+             "1.1.1-delivery", "--repo", str(self.repo), "--vault", str(self.repo)],
+            capture_output=True, text=True)
+        self.assertEqual(result.returncode, 1, result.stdout + result.stderr)
+        self.assertIn("current working branch", result.stderr)
 
 
 if __name__ == "__main__":

@@ -33,7 +33,7 @@ Outside yolo, human gates are 001 release, 003 approval, `(user)` work, a block,
 - A cohesive implementation uses one direct executor with `owns`, denies, and a criterion. Use a sub-orchestrator only for genuine topology.
 - The `005_closing` judge runs in a clean session with the fixed native profile and first checks whether the **original request** was met. `size`/`critical` changes review depth only. It records `differential|full`, reason and surface; `full` is mandatory for critical tasks and after a `premissa` return.
 - The gate has **three exits**: approved; execution blocker → 004 (`yolo_005_returns`, kind `execucao`); plan defect → 002 (`yolo_003_returns`, kind `lacuna` or `premissa`), when the plan's criteria did not cover the card's request and the executor delivered the slice it was given. Every return names a **delta** — type, affected criteria, fronts re-entering, fronts staying intact.
-- Delivery/close-out is mechanical and idempotent: a local scope stays on `main`; external yolo tasks integrate into `develop`, then the **marked scope** (single task, phase/epoch or modification) opens `develop` → `main` without agent merge.
+- Delivery/close-out is mechanical and idempotent: a local scope stays on `main`; external yolo tasks integrate into the current working branch (the same one the worktree started from), then the **marked scope** (single task, phase/epoch or modification) **suggests** the final PR to `main` — opened only on human request, without agent merge.
 
 ## Turn discipline
 
