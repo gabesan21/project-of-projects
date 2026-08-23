@@ -110,7 +110,7 @@ The central procedures are **skills** in the open Agent Skills format (`SKILL.md
 | Skill | When to use |
 |-------|-------------|
 | `new-project` | Guided interview that creates a new project: essence, harness, roadmap and specs. Consumes a draft from `drafts/new/` if present. |
-| `import-project` | Imports an existing repository: recon, fit into type and Epoch 1 of organization. Consumes a draft from `drafts/import/` if present. |
+| `import-project` | Imports an existing repository: recon, fit into type and Epoch 1 of organization (DOX map, skills, research, notes; specs only on demand). Consumes a draft from `drafts/import/` if present. |
 | `recon-project` | Generates and consumes the deterministic `RECON.md` report of a directory before sweeping files — delegated recon, 002 with broad reading, Epoch 1 of `import-project`. |
 | `plan-roadmap` | Build/evolve the roadmap by interview (epochs → phases → candidate tasks). |
 | `new-task` | Quick interview that materializes a roadmap or modification task in `kanban/001_initial_task`; also handles change requests with no active card. |

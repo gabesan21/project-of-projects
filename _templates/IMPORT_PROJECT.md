@@ -24,7 +24,7 @@ created: YYYY-MM-DD
 
 ## Project flow
 
-> What makes the specs faithful — what the code doesn't show.
+> What feeds the project's map and notes — what the code doesn't show.
 
 - **What the project does today**, in your view:
 - **Main flows, end to end** (input → processing → output, or the equivalent):
@@ -34,7 +34,7 @@ created: YYYY-MM-DD
 
 ## Future (optional)
 
-> Epoch 1 is always "Organization" (specs, skills, research, notes faithful to what exists). Here, what comes after.
+> Epoch 1 is always "Organization" (DOX map, skills, research and notes faithful to what exists — specs only on demand, when work touches the topic). The roadmap is born with it alone; here, what comes after.
 
 - **Destination** — where the project needs to arrive:
 - **Candidate post-organization epochs** (one line each):
